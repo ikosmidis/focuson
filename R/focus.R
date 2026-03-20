@@ -24,7 +24,9 @@
 #' @return
 #' A numeric scalar: the estimate  of the quantity defined by `on`.
 #'
-#' @references
+#' @details
+#' If object is glm then refit using brglmFit with type = "ML" starting at the glm coefs
+#' If object is brglmFit and type is not ML, "AS_mean", or "correction" then refit using AS_mean (just to avoid potential separation issues and have bias = 0)
 #'
 #' @examples
 #' \dontrun{
@@ -66,9 +68,6 @@
 #' }
 #'
 #' @export
-
-## If object is glm then refit using brglmFit with type = "ML" starting at the glm coefs
-## If object is brglmFit and type is not ML, "AS_mean", or "correction" then refit using AS_mean (just to avoid potential separation issues and have bias = 0)
 focus <- function(object, on = function(theta, ...) theta[1], correction = "median", ...) {
     if (isTRUE(inherits(object, "glm", TRUE) == 1)) {
         object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
