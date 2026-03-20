@@ -1,0 +1,12 @@
+
+
+| object class | correction  | then                                                        |   |
+|--------------+-------------+-------------------------------------------------------------+---|
+| glm          | ML          | refit using brglmFit with type = "ML"                       |   |
+| brglmFit     | ML          | if not ML refit using brglmFit with type = "ML"             |   |
+| brglmFit     | mean_bias   | if not AS_mean refit using brglmFit with type = "AS_mean"   |   |
+| brglmFit     | median_bias | if not AS_median refit using brglmFit with type = "AS_mean" |   |
+
+
+
+
