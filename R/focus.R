@@ -30,10 +30,10 @@
 #'
 #' @examples
 #' \dontrun{
-#' library(brglm2)
+#' library("brglm2")
 #'
 #' data("endometrial", package = "brglm2")
-#' fit <- glm(HG ~ NV + PI + EH,
+#' endo <- glm(HG ~ NV + PI + EH,
 #'            data = endometrial,
 #'            family = binomial("logit"),
 #'            method = "brglm_fit")
@@ -73,8 +73,7 @@ focus <- function(object, on = function(theta, ...) theta[1], correction = "medi
         object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
     }
     if (inherits(object, "brglmFit")) {
-        otype <- object$type
-        if (!(otype %in% c("ML", "AS_mean", "correction"))) {
+        if (!(object$type %in% c("ML", "AS_mean", "correction"))) {
             object <- update(object, type = "AS_mean")
         }
     }

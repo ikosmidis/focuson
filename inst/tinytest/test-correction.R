@@ -1,3 +1,5 @@
+library("brglm2")
+
 data("coalition", package = "brglm2")
 c_ml <- glm(duration ~ fract + numst2, family = Gamma, data = coalition,
             method = "brglmFit", type = "ML")

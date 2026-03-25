@@ -41,10 +41,10 @@ If object is brglmFit and type is not ML, "AS_mean", or "correction" then refit 
 }
 \examples{
 \dontrun{
-library(brglm2)
+library("brglm2")
 
 data("endometrial", package = "brglm2")
-fit <- glm(HG ~ NV + PI + EH,
+endo <- glm(HG ~ NV + PI + EH,
            data = endometrial,
            family = binomial("logit"),
            method = "brglm_fit")
