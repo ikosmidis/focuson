@@ -28,12 +28,6 @@ hulc_ci <- function(data,
     if (randomize) {
         Dp <- 0.5 + Delta
         Dm <- 0.5 - Delta
-        ## DpB <- Dp^B
-        ## DmB <- Dm^B
-        ## B1 <- B - 1
-        ## prob0 <- Dm^B + Dp^B
-        ## prob1 <- Dm^B1 + Dp^B1
-        ## B <- if ((alpha - prob0) / (prob1 - prob0) < runif(1)) B else B1
         pB <- c(Dm^B, Dp^B)
         prob0 <- sum(pB)
         prob1 <- sum(pB / c(Dm, Dp))        
@@ -42,7 +36,6 @@ hulc_ci <- function(data,
     if (B > nobs)
         stop("The required number of partitions (=", B, ") is larger than `nrow(data)` (=", nobs, ").")
     partitions <- ((seq_len(nobs) - 1) * B) %/% nobs + 1
-    ## partitions <- cut(seq_len(nobs), breaks = B, labels = FALSE)
     data <- split(data, partitions)
     ## Check if statistic returns a value or fails for the smallest
     ## number of observations
