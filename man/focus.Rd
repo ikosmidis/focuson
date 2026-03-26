@@ -50,31 +50,31 @@ endo <- glm(HG ~ NV + PI + EH,
            method = "brglm_fit")
 
 ## Focus on the first regression parameter
-focus(fit)
+focus(endo)
 
 ## Focus on the second coefficient
-focus(fit, on = function(theta) theta[2])
+focus(endo, on = function(theta) theta[2])
 
 ## which are exactly the same as the estiamte from one step
 ## quasi-Fisher scoring with `type = "AS_median"` starting from the
 ## reduced-bias estimates
-fit1FS <- update(fit, maxit = 1, max_step_factor = 1, type = "AS_median",
-                start = coef(fit))
-coef(fit1FS)[1:2]
+endo1FS <- update(endo, maxit = 1, max_step_factor = 1, type = "AS_median",
+                start = coef(endo))
+coef(endo1FS)[1:2]
 
 ## Focus on an odds ratio
-focus(fit, on = function(theta, ...) exp(theta["NV"]))
+focus(endo, on = function(theta, ...) exp(theta["NV"]))
 
 ## Focus on a contrast
 focus_fun <- function(theta, a = 1, b = 2) theta[a] - theta[b]
-focus(fit, on = focus_fun, a = 2, b = 3)
+focus(endo, on = focus_fun, a = 2, b = 3)
 
 ## Or using mean bias correction
-focus(fit, on = focus_fun, a = 2, b = 3, correction = "mean")
+focus(endo, on = focus_fun, a = 2, b = 3, correction = "mean")
 
 ## The mean-bias reduced estimate is exactly the same as it is
 ## equivariant to linear transformations
-coef(fit)[2] - coef(fit)[3]
+coef(endo)[2] - coef(endo)[3]
 
 }
 
