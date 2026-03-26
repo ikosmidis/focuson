@@ -45,7 +45,6 @@
 #' @name focuson
 #' @import brglm2
 #' @import enrichwith
-#' @import future.apply
 #' @importFrom numDeriv grad hessian
 #'
 "_PACKAGE"

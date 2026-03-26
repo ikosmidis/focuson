@@ -126,6 +126,72 @@ focus <- function(object, on = function(theta, ...) theta[1], correction = "medi
     out
 }
 
+#' Focus on a scalar function of the model parameters for new data
+#'
+#' Evaluates a scalar function of the model parameters after refitting
+#' a model object on a supplied dataset. This is a convenience wrapper
+#' around [focus()], intended for use in resampling procedures (e.g.,
+#' bootstrap) where the model needs to be refit on different datasets.
+#'
+#' @param data A data frame (or object coercible to a data frame)
+#'     containing the variables required to refit the model.
+#' @param object A fitted model object of class [`"glm"`][glm] or
+#'     [`"brglmFit"`][brglmFit].
+#' @param on A function specifying the scalar parameter of
+#'     interest. It must take the model parameter vector as first
+#'     argument and return a single numeric value. The default,
+#'     `function(theta, ...) theta[1]`, focuses on the first component
+#'     of the parameter vector.
+#' @param correction The type of correction to be used. Possible
+#'     values are `"no"`, `"mean"`, and `"median"` (default). See
+#'     [focus()] for details.
+#' @param ... Additional arguments passed to `on`.
+#'
+#' @return
+#' A numeric scalar: the estimate of the quantity defined by `on`,
+#' with an attribute `"se"` giving the corresponding standard error.
+#'
+#' @details
+#' The function refits `object` using `data` via [update()], and then
+#' applies [focus()] to the refitted model. This ensures that the
+#' quantity of interest is evaluated using parameter estimates
+#' corresponding to the supplied dataset.
+#'
+#' This function is particularly useful in resampling settings, such as
+#' bootstrap or cross-validation, where `data` varies across iterations.
+#'
+#' @examples
+#' library("brglm2")
+#'
+#' data("endometrial", package = "brglm2")
+#'
+#' endo <- glm(HG ~ NV + PI + EH,
+#'             data = endometrial,
+#'             family = binomial("logit"),
+#'             method = "brglmFit")
+#'
+#' ## Focus on the first coefficient using the original data
+#' focus_statistic(endometrial, endo)
+#'
+#' ## which is the same as
+#' focus(endo)
+#'
+#' \dontrun{
+#'
+#' ## Example in a bootstrap setting
+#' if (requireNamespace("boot", quietly = TRUE)) {
+#'   boot_fun <- function(data, indices) {
+#'     d <- data[indices, ]
+#'     focus_statistic(d, endo, correction = "mean")
+#'   }
+#'   boot::boot(endometrial, boot_fun, R = 100)
+#' }
+#'
+#' }
+#'
+#' @seealso [focus()]
+#'
+#' @export
 focus_statistic <- function(data, object, on = function(theta, ...) theta[1], correction = "median", ...) {
     object <- do.call(update, list(object = object, data = data))
     focus(object, on = on, correction = correction, ...)

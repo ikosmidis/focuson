@@ -10,7 +10,7 @@ compute_B <- function(alpha, Delta){
     ## ceiling here to be slightly more conservative
     Bl <- max(floor(loga / logDp), floor(log2mloga / log2))
     Bu <- ceiling(- log2mloga / logDp)
-    for (B in Bl:Bu) 
+    for (B in Bl:Bu)
         if (Dm^B + Dp^B <= alpha) break
     B
 }
@@ -21,7 +21,7 @@ hulc_ci <- function(data,
                     Delta = 0,
                     randomize = TRUE,
                     check_statistic = TRUE,
-                    parallel = FALSE, ...) {
+                    ...) {
     nobs <- nrow(data)
     data <- data[sample(nobs), , drop = FALSE]
     B <- compute_B(alpha, Delta)
@@ -30,7 +30,7 @@ hulc_ci <- function(data,
         Dm <- 0.5 - Delta
         pB <- c(Dm^B, Dp^B)
         prob0 <- sum(pB)
-        prob1 <- sum(pB / c(Dm, Dp))        
+        prob1 <- sum(pB / c(Dm, Dp))
         B <- B - ((alpha - prob0) / (prob1 - prob0) >= runif(1))
     }
     if (B > nobs)
@@ -49,12 +49,11 @@ hulc_ci <- function(data,
         warning("It has not been possible to evaluate the statistic on the partition with the smallest number of observations (=", nrow(small_data), ").")
         ci <- c(NA, NA)
     } else {
-        if (parallel) {
-            plan(multisession)
-            ci <- future_sapply(data, statistic, ...) |> range()
-        } else {
-            ci <- sapply(data, statistic, ...) |> range()
+        ci <- try(sapply(data, statistic, ...) |> range())
+        if (inherits(ci, "try-error")) {
+            ci <- c(NA, NA)
         }
+        ## NA's in ci's are handled by `range()` where `na.rm = FALSE`
     }
     names(ci) <- c("lower", "upper")
     attr(ci, "Delta") <- Delta
@@ -63,7 +62,3 @@ hulc_ci <- function(data,
     attr(ci, "type") <- "hulc"
     ci
 }
-
-
-
-
