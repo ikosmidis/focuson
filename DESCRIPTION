@@ -10,6 +10,6 @@ RoxygenNote: 7.3.3
 Imports: 
     brglm2,
     enrichwith (>= 0.4.1),
-    numDeriv
+    numDeriv,
     future.apply
 Suggests: tinytest
