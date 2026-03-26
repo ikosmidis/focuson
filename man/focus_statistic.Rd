@@ -8,7 +8,7 @@ focus_statistic(
   data,
   object,
   on = function(theta, ...) theta[1],
-  correction = "median",
+  control = focus_control(),
   ...
 )
 }
@@ -25,9 +25,8 @@ argument and return a single numeric value. The default,
 \code{function(theta, ...) theta[1]}, focuses on the first component
 of the parameter vector.}
 
-\item{correction}{The type of correction to be used. Possible
-values are \code{"no"}, \code{"mean"}, and \code{"median"} (default). See
-\code{\link[=focus]{focus()}} for details.}
+\item{control}{A list, as returned by a call to
+\code{\link[=focus_control]{focus_control()}}. See Details.}
 
 \item{...}{Additional arguments passed to \code{on}.}
 }

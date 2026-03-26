@@ -4,7 +4,12 @@
 \alias{focus}
 \title{Focus on a scalar function of the model parameters}
 \usage{
-focus(object, on = function(theta, ...) theta[1], correction = "median", ...)
+focus(
+  object,
+  on = function(theta, ...) theta[1],
+  control = focus_control(),
+  ...
+)
 }
 \arguments{
 \item{object}{A fitted model object of class \code{\link[=glm]{"glm"}} or
@@ -16,11 +21,8 @@ argument and return a single numeric value. The default,
 \code{function(theta, ...) theta[1]}, focuses on the first component
 of the parameter vector.}
 
-\item{correction}{The type of correction to be used. Possible
-values are \code{"no"} (\code{on} is simply evaluated at the estimates
-from the supplied object), \code{"mean"} (explicit reduced-mean-bias
-estimation of the \code{on} parameter), and \code{"median"} (default; explicit
-reduced-median-bias estimation of the \code{on} parameter).}
+\item{control}{A list, as returned by a call to
+\code{\link[=focus_control]{focus_control()}}. See Details.}
 
 \item{...}{Additional arguments passed to \code{on}.}
 }
@@ -41,9 +43,9 @@ If the primary class of the \code{object} is \code{\link[=glm]{"glm"}}, then
 at \code{coef(object)}.
 
 If the primary class of the \code{object} is \code{\link[brglm2:brglmFit]{"brglmFit"}},
-and \code{type} is not one of "ML", "AS_mean", or "correction", then
-\code{focus()} refits using \code{type = "AS_mean"}. This ensures that the
-first-term in the bias expansion of the maximum likelihood
+and \code{object$type} is not one of "ML", "AS_mean", or "correction",
+then \code{focus()} refits using \code{type = "AS_mean"}. This ensures that
+the first-term in the bias expansion of the maximum likelihood
 estimator is eliminated, and avoids potential separation issues for
 categorical response models.
 }

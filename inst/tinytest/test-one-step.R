@@ -9,8 +9,8 @@ fit1s <- update(coalitionML, maxit = 1,  max_step_factor = 1, type = "AS_median"
 )
 
 coefs_medBR <- coef(fit1s, model = "full")
-expect_equal(sapply(1:4, function(k) focus(coalitionML, on = function(theta) theta[k])),
-             coefs_medBR)
+expect_equal(sapply(1:4, function(k) focus(coalitionML, on = function(theta) theta[k])$estimate),
+             coefs_medBR, check.attributes = FALSE)
 
 ## A binomial logit example
 data("lizards", package = "brglm2")
@@ -22,8 +22,8 @@ expect_warning(
                     start = coef(lizardsML))
 )
 coefs_medBR <- coef(fit1s)
-expect_equal(sapply(1:6, function(k) focus(lizardsML, on = function(theta) theta[k])),
-             coefs_medBR)
+expect_equal(sapply(1:6, function(k) focus(lizardsML, on = function(theta) theta[k])$estimate),
+             coefs_medBR, check.attributes = FALSE)
 
 ## A binomial cauchit example
 data("lizards", package = "brglm2")
@@ -35,5 +35,5 @@ expect_warning(
                     start = coef(lizardsML))
 )
 coefs_medBR <- coef(fit1s)
-expect_equal(sapply(1:6, function(k) focus(lizardsML, on = function(theta) theta[k])),
-             coefs_medBR, tolerance = 1e-06)
+expect_equal(sapply(1:6, function(k) focus(lizardsML, on = function(theta) theta[k])$estimate),
+             coefs_medBR, tolerance = 1e-06, check.attributes = FALSE)
