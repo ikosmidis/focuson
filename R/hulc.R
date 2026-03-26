@@ -150,13 +150,15 @@ hulc_ci <- function(data,
     data <- split(data, partitions)
     ## Check if statistic returns a value or fails for the smallest
     ## number of observations
-    test <- error_msg <- NA
+    test <- FALSE
+    error_msg <- NULL
     if (check_statistic) {
         min_id <- which.min(sapply(data, nrow))
         small_data <- data[[min_id]]
         stat <- try(statistic(small_data, ...), silent = TRUE)
-        test <- isTRUE(inherits(stat, "try-error") || is.na(stat))
-        error_msg <- stat[1]
+        got_error <- inherits(stat, "try-error")
+        error_msg <- if (got_error) stat[1] else NULL
+        test <- isTRUE(got_error || is.na(stat))
     }
     if (test) {
         warning("It has not been possible to evaluate the statistic on the partition with the smallest number of observations (=", nrow(small_data), ").")
@@ -164,11 +166,12 @@ hulc_ci <- function(data,
     } else {
         ci <- try(vapply(data, statistic, numeric(1), ...) |> range(), silent = TRUE)
         if (inherits(ci, "try-error")) {
+            error_msg <- ci[1]
             ci <- c(NA, NA)
-            error_msg <- stat[1]
         }
         ## NA's in ci's are handled by `range()` where `na.rm = FALSE`
     }
+
     names(ci) <- c("lower", "upper")
     attr(ci, "Delta") <- Delta
     attr(ci, "alpha") <- alpha

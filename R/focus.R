@@ -126,7 +126,13 @@ focus <- function(object, on = function(theta, ...) theta[1], control = focus_co
         confint <- out + c(-1, 1) * qnorm(1 - alpha / 2) * se
         names(confint) <- c("lower", "upper")
     }
-    list(estimate = unname(out), se = se, confint = confint, ci_type = ci)
+    if (identical(ci, "hulc")) {
+        control$ci <- "wald"
+        confint <- hulc_ci(model.frame(object), focus_statistic, object = object, control = control,
+                           alpha = control$alpha, Delta = control$Delta, randomize = control$randomize,
+                           check_statistic = control$check_statistic, ...)
+    }
+    list(estimate = unname(out), se = se, ci_type = ci, confint = confint)
 }
 
 #' Configure [focus()] inference options
@@ -199,7 +205,8 @@ focus_control <- function(correction = "median", ci = "wald", alpha = 0.05,
     stopifnot(length(Delta) == 1, is.numeric(Delta), Delta >= 0, Delta < 1/2)
     correction <- match.arg(correction, c("no", "median", "mean"))
     ci <- match.arg(ci, c("wald", "hulc"))
-    list(correction = correction, ci = ci, alpha = alpha)
+    list(correction = correction, ci = ci, alpha = alpha, Delta = Delta,
+         alpha = alpha, randomize = randomize, check_statistic = check_statistic)
 }
 
 #' Focus on a scalar function of the model parameters for new data
@@ -271,7 +278,7 @@ focus_control <- function(correction = "median", ci = "wald", alpha = 0.05,
 #' @export
 focus_statistic <- function(data, object, on = function(theta, ...) theta[1], control = focus_control(), ...) {
     object <- do.call(update, list(object = object, data = data))
-    focus(object, on = on, control = focus_control(), ...)
+    focus(object, on = on, control = focus_control(), ...)$estimate
 }
 
 
