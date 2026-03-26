@@ -116,3 +116,6 @@ focus <- function(object, on = function(theta, ...) theta[1], correction = "medi
     attr(out, "se") <- sqrt(var_psi)
     out
 }
+
+
+

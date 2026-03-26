@@ -41,10 +41,12 @@ hulc_ci <- function(data,
     ## number of observations
     if (check_statistic) {
         min_id <- which.min(sapply(data, nrow))
-        stat <- try(statistic(data[[min_id]], ...))
+        small_data <- data[[min_id]]
+        stat <- try(statistic(small_data, ...))
         test <- isTRUE(inherits(stat, "try-error") || is.na(stat))
     }
     if (test) {
+        warning("It has not been possible to evaluate the statistic on the partition with the smallest number of observations (=", nrow(small_data), ").")
         ci <- c(NA, NA)
     } else {
         if (parallel) {
