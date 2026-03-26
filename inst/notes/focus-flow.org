@@ -1,11 +1,16 @@
 
 
-| object class | correction  | then                                                        |   |
-|--------------+-------------+-------------------------------------------------------------+---|
-| glm          | ML          | refit using brglmFit with type = "ML"                       |   |
-| brglmFit     | ML          | if not ML refit using brglmFit with type = "ML"             |   |
-| brglmFit     | mean_bias   | if not AS_mean refit using brglmFit with type = "AS_mean"   |   |
-| brglmFit     | median_bias | if not AS_median refit using brglmFit with type = "AS_mean" |   |
+| object class | type         | refit | fitter   | type    |              bias |
+|--------------+--------------+-------+----------+---------+-------------------|
+| glm          | ML           | yes   | brglmFit | ML      | get_bias_function |
+| brglmFit     | ML           | no    |          |         | get_bias_function |
+| brglmFit     | AS_mean      | no    |          |         |                 0 |
+| brglmFit     | correction   | no    |          |         |                 0 |
+| brglmFit     | AS_mixed     | yes   |          | AS_mean |                 0 |
+| brglmFit     | AS_median    | yes   |          | AS_mean |                 0 |
+| brglmFit     | MPL_Jeffreys | yes   |          | AS_mean |                 0 |
+
+
 
 
 
