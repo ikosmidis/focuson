@@ -25,8 +25,17 @@
 #' A numeric scalar: the estimate  of the quantity defined by `on`.
 #'
 #' @details
-#' If object is glm then refit using brglmFit with type = "ML" starting at the glm coefs
-#' If object is brglmFit and type is not ML, "AS_mean", or "correction" then refit using AS_mean (just to avoid potential separation issues and have bias = 0)
+#'
+#' If the primary class of the `object` is [`"glm"`][glm], then
+#' `focus()` will refit using [brglm2::brglmFit()] with `type = "ML"` starting
+#' at `coef(object)`.
+#'
+#' If the primary class of the `object` is [`"brglmFit"`][brglmFit],
+#' and `type` is not one of "ML", "AS_mean", or "correction", then
+#' `focus()` refits using `type = "AS_mean"`. This ensures that the
+#' first-term in the bias expansion of the maximum likelihood
+#' estimator is eliminated, and avoids potential separation issues for
+#' categorical response models.
 #'
 #' @examples
 #' \dontrun{
@@ -117,5 +126,9 @@ focus <- function(object, on = function(theta, ...) theta[1], correction = "medi
     out
 }
 
+focus_statistic <- function(data, object, on = function(theta, ...) theta[1], correction = "median", ...) {
+    object <- do.call(update, list(object = object, data = data))
+    focus(object, on = on, correction = correction, ...)
+}
 
 

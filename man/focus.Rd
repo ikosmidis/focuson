@@ -36,8 +36,16 @@ The \code{focus()} method is intended for estimation of and inference on
 a user-defined quantity of interest, represented by a scalar
 function of the full parameter vector, and additional arguments.
 
-If object is glm then refit using brglmFit with type = "ML" starting at the glm coefs
-If object is brglmFit and type is not ML, "AS_mean", or "correction" then refit using AS_mean (just to avoid potential separation issues and have bias = 0)
+If the primary class of the \code{object} is \code{\link[=glm]{"glm"}}, then
+\code{focus()} will refit using \code{\link[brglm2:brglmFit]{brglm2::brglmFit()}} with \code{type = "ML"} starting
+at \code{coef(object)}.
+
+If the primary class of the \code{object} is \code{\link[brglm2:brglmFit]{"brglmFit"}},
+and \code{type} is not one of "ML", "AS_mean", or "correction", then
+\code{focus()} refits using \code{type = "AS_mean"}. This ensures that the
+first-term in the bias expansion of the maximum likelihood
+estimator is eliminated, and avoids potential separation issues for
+categorical response models.
 }
 \examples{
 \dontrun{
