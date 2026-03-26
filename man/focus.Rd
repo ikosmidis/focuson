@@ -7,57 +7,102 @@
 focus(
   object,
   on = function(theta, ...) theta[1],
-  control = focus_control(),
+  correction = "median",
+  ci = "wald",
+  alpha = 0.05,
+  control_ci = ci_control(),
   ...
 )
 }
 \arguments{
-\item{object}{A fitted model object of class \code{\link[=glm]{"glm"}} or
+\item{object}{A fitted model object of class \code{\link[stats:glm]{"glm"}} or
 \code{\link[brglm2:brglmFit]{"brglmFit"}}.}
 
-\item{on}{A function specifying the scalar parameter of
-interest. It must take the model parameter vector as first
-argument and return a single numeric value. The default,
-\code{function(theta, ...) theta[1]}, focuses on the first component
-of the parameter vector.}
+\item{on}{A function specifying the scalar parameter of interest.
+It must take the model parameter vector as first argument and return
+a single numeric value. The default,
+\code{function(theta, ...) theta[1]}, focuses on the first component of
+the parameter vector.}
 
-\item{control}{A list, as returned by a call to
-\code{\link[=focus_control]{focus_control()}}. See Details.}
+\item{correction}{Character string specifying the bias correction method.
+One of:
+\describe{
+\item{\code{"no"}}{No bias correction.}
+\item{\code{"median"}}{Median bias correction.}
+\item{\code{"mean"}}{Mean bias correction.}
+}}
+
+\item{ci}{Character string specifying the confidence interval method.
+One of:
+\describe{
+\item{\code{"wald"}}{Wald-type confidence interval based on the delta method.}
+\item{\code{"hulc"}}{HulC confidence interval; see \code{\link[=hulc_ci]{hulc_ci()}}.}
+}}
+
+\item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level for the
+confidence interval.}
+
+\item{control_ci}{A list of control options for confidence interval
+construction as returned by \code{\link[=ci_control]{ci_control()}}.}
 
 \item{...}{Additional arguments passed to \code{on}.}
 }
 \value{
-A numeric scalar: the estimate  of the quantity defined by \code{on}.
+A list with components:
+\describe{
+\item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.
+The returned value has a \code{"correction"} attribute recording the bias
+correction method used.}
+\item{\code{se}}{Numeric scalar, the delta-method standard error.}
+\item{\code{ci_type}}{Character string indicating the confidence interval method.}
+\item{\code{confint}}{Numeric vector of length 2 with names \code{"lower"} and \code{"upper"} if
+\code{ci = "wald"}, or the result of \code{\link[=hulc_ci]{hulc_ci()}} if \code{ci = "hulc"}.}
+}
 }
 \description{
-Estimates a scalar function of the model parameters, from a fitted
-object of class \code{\link[=glm]{"glm"}} or \code{\link[brglm2:brglmFit]{"brglmFit"}}.
+Estimate and perform inference on a scalar function of the model
+parameters from a fitted model object of class \code{\link[stats:glm]{"glm"}}
+or \code{\link[brglm2:brglmFit]{"brglmFit"}}.
 }
 \details{
-The \code{focus()} method is intended for estimation of and inference on
-a user-defined quantity of interest, represented by a scalar
-function of the full parameter vector, and additional arguments.
+The function evaluates a user-specified scalar function of the full
+parameter vector and optionally applies mean or median bias correction.
+Confidence intervals can be constructed using either Wald or HULC methods.
 
-If the primary class of the \code{object} is \code{\link[=glm]{"glm"}}, then
-\code{focus()} will refit using \code{\link[brglm2:brglmFit]{brglm2::brglmFit()}} with \code{type = "ML"} starting
-at \code{coef(object)}.
+If the primary class of \code{object} is \code{\link[stats:glm]{"glm"}}, then
+\code{focus()} refits the model using \code{\link[brglm2:brglmFit]{brglm2::brglmFit()}} with \code{type = "ML"}
+and starting values \code{coef(object)}.
 
-If the primary class of the \code{object} is \code{\link[brglm2:brglmFit]{"brglmFit"}},
-and \code{object$type} is not one of "ML", "AS_mean", or "correction",
-then \code{focus()} refits using \code{type = "AS_mean"}. This ensures that
-the first-term in the bias expansion of the maximum likelihood
-estimator is eliminated, and avoids potential separation issues for
-categorical response models.
+If the primary class of \code{object} is \code{\link[brglm2:brglmFit]{"brglmFit"}} and
+\code{object$type} is not one of \code{"ML"}, \code{"AS_mean"}, or \code{"correction"},
+then \code{focus()} refits the model with \code{type = "AS_mean"}. This ensures that
+the first-order term in the bias expansion of the maximum likelihood
+estimator is removed, and helps avoid separation issues in categorical
+response models.
+
+Let \eqn{\psi(\theta)} denote the scalar function specified by \code{on}.
+The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the fitted
+parameter vector. Mean and median bias corrections are computed using
+first- and second-order derivatives of \eqn{\psi(\theta)} together with
+model-specific auxiliary quantities.
+
+Standard errors are computed using the delta method,
+with covariance matrix evaluated at the original fitted parameter vector.
+They are therefore not generally re-evaluated at the bias-corrected estimate.
+
+When \code{ci = "hulc"}, the HULC interval is computed by applying \code{\link[=hulc_ci]{hulc_ci()}}
+to the model frame using \code{focus_statistic()} as the statistic evaluated on
+each partition.
 }
 \examples{
-\dontrun{
+
 library("brglm2")
 
 data("endometrial", package = "brglm2")
 endo <- glm(HG ~ NV + PI + EH,
-           data = endometrial,
-           family = binomial("logit"),
-           method = "brglm_fit")
+            data = endometrial,
+            family = binomial("logit"),
+            method = "brglm_fit")
 
 ## Focus on the first regression parameter
 focus(endo)
@@ -65,27 +110,33 @@ focus(endo)
 ## Focus on the second coefficient
 focus(endo, on = function(theta) theta[2])
 
-## which are exactly the same as the estiamte from one step
-## quasi-Fisher scoring with `type = "AS_median"` starting from the
+## These are exactly the same as the estimates from one-step
+## quasi-Fisher scoring with type = "AS_median" starting from the
 ## reduced-bias estimates
 endo1FS <- update(endo, maxit = 1, max_step_factor = 1, type = "AS_median",
-                start = coef(endo))
+                  start = coef(endo))
 coef(endo1FS)[1:2]
 
 ## Focus on an odds ratio
-focus(endo, on = function(theta, ...) exp(theta["NV"]))
+focus(endo, on = function(theta) exp(theta["NV"]))
 
 ## Focus on a contrast
 focus_fun <- function(theta, a = 1, b = 2) theta[a] - theta[b]
 focus(endo, on = focus_fun, a = 2, b = 3)
 
-## Or using mean bias correction
+## Mean bias correction
 focus(endo, on = focus_fun, a = 2, b = 3, correction = "mean")
 
-## The mean-bias reduced estimate is exactly the same as it is
+## The mean-bias reduced estimate is exactly the same as it is #
 ## equivariant to linear transformations
 coef(endo)[2] - coef(endo)[3]
 
+\dontrun{
+## HulC confidence interval
+focus(endo, ci = "hulc", control_ci = ci_control(Delta = 0.05))
 }
 
+}
+\seealso{
+\code{\link[=ci_control]{ci_control()}}, \code{\link[=hulc_ci]{hulc_ci()}}
 }

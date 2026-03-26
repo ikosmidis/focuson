@@ -23,7 +23,7 @@
 #' The search is restricted to a finite interval of candidate values for `B`,
 #' then the first value satisfying the HulC inequality is returned.
 #'
-#' Compared with Kuchibholta et al. (2024, expression (7)), the upper search
+#' Compared with Kuchibhotla et al. (2024, expression (7)), the upper search
 #' bound here uses `ceiling()` to be slightly more conservative.
 #'
 #' @references
@@ -37,6 +37,8 @@
 #'
 #' @export
 compute_B <- function(alpha, Delta){
+    stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
+    stopifnot(length(Delta) == 1L, is.numeric(Delta), !is.na(Delta), Delta >= 0, Delta < 1/2)
     log2 <- log(2)
     loga <- log(alpha)
     Dp <- 1/2 + Delta
@@ -95,7 +97,7 @@ compute_B <- function(alpha, Delta){
 #'
 #' When `randomize = TRUE`, the function may reduce the number of
 #' partitions from `B` to `B - 1` with a probability chosen to match
-#' the randomized HulC construction (see Kuchibholta et al, 2025,
+#' the randomized HulC construction (see Kuchibhotla et al, 2024,
 #' Section 2.1).
 #'
 #' The function assumes that `statistic` returns a single numeric value for each
@@ -134,6 +136,11 @@ hulc_ci <- function(data,
                     check_statistic = TRUE,
                     ...) {
     nobs <- nrow(data)
+    stopifnot(is.data.frame(data), is.function(statistic),
+        length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1,
+        length(Delta) == 1L, is.numeric(Delta), !is.na(Delta), Delta >= 0, Delta < 1/2,
+        length(randomize) == 1L, is.logical(randomize), !is.na(randomize),
+        length(check_statistic) == 1L, is.logical(check_statistic), !is.na(check_statistic))
     data <- data[sample(nobs), , drop = FALSE]
     B <- compute_B(alpha, Delta)
     if (randomize) {
@@ -153,12 +160,14 @@ hulc_ci <- function(data,
     test <- FALSE
     error_msg <- NULL
     if (check_statistic) {
-        min_id <- which.min(sapply(data, nrow))
+        min_id <- which.min(vapply(data, nrow, integer(1)))
         small_data <- data[[min_id]]
         stat <- try(statistic(small_data, ...), silent = TRUE)
         got_error <- inherits(stat, "try-error")
         error_msg <- if (got_error) stat[1] else NULL
-        test <- isTRUE(got_error || is.na(stat))
+        test <- isTRUE(got_error || length(stat) != 1L ||
+                       !is.numeric(stat) || is.na(stat) ||
+                       !is.finite(stat))
     }
     if (test) {
         warning("It has not been possible to evaluate the statistic on the partition with the smallest number of observations (=", nrow(small_data), ").")

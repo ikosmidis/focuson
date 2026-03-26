@@ -8,46 +8,46 @@ focus_statistic(
   data,
   object,
   on = function(theta, ...) theta[1],
-  control = focus_control(),
+  correction = "median",
   ...
 )
 }
 \arguments{
-\item{data}{A data frame (or object coercible to a data frame)
-containing the variables required to refit the model.}
+\item{data}{A data frame containing the variables required to refit
+the model.}
 
-\item{object}{A fitted model object of class \code{\link[=glm]{"glm"}} or
+\item{object}{A fitted model object of class \code{\link[stats:glm]{"glm"}} or
 \code{\link[brglm2:brglmFit]{"brglmFit"}}.}
 
-\item{on}{A function specifying the scalar parameter of
-interest. It must take the model parameter vector as first
-argument and return a single numeric value. The default,
-\code{function(theta, ...) theta[1]}, focuses on the first component
-of the parameter vector.}
+\item{on}{A function specifying the scalar parameter of interest.
+It must take the model parameter vector as first argument and return
+a single numeric value. The default,
+\code{function(theta, ...) theta[1]}, focuses on the first component of
+the parameter vector.}
 
-\item{control}{A list, as returned by a call to
-\code{\link[=focus_control]{focus_control()}}. See Details.}
+\item{correction}{Character string specifying the bias correction method.
+One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
 
 \item{...}{Additional arguments passed to \code{on}.}
 }
 \value{
-A numeric scalar: the estimate of the quantity defined by \code{on},
-with an attribute \code{"se"} giving the corresponding standard error.
+A numeric scalar: the estimate of the quantity defined by \code{on}.
 }
 \description{
-Evaluates a scalar function of the model parameters after refitting
-a model object on a supplied dataset. This is a convenience wrapper
-around \code{\link[=focus]{focus()}}, intended for use in resampling procedures (e.g.,
-bootstrap) where the model needs to be refit on different datasets.
+Evaluate a scalar function of the model parameters after refitting
+a model object on a supplied dataset.
 }
 \details{
-The function refits \code{object} using \code{data} via \code{\link[=update]{update()}}, and then
-applies \code{\link[=focus]{focus()}} to the refitted model. This ensures that the
-quantity of interest is evaluated using parameter estimates
-corresponding to the supplied dataset.
+This is a convenience wrapper around \code{\link[=focus]{focus()}}, intended for use in
+resampling procedures such as the bootstrap, where the model is
+repeatedly refit on different datasets.
 
-This function is particularly useful in resampling settings, such as
-bootstrap or cross-validation, where \code{data} varies across iterations.
+The function refits \code{object} using \code{data} via \code{\link[=update]{update()}}, and then
+applies \code{\link[=focus]{focus()}} to the refitted model. Only the \code{estimate}
+component of the result from \code{\link[=focus]{focus()}} is returned.
+
+This function is particularly useful in resampling settings, where a
+statistic function returning a single numeric value is required.
 }
 \examples{
 library("brglm2")
@@ -62,12 +62,10 @@ endo <- glm(HG ~ NV + PI + EH,
 ## Focus on the first coefficient using the original data
 focus_statistic(endometrial, endo)
 
-## which is the same as
-focus(endo)
+## This is the same point estimate as
+focus(endo)$estimate
 
 \dontrun{
-
-## Example in a bootstrap setting
 if (requireNamespace("boot", quietly = TRUE)) {
   boot_fun <- function(data, indices) {
     d <- data[indices, ]
@@ -75,7 +73,6 @@ if (requireNamespace("boot", quietly = TRUE)) {
   }
   boot::boot(endometrial, boot_fun, R = 100)
 }
-
 }
 
 }

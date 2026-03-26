@@ -32,7 +32,7 @@ This implementation follows the HulC construction of Kuchibhotla et al. (2024)
 The search is restricted to a finite interval of candidate values for \code{B},
 then the first value satisfying the HulC inequality is returned.
 
-Compared with Kuchibholta et al. (2024, expression (7)), the upper search
+Compared with Kuchibhotla et al. (2024, expression (7)), the upper search
 bound here uses \code{ceiling()} to be slightly more conservative.
 }
 \examples{

@@ -63,7 +63,7 @@ values.
 
 When \code{randomize = TRUE}, the function may reduce the number of
 partitions from \code{B} to \code{B - 1} with a probability chosen to match
-the randomized HulC construction (see Kuchibholta et al, 2025,
+the randomized HulC construction (see Kuchibhotla et al, 2024,
 Section 2.1).
 
 The function assumes that \code{statistic} returns a single numeric value for each
