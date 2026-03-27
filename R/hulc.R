@@ -166,27 +166,43 @@ hulc_ci <- function(data,
     ## Check if statistic returns a value or fails for the smallest
     ## number of observations
     test <- FALSE
-    error_msg <- NULL
+    error_msg <- NA_character_
     if (check_statistic) {
         min_id <- which.min(vapply(data, nrow, integer(1)))
         small_data <- data[[min_id]]
         stat <- try(statistic(small_data, ...), silent = TRUE)
         got_error <- inherits(stat, "try-error")
-        error_msg <- if (got_error) stat[1] else NULL
+        error_msg <- if (got_error) as.character(stat[1]) else NA_character_
         test <- isTRUE(got_error || length(stat) != 1L ||
                        !is.numeric(stat) || is.na(stat) ||
                        !is.finite(stat))
+        if (test && !got_error) {
+            error_msg <- paste(
+                "The statistic must return a single finite numeric value;",
+                "got", paste(capture.output(dput(stat)), collapse = "")
+            )
+        }
     }
     if (test) {
-        warning("It has not been possible to evaluate the statistic on the partition with the smallest number of observations (=", nrow(small_data), ").")
+        warning(
+            "It has not been possible to evaluate the statistic on the partition ",
+            "with the smallest number of observations (=", nrow(small_data), "). ",
+            error_msg
+        )
         ci <- c(NA, NA)
     } else {
-        ci <- try(vapply(data, statistic, numeric(1), ...) |> range(), silent = TRUE)
-        if (inherits(ci, "try-error")) {
-            error_msg <- ci[1]
+        stats <- try(vapply(data, statistic, numeric(1), ...), silent = TRUE)
+        if (inherits(stats, "try-error")) {
+            error_msg <- as.character(stats[1])
             ci <- c(NA, NA)
+            warning("It has not been possible to evaluate the statistic on all partitions. ", error_msg)
+        } else if (anyNA(stats) || any(!is.finite(stats))) {
+            error_msg <- "The statistic returned a non-finite value on at least one partition."
+            ci <- c(NA, NA)
+            warning("It has not been possible to evaluate the statistic on all partitions. ", error_msg)
+        } else {
+            ci <- range(stats)
         }
-        ## NA's in ci's are handled by `range()` where `na.rm = FALSE`
     }
 
     names(ci) <- c("lower", "upper")
