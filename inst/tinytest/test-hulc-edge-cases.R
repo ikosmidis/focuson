@@ -12,6 +12,7 @@ expect_warning(
 )
 
 expect_true(all(is.na(ci)))
+expect_true(is.numeric(ci))
 expect_identical(
     attr(ci, "error"),
     "The statistic returned a non-finite value on at least one partition."
@@ -45,6 +46,7 @@ expect_warning(
 )
 
 expect_true(all(is.na(ci)))
+expect_true(is.numeric(ci))
 expect_true(grepl(
     "The statistic must return a single finite numeric value;",
     attr(ci, "error"),
@@ -66,6 +68,7 @@ expect_warning(
 )
 
 expect_true(all(is.na(ci)))
+expect_true(is.numeric(ci))
 expect_true(grepl(
     "The statistic must return a single finite numeric value;",
     attr(ci, "error"),

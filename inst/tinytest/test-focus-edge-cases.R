@@ -61,3 +61,27 @@ for (correction in c("no", "mean", "median")) {
     expect_equal(unname(out_hulc$confint), c(pi, pi), check.attributes = FALSE)
     expect_identical(attr(out_hulc$confint, "type"), "hulc")
 }
+
+
+expect_error(focus(endo, alpha = 0))
+expect_error(focus(endo, alpha = 1))
+expect_error(focus(endo, alpha = 2))
+
+
+f_base <- focus(
+    endo,
+    on = function(theta) theta[1],
+    correction = "median"
+)$estimate
+f_scaled <- focus(
+    endo,
+    on = function(theta) 1e-9 * theta[1],
+    correction = "median"
+)$estimate
+
+expect_equal(
+    unname(f_scaled),
+    1e-9 * unname(f_base),
+    tolerance = 1e-12,
+    check.attributes = FALSE
+)

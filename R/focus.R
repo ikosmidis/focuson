@@ -137,6 +137,7 @@ focus <- function(object,
     if (!inherits(control_ci, "ci_control")) {
         stop("Please use `ci_control()` to construct the list for `control_ci`")
     }
+    stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
     if (identical(class(object)[1], "glm")) {
         object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
     }
@@ -163,8 +164,8 @@ focus <- function(object,
     } else {
         d2_psi <- numDeriv::hessian(on, theta, ...)
         constant_on <-
-            isTRUE(all.equal(as.numeric(d1_psi), rep(0, length(d1_psi)))) &&
-            isTRUE(all.equal(d2_psi, matrix(0, nrow = length(theta), ncol = length(theta))))
+            all(d1_psi == 0) &&
+            all(d2_psi == 0)
         if (constant_on) {
             out <- hat_psi
         } else {

@@ -189,16 +189,16 @@ hulc_ci <- function(data,
             "with the smallest number of observations (=", nrow(small_data), "). ",
             error_msg
         )
-        ci <- c(NA, NA)
+        ci <- c(NA_real_, NA_real_)
     } else {
         stats <- try(vapply(data, statistic, numeric(1), ...), silent = TRUE)
         if (inherits(stats, "try-error")) {
             error_msg <- as.character(stats[1])
-            ci <- c(NA, NA)
+            ci <- c(NA_real_, NA_real_)
             warning("It has not been possible to evaluate the statistic on all partitions. ", error_msg)
         } else if (anyNA(stats) || any(!is.finite(stats))) {
             error_msg <- "The statistic returned a non-finite value on at least one partition."
-            ci <- c(NA, NA)
+            ci <- c(NA_real_, NA_real_)
             warning("It has not been possible to evaluate the statistic on all partitions. ", error_msg)
         } else {
             ci <- range(stats)
