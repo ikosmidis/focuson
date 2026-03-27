@@ -86,6 +86,11 @@ parameter vector. Mean and median bias corrections are computed using
 first- and second-order derivatives of \eqn{\psi(\theta)} together with
 model-specific auxiliary quantities.
 
+Arguments in \code{...} are reserved for \code{on}. However, names that coincide
+with formal arguments of \code{focus()} itself, such as \code{ci}, \code{correction},
+\code{alpha}, \code{control_ci}, and \code{object}, are matched before \code{...} is formed
+and therefore cannot be passed to \code{on} through \code{...}.
+
 Standard errors are computed using the delta method,
 with covariance matrix evaluated at the original fitted parameter vector.
 They are therefore not generally re-evaluated at the bias-corrected estimate.

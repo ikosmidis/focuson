@@ -65,6 +65,11 @@
 #' first- and second-order derivatives of \eqn{\psi(\theta)} together with
 #' model-specific auxiliary quantities.
 #'
+#' Arguments in `...` are reserved for `on`. However, names that coincide
+#' with formal arguments of `focus()` itself, such as `ci`, `correction`,
+#' `alpha`, `control_ci`, and `object`, are matched before `...` is formed
+#' and therefore cannot be passed to `on` through `...`.
+#'
 #' Standard errors are computed using the delta method,
 #' with covariance matrix evaluated at the original fitted parameter vector.
 #' They are therefore not generally re-evaluated at the bias-corrected estimate.
@@ -182,15 +187,24 @@ focus <- function(object,
         attr(confint, "alpha") <- alpha
     }
     if (identical(ci, "hulc")) {
+        statistic <- function(data, object, on, correction) {
+            do.call(
+                focus_statistic,
+                c(
+                    list(data = data, object = object, on = on, correction = correction),
+                    list(...)
+                )
+            )
+        }
         confint <- hulc_ci(model.frame(object),
-                           statistic = focus_statistic,
+                           statistic = statistic,
                            object = object,
                            on = on,
                            correction = correction,
                            alpha = alpha,
                            Delta = control_ci$Delta,
                            randomize = control_ci$randomize,
-                           check_statistic = control_ci$check_statistic, ...)
+                           check_statistic = control_ci$check_statistic)
     }
     out <- unname(out)
     attr(out, "correction") <- correction
