@@ -121,19 +121,22 @@ coef(endo1FS)[1:2]
 focus(endo, on = function(theta) exp(theta["NV"]))
 
 ## Focus on a contrast
-focus_fun <- function(theta, a = 1, b = 2) theta[a] - theta[b]
-focus(endo, on = focus_fun, a = 2, b = 3)
+focus_fun <- function(theta, i = 1, j = 2) theta[i] - theta[j]
+focus(endo, on = focus_fun, i = 2, j = 3)
 
 ## Mean bias correction
-focus(endo, on = focus_fun, a = 2, b = 3, correction = "mean")
+focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
 
 ## The mean-bias reduced estimate is exactly the same as it is #
 ## equivariant to linear transformations
 coef(endo)[2] - coef(endo)[3]
 
 \dontrun{
-## HulC confidence interval
-focus(endo, ci = "hulc", control_ci = ci_control(Delta = 0.05))
+
+## HulC and Wald confidence intervals
+set.seed(678)
+focus(endo, ci = "hulc", alpha = 0.1, control_ci = ci_control(Delta = 0, check_statistic = FALSE))
+focus(endo, ci = "wald", alpha = 0.1)
 }
 
 }

@@ -60,10 +60,10 @@ endo <- glm(HG ~ NV + PI + EH,
             method = "brglmFit")
 
 ## Focus on the first coefficient using the original data
-focus_statistic(endometrial, endo)
+focus_statistic(endometrial, endo, correction = "no")
 
 ## This is the same point estimate as
-focus(endo)$estimate
+focus(endo, correction = "no")$estimate
 
 \dontrun{
 if (requireNamespace("boot", quietly = TRUE)) {
