@@ -81,7 +81,7 @@ estimator is removed, and helps avoid separation issues in categorical
 response models.
 
 Let \eqn{\psi(\theta)} denote the scalar function specified by \code{on}.
-The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the fitted
+The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the estimated
 parameter vector. Mean and median bias corrections are computed using
 first- and second-order derivatives of \eqn{\psi(\theta)} together with
 model-specific auxiliary quantities.
@@ -91,13 +91,15 @@ with formal arguments of \code{focus()} itself, such as \code{ci}, \code{correct
 \code{alpha}, \code{control_ci}, and \code{object}, are matched before \code{...} is formed
 and therefore cannot be passed to \code{on} through \code{...}.
 
-Standard errors are computed using the delta method,
-with covariance matrix evaluated at the original fitted parameter vector.
-They are therefore not generally re-evaluated at the bias-corrected estimate.
+Standard errors are computed using the delta method, with
+covariance matrix and gradients evaluated at the estimated
+parameters from \code{object} or the refit version of it, as described
+above.  They are therefore not re-evaluated at the corrected
+estimates.
 
-When \code{ci = "hulc"}, the HULC interval is computed by applying \code{\link[=hulc_ci]{hulc_ci()}}
-to the model frame using \code{focus_statistic()} as the statistic evaluated on
-each partition.
+When \code{ci = "hulc"}, the HulC interval is computed by applying
+\code{\link[=hulc_ci]{hulc_ci()}} to the model frame using \code{\link[=focus_statistic]{focus_statistic()}} as the
+statistic evaluated on each partition.
 }
 \examples{
 

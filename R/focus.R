@@ -60,7 +60,7 @@
 #' response models.
 #'
 #' Let \eqn{\psi(\theta)} denote the scalar function specified by `on`.
-#' The plug-in estimator is `on(theta, ...)`, where `theta` is the fitted
+#' The plug-in estimator is `on(theta, ...)`, where `theta` is the estimated
 #' parameter vector. Mean and median bias corrections are computed using
 #' first- and second-order derivatives of \eqn{\psi(\theta)} together with
 #' model-specific auxiliary quantities.
@@ -70,13 +70,15 @@
 #' `alpha`, `control_ci`, and `object`, are matched before `...` is formed
 #' and therefore cannot be passed to `on` through `...`.
 #'
-#' Standard errors are computed using the delta method,
-#' with covariance matrix evaluated at the original fitted parameter vector.
-#' They are therefore not generally re-evaluated at the bias-corrected estimate.
+#' Standard errors are computed using the delta method, with
+#' covariance matrix and gradients evaluated at the estimated
+#' parameters from `object` or the refit version of it, as described
+#' above.  They are therefore not re-evaluated at the corrected
+#' estimates.
 #'
-#' When `ci = "hulc"`, the HULC interval is computed by applying [hulc_ci()]
-#' to the model frame using `focus_statistic()` as the statistic evaluated on
-#' each partition.
+#' When `ci = "hulc"`, the HulC interval is computed by applying
+#' [hulc_ci()] to the model frame using [focus_statistic()] as the
+#' statistic evaluated on each partition.
 #'
 #' @seealso [ci_control()], [hulc_ci()]
 #'
