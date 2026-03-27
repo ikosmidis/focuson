@@ -11,6 +11,8 @@ focus(
   ci = "wald",
   alpha = 0.05,
   control_ci = ci_control(),
+  on_gradient = NULL,
+  on_hessian = NULL,
   ...
 )
 }
@@ -45,7 +47,23 @@ confidence interval.}
 \item{control_ci}{A list of control options for confidence interval
 construction as returned by \code{\link[=ci_control]{ci_control()}}.}
 
-\item{...}{Additional arguments passed to \code{on}.}
+\item{on_gradient}{Optional function returning the gradient of \code{on} with
+respect to the model parameter vector. It must take the parameter vector
+as first argument and return a numeric vector of the same length.
+If \code{NULL} (default), the gradient is computed numerically using
+\code{\link[numDeriv:grad]{numDeriv::grad()}}. Apart from basic checks on type and dimension,
+\code{focus()} does not verify that the supplied gradient is correct.}
+
+\item{on_hessian}{Optional function returning the Hessian matrix of \code{on}
+with respect to the model parameter vector. It must take the parameter
+vector as first argument and return a numeric matrix with one row and one
+column per model parameter. If \code{NULL} (default), the Hessian is computed
+numerically using \code{\link[numDeriv:hessian]{numDeriv::hessian()}}. Apart from basic checks on type
+and dimension, \code{focus()} does not verify that the supplied Hessian is
+correct.}
+
+\item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
+\code{on_hessian}.}
 }
 \value{
 A list with components:
@@ -86,10 +104,16 @@ parameter vector. Mean and median bias corrections are computed using
 first- and second-order derivatives of \eqn{\psi(\theta)} together with
 model-specific auxiliary quantities.
 
-Arguments in \code{...} are reserved for \code{on}. However, names that coincide
-with formal arguments of \code{focus()} itself, such as \code{ci}, \code{correction},
-\code{alpha}, \code{control_ci}, and \code{object}, are matched before \code{...} is formed
-and therefore cannot be passed to \code{on} through \code{...}.
+If \code{on_gradient} or \code{on_hessian} are supplied, then \code{focus()} uses them in
+place of numerical derivatives. Apart from basic checks on type and
+dimension, their validity is not verified and is the user's
+responsibility.
+
+Arguments in \code{...} are reserved for \code{on}, \code{on_gradient}, and
+\code{on_hessian}. However, names that coincide with formal arguments of
+\code{focus()} itself, such as \code{ci}, \code{correction}, \code{alpha}, \code{control_ci},
+and \code{object}, are matched before \code{...} is formed and therefore cannot
+be passed through \code{...}.
 
 Standard errors are computed using the delta method, with
 covariance matrix and gradients evaluated at the estimated

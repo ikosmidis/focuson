@@ -9,6 +9,8 @@ focus_statistic(
   object,
   on = function(theta, ...) theta[1],
   correction = "median",
+  on_gradient = NULL,
+  on_hessian = NULL,
   ...
 )
 }
@@ -28,9 +30,16 @@ the parameter vector.}
 \item{correction}{Character string specifying the bias correction method.
 One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
 
+\item{on_gradient}{Optional function returning the gradient of \code{on}; see
+\code{\link[=focus]{focus()}}.}
+
+\item{on_hessian}{Optional function returning the Hessian of \code{on}; see
+\code{\link[=focus]{focus()}}.}
+
 \item{...}{Additional arguments passed to \code{\link[=focus]{focus()}}. These can be used
-to supply further arguments to \code{on}, and also to specify options such
-as \code{ci}, \code{alpha}, and \code{control_ci}.}
+to supply further arguments to \code{on}, \code{on_gradient}, and
+\code{on_hessian}, and also to specify options such as \code{ci}, \code{alpha}, and
+\code{control_ci}.}
 }
 \value{
 A numeric scalar: the estimate of the quantity defined by \code{on}.

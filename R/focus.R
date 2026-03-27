@@ -32,7 +32,21 @@
 #'   confidence interval.
 #' @param control_ci A list of control options for confidence interval
 #'   construction as returned by [ci_control()].
-#' @param ... Additional arguments passed to `on`.
+#' @param on_gradient Optional function returning the gradient of `on` with
+#'   respect to the model parameter vector. It must take the parameter vector
+#'   as first argument and return a numeric vector of the same length.
+#'   If `NULL` (default), the gradient is computed numerically using
+#'   [numDeriv::grad()]. Apart from basic checks on type and dimension,
+#'   `focus()` does not verify that the supplied gradient is correct.
+#' @param on_hessian Optional function returning the Hessian matrix of `on`
+#'   with respect to the model parameter vector. It must take the parameter
+#'   vector as first argument and return a numeric matrix with one row and one
+#'   column per model parameter. If `NULL` (default), the Hessian is computed
+#'   numerically using [numDeriv::hessian()]. Apart from basic checks on type
+#'   and dimension, `focus()` does not verify that the supplied Hessian is
+#'   correct.
+#' @param ... Additional arguments passed to `on`, `on_gradient`, and
+#'   `on_hessian`.
 #'
 #' @return
 #' A list with components:
@@ -65,10 +79,16 @@
 #' first- and second-order derivatives of \eqn{\psi(\theta)} together with
 #' model-specific auxiliary quantities.
 #'
-#' Arguments in `...` are reserved for `on`. However, names that coincide
-#' with formal arguments of `focus()` itself, such as `ci`, `correction`,
-#' `alpha`, `control_ci`, and `object`, are matched before `...` is formed
-#' and therefore cannot be passed to `on` through `...`.
+#' If `on_gradient` or `on_hessian` are supplied, then `focus()` uses them in
+#' place of numerical derivatives. Apart from basic checks on type and
+#' dimension, their validity is not verified and is the user's
+#' responsibility.
+#'
+#' Arguments in `...` are reserved for `on`, `on_gradient`, and
+#' `on_hessian`. However, names that coincide with formal arguments of
+#' `focus()` itself, such as `ci`, `correction`, `alpha`, `control_ci`,
+#' and `object`, are matched before `...` is formed and therefore cannot
+#' be passed through `...`.
 #'
 #' Standard errors are computed using the delta method, with
 #' covariance matrix and gradients evaluated at the estimated
@@ -133,11 +153,15 @@ focus <- function(object,
                   correction = "median",
                   ci = "wald",
                   alpha = 0.05,
-                  control_ci = ci_control(), ...) {
+                  control_ci = ci_control(),
+                  on_gradient = NULL,
+                  on_hessian = NULL, ...) {
     if (!inherits(control_ci, "ci_control")) {
         stop("Please use `ci_control()` to construct the list for `control_ci`")
     }
     stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
+    stopifnot(is.null(on_gradient) || is.function(on_gradient))
+    stopifnot(is.null(on_hessian) || is.function(on_hessian))
     if (identical(class(object)[1], "glm")) {
         object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
     }
@@ -155,14 +179,21 @@ focus <- function(object,
         V <- V[cnams, cnams]
         theta <- theta[cnams]
     }
-    d1_psi <- numDeriv::grad(on, theta, ...)
+    d1_psi <- if (is.null(on_gradient)) numDeriv::grad(on, theta, ...) else on_gradient(theta, ...)
+    stopifnot(is.numeric(d1_psi), length(d1_psi) == length(theta), !anyNA(d1_psi))
+    d1_psi <- as.numeric(d1_psi)
     hat_psi <- on(theta, ...)
     muffin <-  drop(V %*% d1_psi)
     var_psi <- sum(d1_psi * muffin)
     if (identical(correction, "no")) {
         out <- hat_psi
     } else {
-        d2_psi <- numDeriv::hessian(on, theta, ...)
+        d2_psi <- if (is.null(on_hessian)) {
+            numDeriv::hessian(on, theta, ...)
+        } else {
+            on_hessian(theta, ...)
+        }
+        stopifnot(is.numeric(d2_psi), identical(dim(d2_psi), c(length(theta), length(theta))), !anyNA(d2_psi))
         constant_on <-
             all(d1_psi == 0) &&
             all(d2_psi == 0)
@@ -201,7 +232,8 @@ focus <- function(object,
             do.call(
                 focus_statistic,
                 c(
-                    list(data = data, object = object, on = on, correction = correction),
+                    list(data = data, object = object, on = on, correction = correction,
+                         on_gradient = on_gradient, on_hessian = on_hessian),
                     list(...)
                 )
             )
@@ -287,9 +319,14 @@ ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...)
 #'   the parameter vector.
 #' @param correction Character string specifying the bias correction method.
 #'   One of `"no"`, `"median"`, or `"mean"`.
+#' @param on_gradient Optional function returning the gradient of `on`; see
+#'   [focus()].
+#' @param on_hessian Optional function returning the Hessian of `on`; see
+#'   [focus()].
 #' @param ... Additional arguments passed to [focus()]. These can be used
-#'   to supply further arguments to `on`, and also to specify options such
-#'   as `ci`, `alpha`, and `control_ci`.
+#'   to supply further arguments to `on`, `on_gradient`, and
+#'   `on_hessian`, and also to specify options such as `ci`, `alpha`, and
+#'   `control_ci`.
 #'
 #' @return
 #' A numeric scalar: the estimate of the quantity defined by `on`.
@@ -333,7 +370,10 @@ ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...)
 #' @export
 focus_statistic <- function(data, object,
                             on = function(theta, ...) theta[1],
-                            correction = "median", ...) {
+                            correction = "median",
+                            on_gradient = NULL,
+                            on_hessian = NULL, ...) {
     object <- do.call(update, list(object = object, data = data))
-    focus(object, on = on, correction = correction, ...)$estimate
+    focus(object, on = on, correction = correction,
+          on_gradient = on_gradient, on_hessian = on_hessian, ...)$estimate
 }
