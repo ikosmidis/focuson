@@ -1,8 +1,8 @@
 Package: focuson
-Title: Methods for estimation of and inference about a parameter of interest.
+Title: Inference on Scalar Functions of Model Parameters
 Version: 0.0.0.9000
 Authors@R: c(person(given = "Ioannis", family = "Kosmidis", role = c("aut", "cre"), email = "ioannis.kosmidis@warwick.ac.uk", comment = c(ORCID = "0000-0003-1556-0302")))
-Description: What the package does (one paragraph).
+Description: Provides methods for estimation and inference for user-specified parameters of interest from fitted model objects through the `focus()` method. Estimation can be performed using mean or median bias correction, and inference is based on Wald-type confidence intervals using delta-method standard errors or HulC confidence intervals <doi:10.1093/jrsssb/qkad134>.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

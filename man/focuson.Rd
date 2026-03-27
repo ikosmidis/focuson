@@ -4,11 +4,13 @@
 \name{focuson}
 \alias{focuson}
 \alias{focuson-package}
-\title{focuson: Methods for estimation of and inference about a parameter
-of interest.}
+\title{focuson: Inference on scalar functions of model parameters.}
 \description{
-Estimation and inference about a parameter of interest from typical
-model objects.
+Methods for estimation and inference on user-specified scalar
+parameters of interest from fitted model objects through \code{\link[=focus]{focus()}}.
+Estimation can be performed using mean or median bias correction, and
+inference is based on Wald-type confidence intervals using
+delta-method standard errors or HulC confidence intervals.
 }
 \references{
 Kenne Pagui E C, Salvan A, Sartori N (2017). Median bias
@@ -22,6 +24,11 @@ reduction in generalized linear models. \emph{Statistics and Computing},
 Kosmidis I (2014). Bias in parametric estimation: reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
 185-196. \doi{10.1002/wics.1296}.
+
+Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). HulC: high
+confidence level upper and lower confidence bounds. \emph{Journal of the
+Royal Statistical Society Series B: Statistical Methodology}, \strong{86},
+586-622. \doi{10.1093/jrsssb/qkad134}.
 }
 \seealso{
 \code{\link[=focus]{focus()}}

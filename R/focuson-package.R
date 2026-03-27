@@ -14,11 +14,13 @@
 #  http://www.r-project.org/Licenses/
 
 #'
-#' focuson: Methods for estimation of and inference about a parameter
-#' of interest.
+#' focuson: Inference on scalar functions of model parameters.
 #'
-#' Estimation and inference about a parameter of interest from typical
-#' model objects.
+#' Methods for estimation and inference on user-specified scalar
+#' parameters of interest from fitted model objects through [focus()].
+#' Estimation can be performed using mean or median bias correction, and
+#' inference is based on Wald-type confidence intervals using
+#' delta-method standard errors or HulC confidence intervals.
 #'
 #' @author Ioannis Kosmidis `[aut, cre]` \email{ioannis.kosmidis@warwick.ac.uk}
 #'
@@ -39,6 +41,11 @@
 #' Kosmidis I (2014). Bias in parametric estimation: reduction and
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
 #' 185-196. \doi{10.1002/wics.1296}.
+#'
+#' Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). HulC: high
+#' confidence level upper and lower confidence bounds. *Journal of the
+#' Royal Statistical Society Series B: Statistical Methodology*, **86**,
+#' 586-622. \doi{10.1093/jrsssb/qkad134}.
 #'
 #' @docType package
 #' @aliases focuson-package
