@@ -73,6 +73,13 @@
 #' estimator is removed, and helps avoid separation issues in categorical
 #' response models.
 #'
+#' The current implementation assumes that `object` supports
+#' [stats::coef()] and [stats::vcov()] for the full parameter vector
+#' and the inverse of the expected information. If `ci = "hulc"`, then
+#' [stats::model.frame()] and [stats::update()] must also work for
+#' `object`, because the model is repeatedly refit on data partitions
+#' through [focus_statistic()].
+#'
 #' Let \eqn{\psi(\theta)} denote the scalar function specified by `on`.
 #' The plug-in estimator is `on(theta, ...)`, where `theta` is the estimated
 #' parameter vector. Mean and median bias corrections are computed using

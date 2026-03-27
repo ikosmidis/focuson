@@ -98,6 +98,13 @@ the first-order term in the bias expansion of the maximum likelihood
 estimator is removed, and helps avoid separation issues in categorical
 response models.
 
+The current implementation assumes that \code{object} supports
+\code{\link[stats:coef]{stats::coef()}} and \code{\link[stats:vcov]{stats::vcov()}} for the full parameter vector
+and the inverse of the expected information. If \code{ci = "hulc"}, then
+\code{\link[stats:model.frame]{stats::model.frame()}} and \code{\link[stats:update]{stats::update()}} must also work for
+\code{object}, because the model is repeatedly refit on data partitions
+through \code{\link[=focus_statistic]{focus_statistic()}}.
+
 Let \eqn{\psi(\theta)} denote the scalar function specified by \code{on}.
 The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the estimated
 parameter vector. Mean and median bias corrections are computed using
