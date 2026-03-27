@@ -23,8 +23,8 @@ interval; see \code{\link[=hulc_ci]{hulc_ci()}} for details.}
 \item{...}{Currently unused. Included for future extensions.}
 }
 \value{
-A named list with components \code{Delta}, \code{randomize},
-\code{check_statistic} with the values supplied.
+A named list of class \code{"ci_control"} with components \code{Delta},
+\code{randomize}, and \code{check_statistic} with the values supplied.
 }
 \description{
 Create a control object specifying options for confidence intervals

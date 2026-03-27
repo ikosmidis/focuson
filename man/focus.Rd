@@ -102,7 +102,7 @@ data("endometrial", package = "brglm2")
 endo <- glm(HG ~ NV + PI + EH,
             data = endometrial,
             family = binomial("logit"),
-            method = "brglm_fit")
+            method = "brglmFit")
 
 ## Focus on the first regression parameter
 focus(endo)
@@ -127,7 +127,7 @@ focus(endo, on = focus_fun, i = 2, j = 3)
 ## Mean bias correction
 focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
 
-## The mean-bias reduced estimate is exactly the same as it is #
+## The mean-bias reduced estimate is exactly the same as it is
 ## equivariant to linear transformations
 coef(endo)[2] - coef(endo)[3]
 
