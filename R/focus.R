@@ -132,6 +132,25 @@
 #' focus_fun <- function(theta, i = 1, j = 2) theta[i] - theta[j]
 #' focus(endo, on = focus_fun, i = 2, j = 3)
 #'
+#' ## The same contrast with analytic derivatives
+#' focus_grad <- function(theta, i = 1, j = 2) {
+#'   out <- rep(0, length(theta))
+#'   out[i] <- 1
+#'   out[j] <- -1
+#'   out
+#' }
+#' focus_hessian <- function(theta, i = 1, j = 2) {
+#'   matrix(0, nrow = length(theta), ncol = length(theta))
+#' }
+#' focus(
+#'   endo,
+#'   on = focus_fun,
+#'   on_gradient = focus_grad,
+#'   on_hessian = focus_hessian,
+#'   i = 2,
+#'   j = 3
+#' )
+#'
 #' ## Mean bias correction
 #' focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
 #'
