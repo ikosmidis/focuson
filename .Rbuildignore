@@ -4,6 +4,7 @@ inst/notes
 ^\.github$
 ^\.gitignore
 ^\._*
+^.*~$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.travis\.yml$
@@ -17,4 +18,3 @@ README_cache
 ^CRAN-SUBMISSION$
 ^doc$
 ^Meta$
-
