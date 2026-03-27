@@ -176,7 +176,7 @@ focus <- function(object,
                   on_gradient = NULL,
                   on_hessian = NULL, ...) {
     if (!inherits(control_ci, "ci_control")) {
-        stop("Please use `ci_control()` to construct the list for `control_ci`")
+        stop("Please use `ci_control()` to construct the list for `control_ci`.")
     }
     stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
