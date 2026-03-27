@@ -162,19 +162,26 @@ focus <- function(object,
         out <- hat_psi
     } else {
         d2_psi <- numDeriv::hessian(on, theta, ...)
-        afuns <- enrichwith::get_auxiliary_functions(object)
-        P <- afuns$Pmat()
-        Q <- afuns$Qmat()
-        bias <- if (object$type %in% c("ML")) afuns$bias() else 0
-        mean_b <- sum(d1_psi * bias) + 0.5 * sum(d2_psi * V) # 1st term of the mean bias expansion
-        if (identical(correction, "mean")) {
-            out <- hat_psi - mean_b
-        }
-        if (identical(correction, "median")) {
-            cheese <- lapply(seq_along(P), function(k) muffin[k] * (P[[k]] / 3 + Q[[k]] / 2))
-            cheese <- - Reduce("+", cheese) + 0.5 * d2_psi
-            skew <- sum((cheese %*% muffin) * muffin) / var_psi
-            out <- hat_psi - mean_b + skew
+        constant_on <-
+            isTRUE(all.equal(as.numeric(d1_psi), rep(0, length(d1_psi)))) &&
+            isTRUE(all.equal(d2_psi, matrix(0, nrow = length(theta), ncol = length(theta))))
+        if (constant_on) {
+            out <- hat_psi
+        } else {
+            afuns <- enrichwith::get_auxiliary_functions(object)
+            P <- afuns$Pmat()
+            Q <- afuns$Qmat()
+            bias <- if (object$type %in% c("ML")) afuns$bias() else 0
+            mean_b <- sum(d1_psi * bias) + 0.5 * sum(d2_psi * V) # 1st term of the mean bias expansion
+            if (identical(correction, "mean")) {
+                out <- hat_psi - mean_b
+            }
+            if (identical(correction, "median")) {
+                cheese <- lapply(seq_along(P), function(k) muffin[k] * (P[[k]] / 3 + Q[[k]] / 2))
+                cheese <- - Reduce("+", cheese) + 0.5 * d2_psi
+                skew <- sum((cheese %*% muffin) * muffin) / var_psi
+                out <- hat_psi - mean_b + skew
+            }
         }
     }
     ## If the model has only one parameter (and some other cases) it

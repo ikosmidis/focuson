@@ -1,3 +1,5 @@
+library("brglm2")
+
 ## A Gamma example
 data("coalition", package = "brglm2")
 coalitionML <- glm(duration ~ fract + numst2, family = Gamma, data = coalition,

@@ -38,3 +38,26 @@ expect_equal(
     unname(out$estimate),
     2 * unname(focus(endo, on = function(theta) theta[1], correction = "no")$estimate)
 )
+
+
+for (correction in c("no", "mean", "median")) {
+    out <- focus(endo, on = function(theta) pi, correction = correction)
+
+    expect_equal(unname(out$estimate), pi, check.attributes = FALSE)
+    expect_equal(out$se, 0)
+    expect_equal(unname(out$confint), c(pi, pi), check.attributes = FALSE)
+
+    set.seed(678)
+    out_hulc <- focus(
+        endo,
+        on = function(theta) pi,
+        correction = correction,
+        ci = "hulc",
+        control_ci = ci_control(check_statistic = FALSE)
+    )
+
+    expect_equal(unname(out_hulc$estimate), pi, check.attributes = FALSE)
+    expect_equal(out_hulc$se, 0)
+    expect_equal(unname(out_hulc$confint), c(pi, pi), check.attributes = FALSE)
+    expect_identical(attr(out_hulc$confint, "type"), "hulc")
+}
