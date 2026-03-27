@@ -1,3 +1,20 @@
 ^LICENSE\.md$
 inst/notes
 
+^\.github$
+^\.gitignore
+^\._*
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.travis\.yml$
+
+^CRAN-RELEASE$
+^README\.Rmd$
+README_cache
+^codecov\.yml$
+^CRAN-RELEASE$
+^code_of_conduct\.md$
+^CRAN-SUBMISSION$
+^doc$
+^Meta$
+
