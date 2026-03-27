@@ -3,6 +3,7 @@
 export(ci_control)
 export(compute_B)
 export(focus)
+export(focus_engine)
 export(focus_statistic)
 export(hulc_ci)
 import(brglm2)
