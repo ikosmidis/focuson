@@ -40,7 +40,7 @@ The return value has the following attributes:
 \item{\code{Delta}}{The supplied median bias.}
 \item{\code{alpha}}{The supplied target miscoverage level.}
 \item{\code{B}}{The number of partitions used.}
-\item{\code{error}}{\code{NULL} on success, or the captured error message if
+\item{\code{error}}{\code{NA} on success, or the captured error message if
 evaluating \code{statistic} failed.}
 \item{\code{type}}{Character string \code{"hulc"}.}
 }
@@ -71,8 +71,8 @@ Section 2.1).
 If \code{check_statistic = TRUE} and the statistic cannot be evaluated on the
 smallest partition, the function issues a warning and returns \code{c(NA, NA)}.
 If evaluation instead fails later when applying \code{statistic} across all
-partitions, the function returns \code{c(NA, NA)} without a warning and stores
-the captured error message in the \code{"error"} attribute.
+partitions, the function also issues a warning, returns \code{c(NA, NA)}, and
+stores the captured error message in the \code{"error"} attribute.
 
 The function assumes that \code{statistic} returns a single numeric value for each
 subset. If \code{statistic} returns \code{NA}, throws an error, or is undefined for

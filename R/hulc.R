@@ -83,7 +83,7 @@ compute_B <- function(alpha, Delta){
 #'   \item{`Delta`}{The supplied median bias.}
 #'   \item{`alpha`}{The supplied target miscoverage level.}
 #'   \item{`B`}{The number of partitions used.}
-#'   \item{`error`}{`NULL` on success, or the captured error message if
+#'   \item{`error`}{`NA` on success, or the captured error message if
 #'     evaluating `statistic` failed.}
 #'   \item{`type`}{Character string `"hulc"`.}
 #' }
@@ -105,8 +105,8 @@ compute_B <- function(alpha, Delta){
 #' If `check_statistic = TRUE` and the statistic cannot be evaluated on the
 #' smallest partition, the function issues a warning and returns `c(NA, NA)`.
 #' If evaluation instead fails later when applying `statistic` across all
-#' partitions, the function returns `c(NA, NA)` without a warning and stores
-#' the captured error message in the `"error"` attribute.
+#' partitions, the function also issues a warning, returns `c(NA, NA)`, and
+#' stores the captured error message in the `"error"` attribute.
 #'
 #' The function assumes that `statistic` returns a single numeric value for each
 #' subset. If `statistic` returns `NA`, throws an error, or is undefined for
