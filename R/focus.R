@@ -83,7 +83,7 @@
 #' endo <- glm(HG ~ NV + PI + EH,
 #'             data = endometrial,
 #'             family = binomial("logit"),
-#'             method = "brglm_fit")
+#'             method = "brglmFit")
 #'
 #' ## Focus on the first regression parameter
 #' focus(endo)
@@ -108,7 +108,7 @@
 #' ## Mean bias correction
 #' focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
 #'
-#' ## The mean-bias reduced estimate is exactly the same as it is #
+#' ## The mean-bias reduced estimate is exactly the same as it is
 #' ## equivariant to linear transformations
 #' coef(endo)[2] - coef(endo)[3]
 #'
@@ -219,8 +219,8 @@ focus <- function(object,
 #'
 #' @return
 #'
-#' A named list with components `Delta`, `randomize`,
-#' `check_statistic` with the values supplied.
+#' A named list of class `"ci_control"` with components `Delta`,
+#' `randomize`, and `check_statistic` with the values supplied.
 #'
 #' @details
 #'
@@ -263,7 +263,9 @@ ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...)
 #'   the parameter vector.
 #' @param correction Character string specifying the bias correction method.
 #'   One of `"no"`, `"median"`, or `"mean"`.
-#' @param ... Additional arguments passed to `on`.
+#' @param ... Additional arguments passed to [focus()]. These can be used
+#'   to supply further arguments to `on`, and also to specify options such
+#'   as `ci`, `alpha`, and `control_ci`.
 #'
 #' @return
 #' A numeric scalar: the estimate of the quantity defined by `on`.
