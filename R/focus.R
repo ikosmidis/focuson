@@ -224,9 +224,9 @@ focus <- function(object,
 #'
 #' @details
 #'
-#' This function does not perform extensive validation. It is
-#' primarily a convenience constructor to group options related to
-#' confidence intervals.
+#' This function does not perform extensive validation of the
+#' arguments. It is primarily a convenience constructor to group
+#' options related to confidence intervals.
 #'
 #' @seealso [hulc_ci()], [focus()]
 #'

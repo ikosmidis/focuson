@@ -31,9 +31,9 @@ Create a control object specifying options for confidence intervals
 returned by \code{\link[=focus]{focus()}}
 }
 \details{
-This function does not perform extensive validation. It is
-primarily a convenience constructor to group options related to
-confidence intervals.
+This function does not perform extensive validation of the
+arguments. It is primarily a convenience constructor to group
+options related to confidence intervals.
 }
 \examples{
 ci_control()
