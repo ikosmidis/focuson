@@ -9,6 +9,7 @@ focus_engine(
   V,
   on = function(theta, ...) theta[1],
   correction = "median",
+  estimator = "ML",
   alpha = 0.05,
   P = NULL,
   Q = NULL,
@@ -18,8 +19,9 @@ focus_engine(
 )
 }
 \arguments{
-\item{theta}{Numeric parameter vector, assumed to be the maximum
-likelihood estimate of the model parameters.}
+\item{theta}{Numeric parameter vector, assumed to be either the maximum
+likelihood estimate of the model parameters or a reduced mean-bias
+estimator of them.}
 
 \item{V}{the inverse of the expected information at \code{theta}.}
 
@@ -31,16 +33,22 @@ vector.}
 \item{correction}{Character string specifying the bias correction
 method.  One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
 
+\item{estimator}{Character string specifying the estimator represented by
+the supplied \code{theta}. One of \code{"ML"} (maximum likelihood, default) or
+\code{"meanBR"} (reduced mean-bias estimator).}
+
 \item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level
 for the Wald confidence interval.}
 
 \item{P}{Optional list of matrices \eqn{P_t}, one matrix per
 parameter, as defined in Kosmidis (2014, expression
-(5)). Required when \code{correction = "median"} or \code{correction = "mean"}.}
+(5)). Required when \code{correction = "median"}, and also when
+\code{correction = "mean"} and \code{estimator = "ML"}.}
 
 \item{Q}{Optional list of matrices \eqn{Q_t}, one matrix per
 parameter, as defined in Kosmidis (2014, expression
-(5)). Required when \code{correction = "median"} or \code{correction = "mean"}.}
+(5)). Required when \code{correction = "median"}, and also when
+\code{correction = "mean"} and \code{estimator = "ML"}.}
 
 \item{on_gradient}{Optional function returning the gradient of
 \code{on}; if \code{NULL} (default), the gradient is computed numerically using
@@ -59,20 +67,29 @@ A list with the same components as \code{\link[=focus]{focus()}} for Wald infere
 }
 \description{
 Estimate and perform inference on a scalar function of a supplied
-parameter vector, assumed to be the maximum likelihood estimate of
-the model parameters, using the inverse of the expected information
-matrix at that estimaate, and, when needed, auxiliary quantities
-for bias correction.
+parameter vector, assumed to be either the maximum likelihood estimate
+of the model parameters or a reduced mean-bias estimator, using the
+inverse of the expected information matrix at that estimate, and, when
+needed, auxiliary quantities for bias correction.
 }
 \details{
-\code{focus_engine()} assumes that the supplied \code{theta} is the maximum likelihood
-estimate of the model parameters, and that any requested bias correction is
-to be based on this estimator and its supplied covariance matrix \code{V}.
+\code{focus_engine()} assumes that the supplied \code{theta} is either the maximum
+likelihood estimator of the model parameters or a reduced mean-bias
+estimator of them, as indicated by \code{estimator}.
+
+If \code{estimator = "ML"}, then the first-order bias term required for
+\code{correction = "mean"} or \code{correction = "median"} is computed from
+the supplied \code{P}, \code{Q}, and \code{V}. If \code{estimator = "meanBR"}, then
+that first-order bias term is taken to be zero.
+
+If \code{estimator = "meanBR"} and \code{correction = "mean"}, then \code{P} and
+\code{Q} are not needed, because the correction depends only on the
+Hessian of \code{on} and the supplied covariance matrix \code{V}.
 
 \code{focus_engine()} is a low-level helper intended for advanced use and
 therefore performs only minimal validation of its inputs. In particular,
-when \code{correction} is \code{"mean"} or \code{"median"}, \code{P} and \code{Q} are assumed to be
-supplied in the format required by the computation.
+whenever they are needed by the requested correction, \code{P} and \code{Q} are
+assumed to be supplied in the format required by the computation.
 
 Confidence intervals returned by \code{focus_engine()} are Wald-type intervals
 using the delta-method and the supplied covariance matrix \code{V}.

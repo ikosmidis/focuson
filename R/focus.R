@@ -149,14 +149,8 @@
 #' focus_hessian <- function(theta, i = 1, j = 2) {
 #'   matrix(0, nrow = length(theta), ncol = length(theta))
 #' }
-#' focus(
-#'   endo,
-#'   on = focus_fun,
-#'   on_gradient = focus_grad,
-#'   on_hessian = focus_hessian,
-#'   i = 2,
-#'   j = 3
-#' )
+#' focus(endo, on = focus_fun, on_gradient = focus_grad, on_hessian = focus_hessian,
+#'       i = 2, j = 3)
 #'
 #' ## Mean bias correction
 #' focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
@@ -255,14 +249,10 @@ focus <- function(object,
     }
     if (identical(ci, "hulc")) {
         statistic <- function(data, object, on, correction) {
-            do.call(
-                focus_statistic,
-                c(
-                    list(data = data, object = object, on = on, correction = correction,
-                         on_gradient = on_gradient, on_hessian = on_hessian),
-                    list(...)
-                )
-            )
+            do.call(focus_statistic,
+                    c(list(data = data, object = object, on = on, correction = correction,
+                           on_gradient = on_gradient, on_hessian = on_hessian),
+                      list(...)))
         }
         confint <- hulc_ci(model.frame(object),
                            statistic = statistic,

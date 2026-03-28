@@ -172,14 +172,8 @@ focus_grad <- function(theta, i = 1, j = 2) {
 focus_hessian <- function(theta, i = 1, j = 2) {
   matrix(0, nrow = length(theta), ncol = length(theta))
 }
-focus(
-  endo,
-  on = focus_fun,
-  on_gradient = focus_grad,
-  on_hessian = focus_hessian,
-  i = 2,
-  j = 3
-)
+focus(endo, on = focus_fun, on_gradient = focus_grad, on_hessian = focus_hessian,
+      i = 2, j = 3)
 
 ## Mean bias correction
 focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
