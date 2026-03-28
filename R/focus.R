@@ -168,24 +168,40 @@
 #' }
 #'
 #' @export
-focus <- function(object,
-                  on = function(theta, ...) theta[1],
-                  correction = "median",
-                  ci = "wald",
-                  alpha = 0.05,
-                  control_ci = ci_control(),
-                  on_gradient = NULL,
-                  on_hessian = NULL, ...) {
+focus <- function(object, ...) {
+    UseMethod("focus")
+}
+
+#' @export
+focus.default <- function(object, ...) {
+    stop("No `focus()` method is available for objects of class ",
+         paste(class(object), collapse = "/"), ".")
+}
+
+#' @export
+focus.glm <- function(object,
+                      on = function(theta, ...) theta[1],
+                      correction = "median",
+                      ci = "wald",
+                      alpha = 0.05,
+                      control_ci = ci_control(),
+                      on_gradient = NULL,
+                      on_hessian = NULL, ...) {
     if (!inherits(control_ci, "ci_control")) {
         stop("Please use `ci_control()` to construct the list for `control_ci`.")
     }
     stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
     stopifnot(is.null(on_hessian) || is.function(on_hessian))
-    if (identical(class(object)[1], "glm")) {
+    is_glm <- identical(class(object)[1], "glm")
+    is_brglmFit <- inherits(object, "brglmFit")
+    if (!(is_glm || is_brglmFit)) {
+        stop("`focus.glm()` supports only objects of primary class `glm` or `brglmFit`.")
+    }
+    if (is_glm) {
         object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
     }
-    if (inherits(object, "brglmFit")) {
+    if (is_brglmFit) {
         if (!(object$type %in% c("ML", "AS_mean", "correction"))) {
             object <- update(object, type = "AS_mean")
         }
