@@ -6,13 +6,11 @@
 \usage{
 focus_engine(
   theta,
-  V,
+  components,
   on = function(theta, ...) theta[1],
   correction = "median",
   estimator = "ML",
   alpha = 0.05,
-  P = NULL,
-  Q = NULL,
   on_gradient = NULL,
   on_hessian = NULL,
   ...
@@ -23,7 +21,11 @@ focus_engine(
 likelihood estimate of the model parameters or a reduced mean-bias
 estimator of them.}
 
-\item{V}{the inverse of the expected information at \code{theta}.}
+\item{components}{A named list containing the model-side quantities needed
+by the correction. At present, this can include \code{V}, \code{P}, and \code{Q},
+where \code{V} is the inverse of the expected information at \code{theta}, and
+\code{P} and \code{Q} are lists of matrices \eqn{P_t} and \eqn{Q_t} in
+Kosmidis (2014, expression (5)); see below for when each is required.}
 
 \item{on}{A function specifying the scalar parameter of interest.
 It must take the parameter vector as first argument and return
@@ -39,16 +41,6 @@ the supplied \code{theta}. One of \code{"ML"} (maximum likelihood, default) or
 
 \item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level
 for the Wald confidence interval.}
-
-\item{P}{Optional list of matrices \eqn{P_t}, one matrix per
-parameter, as defined in Kosmidis (2014, expression
-(5)). Required when \code{correction = "median"}, and also when
-\code{correction = "mean"} and \code{estimator = "ML"}.}
-
-\item{Q}{Optional list of matrices \eqn{Q_t}, one matrix per
-parameter, as defined in Kosmidis (2014, expression
-(5)). Required when \code{correction = "median"}, and also when
-\code{correction = "mean"} and \code{estimator = "ML"}.}
 
 \item{on_gradient}{Optional function returning the gradient of
 \code{on}; if \code{NULL} (default), the gradient is computed numerically using
@@ -79,20 +71,23 @@ estimator of them, as indicated by \code{estimator}.
 
 If \code{estimator = "ML"}, then the first-order bias term required for
 \code{correction = "mean"} or \code{correction = "median"} is computed from
-the supplied \code{P}, \code{Q}, and \code{V}. If \code{estimator = "meanBR"}, then
+the supplied \code{components$P}, \code{components$Q}, and \code{components$V}. If
+\code{estimator = "meanBR"}, then
 that first-order bias term is taken to be zero.
 
 If \code{estimator = "meanBR"} and \code{correction = "mean"}, then \code{P} and
 \code{Q} are not needed, because the correction depends only on the
-Hessian of \code{on} and the supplied covariance matrix \code{V}.
+Hessian of \code{on} and the supplied covariance matrix \code{components$V}.
 
 \code{focus_engine()} is a low-level helper intended for advanced use and
 therefore performs only minimal validation of its inputs. In particular,
-whenever they are needed by the requested correction, \code{P} and \code{Q} are
+\code{components$V} is always assumed to be supplied, and whenever they are
+needed by the requested correction, \code{components$P} and \code{components$Q} are
 assumed to be supplied in the format required by the computation.
 
 Confidence intervals returned by \code{focus_engine()} are Wald-type intervals
-using the delta-method and the supplied covariance matrix \code{V}.
+using the delta-method and the supplied covariance matrix
+\code{components$V}.
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=ci_control]{ci_control()}}

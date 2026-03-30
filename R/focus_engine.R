@@ -9,7 +9,11 @@
 #' @param theta Numeric parameter vector, assumed to be either the maximum
 #'     likelihood estimate of the model parameters or a reduced mean-bias
 #'     estimator of them.
-#' @param V the inverse of the expected information at `theta`.
+#' @param components A named list containing the model-side quantities needed
+#'     by the correction. At present, this can include `V`, `P`, and `Q`,
+#'     where `V` is the inverse of the expected information at `theta`, and
+#'     `P` and `Q` are lists of matrices \eqn{P_t} and \eqn{Q_t} in
+#'     Kosmidis (2014, expression (5)); see below for when each is required.
 #' @param on A function specifying the scalar parameter of interest.
 #'     It must take the parameter vector as first argument and return
 #'     a single numeric value. The default, `function(theta, ...)
@@ -22,14 +26,6 @@
 #'     `"meanBR"` (reduced mean-bias estimator).
 #' @param alpha Numeric scalar in `(0, 1)`. Target miscoverage level
 #'     for the Wald confidence interval.
-#' @param P Optional list of matrices \eqn{P_t}, one matrix per
-#'     parameter, as defined in Kosmidis (2014, expression
-#'     (5)). Required when `correction = "median"`, and also when
-#'     `correction = "mean"` and `estimator = "ML"`.
-#' @param Q Optional list of matrices \eqn{Q_t}, one matrix per
-#'     parameter, as defined in Kosmidis (2014, expression
-#'     (5)). Required when `correction = "median"`, and also when
-#'     `correction = "mean"` and `estimator = "ML"`.
 #' @param on_gradient Optional function returning the gradient of
 #'     `on`; if `NULL` (default), the gradient is computed numerically using
 #'     [numDeriv::grad()].
@@ -50,20 +46,23 @@
 #'
 #' If `estimator = "ML"`, then the first-order bias term required for
 #' `correction = "mean"` or `correction = "median"` is computed from
-#' the supplied `P`, `Q`, and `V`. If `estimator = "meanBR"`, then
+#' the supplied `components$P`, `components$Q`, and `components$V`. If
+#' `estimator = "meanBR"`, then
 #' that first-order bias term is taken to be zero.
 #'
 #' If `estimator = "meanBR"` and `correction = "mean"`, then `P` and
 #' `Q` are not needed, because the correction depends only on the
-#' Hessian of `on` and the supplied covariance matrix `V`.
+#' Hessian of `on` and the supplied covariance matrix `components$V`.
 #'
 #' `focus_engine()` is a low-level helper intended for advanced use and
 #' therefore performs only minimal validation of its inputs. In particular,
-#' whenever they are needed by the requested correction, `P` and `Q` are
+#' `components$V` is always assumed to be supplied, and whenever they are
+#' needed by the requested correction, `components$P` and `components$Q` are
 #' assumed to be supplied in the format required by the computation.
 #'
 #' Confidence intervals returned by `focus_engine()` are Wald-type intervals
-#' using the delta-method and the supplied covariance matrix `V`.
+#' using the delta-method and the supplied covariance matrix
+#' `components$V`.
 #'
 #' @seealso [focus()], [ci_control()]
 #'
@@ -73,18 +72,20 @@
 #'
 #' @export
 focus_engine <- function(theta,
-                         V,
+                         components,
                          on = function(theta, ...) theta[1],
                          correction = "median",
                          estimator = "ML",
                          alpha = 0.05,
-                         P = NULL,
-                         Q = NULL,
                          on_gradient = NULL,
                          on_hessian = NULL, ...) {
     theta <- as.numeric(theta)
     correction <- match.arg(correction, c("no", "median", "mean"))
     estimator <- match.arg(estimator, c("ML", "meanBR"))
+    stopifnot(is.list(components), !is.null(components$V))
+    V <- components$V
+    P <- components$P
+    Q <- components$Q
     d1_psi <- if (is.null(on_gradient)) numDeriv::grad(on, theta, ...) else on_gradient(theta, ...)
     d1_psi <- as.numeric(d1_psi)
     hat_psi <- on(theta, ...)
