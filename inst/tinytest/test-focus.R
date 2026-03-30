@@ -208,3 +208,4 @@ expect_equal(Q(cml, df$x)[[3]], afuns$Qmat()[[3]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[1]], afuns$Pmat()[[1]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[2]], afuns$Pmat()[[2]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[3]], afuns$Pmat()[[3]], check.attributes = FALSE)
+
