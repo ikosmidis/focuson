@@ -72,8 +72,8 @@ estimator of them, as indicated by \code{estimator}.
 If \code{estimator = "ML"}, then the first-order bias term required for
 \code{correction = "mean"} or \code{correction = "median"} is computed from
 the supplied \code{components$P}, \code{components$Q}, and \code{components$V}. If
-\code{estimator = "meanBR"}, then
-that first-order bias term is taken to be zero.
+\code{estimator = "meanBR"}, then that first-order bias term is taken to be
+zero.
 
 If \code{estimator = "meanBR"} and \code{correction = "mean"}, then \code{P} and
 \code{Q} are not needed, because the correction depends only on the

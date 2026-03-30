@@ -1,3 +1,106 @@
+#' Estimate components for [focus_engine()]
+#'
+#' Estimate the model-side components used by [focus_engine()] through repeated
+#' simulation at a supplied parameter vector.
+#'
+#' @param theta Numeric parameter vector at which the components are estimated.
+#' @param loglik A function returning the log-likelihood evaluated at a supplied
+#'   parameter vector and dataset. It is expected to have an interface of the
+#'   form `loglik(theta, data, ...)` and to return a single numeric value.
+#' @param simulate A function that simulates one dataset at the supplied
+#'   parameter vector `theta`. It is expected to have an interface of the form
+#'   `simulate(theta, ...)` and to return one simulated dataset at each call.
+#' @param correction Character string specifying the bias correction method.
+#'   One of `"no"`, `"median"`, or `"mean"`.
+#' @param estimator Character string specifying the estimator represented by
+#'   the supplied `theta`. One of `"ML"` (maximum likelihood, default) or
+#'   `"meanBR"` (reduced mean-bias estimator).
+#' @param nsim Integer. The number of simulated datasets used to estimate the
+#'   required components.
+#' @param parallelize Logical. If `TRUE`, use
+#'   [future.apply::future_lapply()] for the repeated derivative
+#'   calculations. This requires the suggested package
+#'   \pkg{future.apply}.
+#' @param ... Additional arguments passed to `simulate` and `loglik`.
+#'
+#' @return
+#' A named list suitable for the `components` argument of [focus_engine()].
+#' It always contains `V`, and also contains `P` and `Q` when they are needed
+#' by the requested `correction` and `estimator`.
+#'
+#' @details
+#' The supplied `simulate` function is called repeatedly as
+#' `simulate(theta, ...)`, once for each simulated dataset.
+#'
+#' The supplied `loglik` function is then used on each simulated dataset
+#' through calls of the form `loglik(theta, data = data, ...)`.
+#'
+#' The returned `V` is obtained by averaging the observed information matrices
+#' across the simulated datasets and inverting the result.
+#'
+#' When required by the requested correction, `P` and `Q` are estimated by
+#' averaging the corresponding simulation-based quantities across the simulated
+#' datasets.
+#'
+#' @seealso [focus_engine()]
+#'
+#' @export
+estimate_focus_components <- function(theta,
+                                      loglik,
+                                      simulate,
+                                      correction = "median",
+                                      estimator = "ML",
+                                      nsim = 1000,
+                                      parallelize = FALSE,
+                                      ...) {
+    theta <- as.numeric(theta)
+    correction <- match.arg(correction, c("no", "median", "mean"))
+    estimator <- match.arg(estimator, c("ML", "meanBR"))
+    if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
+        stop("Package `future.apply` is required when `parallelize = TRUE`.")
+    }
+    simu_one <- function(i) {
+        data <- simulate(theta, ...)
+        list(
+            S = numDeriv::grad(loglik, theta, data = data, ...),
+            I = -numDeriv::hessian(loglik, theta, data = data, ...)
+        )
+    }
+    derivatives <- if (parallelize) {
+        future.apply::future_lapply(
+            seq_len(nsim),
+            simu_one,
+            future.seed = TRUE
+        )
+    } else {
+        lapply(seq_len(nsim), simu_one)
+    }
+
+    Ihat <- Reduce("+", lapply(derivatives, `[[`, "I")) / nsim
+    out <- list(V = solve(Ihat))
+
+    need_pq <- identical(correction, "median") ||
+        (identical(correction, "mean") && identical(estimator, "ML"))
+
+    if (need_pq) {
+        out$P <- lapply(seq_along(theta), function(t) {
+            Reduce(
+                "+",
+                lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t])
+            ) / nsim
+        })
+
+        out$Q <- lapply(seq_along(theta), function(t) {
+            Reduce(
+                "+",
+                lapply(derivatives, function(der) -der$I * der$S[t])
+            ) / nsim
+        })
+    }
+
+    out
+}
+
 #' Low-level engine for focus estimation and inference
 #'
 #' Estimate and perform inference on a scalar function of a supplied
@@ -47,8 +150,8 @@
 #' If `estimator = "ML"`, then the first-order bias term required for
 #' `correction = "mean"` or `correction = "median"` is computed from
 #' the supplied `components$P`, `components$Q`, and `components$V`. If
-#' `estimator = "meanBR"`, then
-#' that first-order bias term is taken to be zero.
+#' `estimator = "meanBR"`, then that first-order bias term is taken to be
+#' zero.
 #'
 #' If `estimator = "meanBR"` and `correction = "mean"`, then `P` and
 #' `Q` are not needed, because the correction depends only on the

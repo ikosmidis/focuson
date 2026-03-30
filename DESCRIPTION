@@ -11,4 +11,6 @@ Imports:
     brglm2,
     enrichwith (>= 0.4.1),
     numDeriv
-Suggests: tinytest
+Suggests: 
+    future.apply,
+    tinytest
