@@ -91,14 +91,16 @@ hessian_or <- function(theta) {
     out
 }
 
+on_or <- function(theta) exp(theta[1])
+
 out_num <- focus(
     endo,
-    on = function(theta) exp(theta[1]),
+    on = on_or,
     correction = "median"
 )
 out_ana <- focus(
     endo,
-    on = function(theta) exp(theta[1]),
+    on = on_or,
     correction = "median",
     on_gradient = grad_or,
     on_hessian = hessian_or
@@ -107,11 +109,14 @@ out_ana <- focus(
 expect_equal(out_ana$estimate, out_num$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(out_ana$se, out_num$se, tolerance = 1e-8)
 expect_equal(out_ana$confint, out_num$confint, tolerance = 1e-8, check.attributes = FALSE)
+expect_identical(out_ana$on$on, on_or)
+expect_identical(out_ana$on$on_gradient, grad_or)
+expect_identical(out_ana$on$on_hessian, hessian_or)
 
 set.seed(678)
 out_hulc <- focus(
     endo,
-    on = function(theta) exp(theta[1]),
+    on = on_or,
     correction = "median",
     ci = "hulc",
     on_gradient = grad_or,
@@ -122,4 +127,3 @@ out_hulc <- focus(
 expect_identical(out_hulc$ci_type, "hulc")
 expect_true(is.numeric(out_hulc$estimate))
 expect_identical(attr(out_hulc$confint, "type"), "hulc")
-

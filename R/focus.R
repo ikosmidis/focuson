@@ -213,6 +213,7 @@ focus.glm <- function(object,
                       on_gradient = NULL,
                       on_hessian = NULL, ...) {
     cl <- match.call()
+    dots <- list(...)
     if (!inherits(control_ci, "ci_control")) {
         stop("Please use `ci_control()` to construct the list for `control_ci`.")
     }
@@ -308,7 +309,18 @@ focus.glm <- function(object,
     }
     out <- unname(out)
     attr(out, "correction") <- correction
-    out <- list(call = cl, estimate = out, se = se, ci_type = ci, confint = confint)
+    out <- list(
+        call = cl,
+        object = object,
+        on = list(on = on,
+                  on_gradient = on_gradient,
+                  on_hessian = on_hessian),
+        dots = dots,
+        estimate = out,
+        se = se,
+        ci_type = ci,
+        confint = confint
+    )
     class(out) <- c("focus_list", class(out))
     out
 }
