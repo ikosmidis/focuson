@@ -39,6 +39,7 @@ expect_equal(
 
 
 out_wald <- focus(endo, correction = "mean")
+expect_identical(out_wald$correction, "mean")
 expect_equal(
     unname(confint(out_wald)),
     unname(out_wald$estimate) + c(-1, 1) * qnorm(0.975) * out_wald$se,
@@ -153,6 +154,7 @@ out_ana <- focus(
     on_hessian = hessian_or
 )
 
+expect_identical(out_ana$correction, "median")
 expect_equal(out_ana$estimate, out_num$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(out_ana$se, out_num$se, tolerance = 1e-8)
 expect_equal(confint(out_ana), confint(out_num), tolerance = 1e-8, check.attributes = FALSE)

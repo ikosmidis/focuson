@@ -50,8 +50,8 @@ if \code{NULL} (default), the Hessian is computed numerically using
 \code{on_hessian}.}
 }
 \value{
-A list with the same main components as \code{\link[=focus]{focus()}}, namely \code{estimate}
-and \code{se}.
+A list with the same main components as \code{\link[=focus]{focus()}}, namely \code{estimate},
+\code{se}, and \code{correction}.
 }
 \description{
 Estimate and perform inference on a scalar function of a supplied

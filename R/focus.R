@@ -40,10 +40,9 @@
 #' @return
 #' A list with components:
 #' \describe{
-#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.
-#'     The returned value has a `"correction"` attribute recording the bias
-#'     correction method used.}
+#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
+#'   \item{`correction`}{Character string recording the bias correction method used.}
 #'   \item{`object`}{The fitted model object used internally by `focus()`,
 #'     after any refitting described below.}
 #'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
@@ -182,7 +181,7 @@ print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...)
     cat("Focus estimate\n")
     printCoefmat(out, digits = digits, P.values = FALSE, has.Pvalue = FALSE)
     cat("\n")
-    cat("Type of correction:", attr(x$estimate, "correction"), "\n")
+    cat("Type of correction:", x$correction, "\n")
     invisible(x)
 }
 
@@ -262,7 +261,6 @@ focus.glm <- function(object,
     ## AS_mean/correction).
     se <- sqrt(var_psi)
     out <- unname(out)
-    attr(out, "correction") <- correction
     out <- list(
         call = cl,
         object = object,
@@ -270,6 +268,7 @@ focus.glm <- function(object,
                   on_gradient = on_gradient,
                   on_hessian = on_hessian),
         dots = dots,
+        correction = correction,
         estimate = out,
         se = se)
     class(out) <- c("focus_list", class(out))

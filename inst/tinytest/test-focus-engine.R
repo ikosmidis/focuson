@@ -19,6 +19,7 @@ engine_out <- focus_engine(
     on = function(theta) exp(theta[1]),
     correction = "mean"
 )
+expect_identical(engine_out$correction, "mean")
 focus_out <- focus(
     coalition_fit,
     on = function(theta) exp(theta[1]),

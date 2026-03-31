@@ -120,8 +120,8 @@ estimate_focus_components <- function(theta,
 #'     `on_hessian`.
 #'
 #' @return
-#' A list with the same main components as [focus()], namely `estimate`
-#' and `se`.
+#' A list with the same main components as [focus()], namely `estimate`,
+#' `se`, and `correction`.
 #'
 #' @details
 #' `focus_engine()` assumes that the supplied `theta` is either the maximum
@@ -205,6 +205,5 @@ focus_engine <- function(theta,
     }
     se <- sqrt(var_psi)
     out <- unname(out)
-    attr(out, "correction") <- correction
-    list(estimate = out, se = se)
+    list(estimate = out, se = se, correction = correction)
 }

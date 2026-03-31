@@ -45,7 +45,7 @@ confint.focus_list <- function(object,
         return(ci)
     }
 
-    correction <- attr(object$estimate, "correction")
+    correction <- object$correction
     on_funs <- object$on
     on <- on_funs$on
     on_gradient <- on_funs$on_gradient
