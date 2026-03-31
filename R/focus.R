@@ -17,8 +17,8 @@
 #' @param correction Character string specifying the bias correction method.
 #'   One of:
 #'   \describe{
-#'     \item{`"no"`}{No bias correction.}
-#'     \item{`"median"`}{Median bias correction.}
+#'     \item{`"no"`}{No correction.}
+#'     \item{`"median"`}{Median bias correction; default.}
 #'     \item{`"mean"`}{Mean bias correction.}
 #'   }
 #' @param on_gradient Optional function returning the gradient of `on` with

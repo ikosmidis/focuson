@@ -22,8 +22,8 @@ the parameter vector.}
 \item{correction}{Character string specifying the bias correction method.
 One of:
 \describe{
-\item{\code{"no"}}{No bias correction.}
-\item{\code{"median"}}{Median bias correction.}
+\item{\code{"no"}}{No correction.}
+\item{\code{"median"}}{Median bias correction; default.}
 \item{\code{"mean"}}{Mean bias correction.}
 }}
 
