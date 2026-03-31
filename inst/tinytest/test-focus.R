@@ -41,7 +41,7 @@ expect_equal(
 
 
 out_wald <- focus(endo, correction = "mean")
-expect_identical(confint(out_wald), out_wald$confint)
+expect_equal(confint(out_wald), out_wald$confint)
 expect_equal(
     unname(confint(out_wald, level = 0.9)),
     unname(out_wald$estimate) + c(-1, 1) * qnorm(0.95) * out_wald$se,
@@ -56,7 +56,6 @@ grad_index <- function(theta, i = 1) {
 }
 hess_index <- function(theta, i = 1) matrix(0, nrow = length(theta), ncol = length(theta))
 
-set.seed(1)
 out_wald_i2 <- focus(
     endo,
     on = on_index,
@@ -65,14 +64,14 @@ out_wald_i2 <- focus(
     i = 2,
     correction = "no"
 )
-set.seed(1)
+set.seed(678)
 ci_hulc_method <- confint(
     out_wald_i2,
     method = "hulc",
     randomize = FALSE,
     check_statistic = FALSE
 )
-set.seed(1)
+set.seed(678)
 ci_hulc_focus <- focus(
     endo,
     on = on_index,

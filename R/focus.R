@@ -348,6 +348,7 @@ focus.glm <- function(object,
         confint <- out + c(-1, 1) * qnorm(1 - alpha / 2) * se
         names(confint) <- c("lower", "upper")
         attr(confint, "alpha") <- alpha
+        attr(confint, "type") <- "wald"
     }
     if (identical(ci, "hulc")) {
         statistic <- function(data, object, on, correction) {
