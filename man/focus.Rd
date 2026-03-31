@@ -27,19 +27,6 @@ One of:
 \item{\code{"mean"}}{Mean bias correction.}
 }}
 
-\item{ci}{Character string specifying the confidence interval method.
-One of:
-\describe{
-\item{\code{"wald"}}{Wald-type confidence interval based on the delta method.}
-\item{\code{"hulc"}}{HulC confidence interval; see \code{\link[=hulc_ci]{hulc_ci()}}.}
-}}
-
-\item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level for the
-confidence interval.}
-
-\item{control_ci}{A list of control options for confidence interval
-construction as returned by \code{\link[=ci_control]{ci_control()}}.}
-
 \item{on_gradient}{Optional function returning the gradient of \code{on} with
 respect to the model parameter vector. It must take the parameter vector
 as first argument and return a numeric vector of the same length.
@@ -62,9 +49,11 @@ A list with components:
 The returned value has a \code{"correction"} attribute recording the bias
 correction method used.}
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
-\item{\code{ci_type}}{Character string indicating the confidence interval method.}
-\item{\code{confint}}{Numeric vector of length 2 with names \code{"lower"} and \code{"upper"} if
-\code{ci = "wald"}, or the result of \code{\link[=hulc_ci]{hulc_ci()}} if \code{ci = "hulc"}.}
+\item{\code{object}}{The fitted model object used internally by \code{focus()},
+after any refitting described below.}
+\item{\code{on}}{A list containing the supplied \code{on}, \code{on_gradient}, and
+\code{on_hessian} functions.}
+\item{\code{dots}}{A list with the additional arguments supplied through \code{...}.}
 }
 }
 \description{
@@ -75,7 +64,6 @@ or \code{\link[brglm2:brglmFit]{"brglmFit"}}.
 \details{
 The function evaluates a user-specified scalar function of the full
 parameter vector and optionally applies mean or median bias correction.
-Confidence intervals can be constructed using either Wald or HULC methods.
 
 If the primary class of \code{object} is \code{\link[stats:glm]{"glm"}}, then
 \code{focus()} refits the model using \code{\link[brglm2:brglmFit]{brglm2::brglmFit()}} with \code{type = "ML"}
@@ -90,10 +78,7 @@ response models.
 
 The current implementation assumes that \code{object} supports
 \code{\link[stats:coef]{stats::coef()}} and \code{\link[stats:vcov]{stats::vcov()}} for the full parameter vector
-and the inverse of the expected information. If \code{ci = "hulc"}, then
-\code{\link[stats:model.frame]{stats::model.frame()}} and \code{\link[stats:update]{stats::update()}} must also work for
-\code{object}, because the model is repeatedly refit on data partitions
-through \code{\link[=focus_statistic]{focus_statistic()}}.
+and the inverse of the expected information.
 
 Let \eqn{\psi(\theta)} denote the scalar function specified by \code{on}.
 The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the estimated
@@ -108,19 +93,17 @@ responsibility.
 
 Arguments in \code{...} are reserved for \code{on}, \code{on_gradient}, and
 \code{on_hessian}. However, names that coincide with formal arguments of
-\code{focus()} itself, such as \code{ci}, \code{correction}, \code{alpha}, \code{control_ci},
-and \code{object}, are matched before \code{...} is formed and therefore cannot
-be passed through \code{...}.
+\code{focus()} itself, such as \code{correction} and \code{object}, are matched
+before \code{...} is formed and therefore cannot be passed through \code{...}.
 
 Standard errors are computed using the delta method, with
 covariance matrix and gradients evaluated at the estimated
 parameters from \code{object} or the refit version of it, as described
-above.  They are therefore not re-evaluated at the corrected
+above. They are therefore not re-evaluated at the corrected
 estimates.
 
-When \code{ci = "hulc"}, the HulC interval is computed by applying
-\code{\link[=hulc_ci]{hulc_ci()}} to the model frame using \code{\link[=focus_statistic]{focus_statistic()}} as the
-statistic evaluated on each partition.
+Confidence intervals can be obtained from the returned object using
+\code{\link[=confint]{confint()}}.
 }
 \examples{
 
@@ -172,15 +155,17 @@ focus(endo, on = focus_fun, i = 2, j = 3, correction = "mean")
 ## equivariant to linear transformations
 coef(endo)[2] - coef(endo)[3]
 
-\dontrun{
+## Wald confidence interval
+confint(focus(endo), level = 0.9)
 
-## HulC and Wald confidence intervals
+\dontrun{
+## HulC confidence interval
 set.seed(678)
-focus(endo, ci = "hulc", alpha = 0.1, control_ci = ci_control(Delta = 0, check_statistic = FALSE))
-focus(endo, ci = "wald", alpha = 0.1)
+confint(focus(endo), method = "hulc", level = 0.9,
+        Delta = 0, check_statistic = FALSE)
 }
 
 }
 \seealso{
-\code{\link[=ci_control]{ci_control()}}, \code{\link[=hulc_ci]{hulc_ci()}}
+\code{\link[=confint.focus_list]{confint.focus_list()}}, \code{\link[=hulc_ci]{hulc_ci()}}
 }

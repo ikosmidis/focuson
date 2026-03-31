@@ -26,3 +26,18 @@ A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}.
 \description{
 Compute confidence intervals for objects returned by \code{\link[=focus]{focus()}}.
 }
+\details{
+For \code{method = "wald"}, the interval is computed from the stored point
+estimate and standard error using the normal approximation.
+
+For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to the model frame of the
+stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as the statistic evaluated
+on each partition. This requires that \code{\link[stats:model.frame]{stats::model.frame()}} and
+\code{\link[stats:update]{stats::update()}} work for the stored fitted object.
+
+The miscoverage rate is determined by \code{level}; users should not supply
+\code{alpha} in \code{...}.
+}
+\seealso{
+\code{\link[=focus]{focus()}}, \code{\link[=hulc_ci]{hulc_ci()}}, \code{\link[=focus_statistic]{focus_statistic()}}
+}

@@ -110,8 +110,6 @@ estimate_focus_components <- function(theta,
 #' @param estimator Character string specifying the estimator represented by
 #'     the supplied `theta`. One of `"ML"` (maximum likelihood, default) or
 #'     `"meanBR"` (reduced mean-bias estimator).
-#' @param alpha Numeric scalar in `(0, 1)`. Target miscoverage level
-#'     for the Wald confidence interval.
 #' @param on_gradient Optional function returning the gradient of
 #'     `on`; if `NULL` (default), the gradient is computed numerically using
 #'     [numDeriv::grad()].
@@ -122,8 +120,8 @@ estimate_focus_components <- function(theta,
 #'     `on_hessian`.
 #'
 #' @return
-#' A list with the same components as [focus()] for Wald inference:
-#' `estimate`, `se`, `ci_type`, and `confint`.
+#' A list with the same main components as [focus()], namely `estimate`
+#' and `se`.
 #'
 #' @details
 #' `focus_engine()` assumes that the supplied `theta` is either the maximum
@@ -146,11 +144,14 @@ estimate_focus_components <- function(theta,
 #' needed by the requested correction, `components$P` and `components$Q` are
 #' assumed to be supplied in the format required by the computation.
 #'
-#' Confidence intervals returned by `focus_engine()` are Wald-type intervals
-#' using the delta-method and the supplied covariance matrix
-#' `components$V`.
+#' Standard errors are computed using the delta method, with covariance
+#' matrix and gradients evaluated at the supplied `theta`. They are therefore
+#' not re-evaluated at the corrected estimates.
 #'
-#' @seealso [focus()], [ci_control()]
+#' Confidence intervals can be constructed from the returned `estimate`
+#' and `se`, for example through the normal approximation.
+#'
+#' @seealso [focus()]
 #'
 #' Kosmidis I (2014). Bias in parametric estimation: reduction and
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
@@ -162,7 +163,6 @@ focus_engine <- function(theta,
                          on = function(theta, ...) theta[1],
                          correction = "median",
                          estimator = "ML",
-                         alpha = 0.05,
                          on_gradient = NULL,
                          on_hessian = NULL, ...) {
     theta <- as.numeric(theta)
@@ -204,10 +204,7 @@ focus_engine <- function(theta,
         }
     }
     se <- sqrt(var_psi)
-    confint <- out + c(-1, 1) * qnorm(1 - alpha / 2) * se
-    names(confint) <- c("lower", "upper")
-    attr(confint, "alpha") <- alpha
     out <- unname(out)
     attr(out, "correction") <- correction
-    list(estimate = out, se = se, ci_type = "wald", confint = confint)
+    list(estimate = out, se = se)
 }

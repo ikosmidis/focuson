@@ -10,7 +10,6 @@ focus_engine(
   on = function(theta, ...) theta[1],
   correction = "median",
   estimator = "ML",
-  alpha = 0.05,
   on_gradient = NULL,
   on_hessian = NULL,
   ...
@@ -39,9 +38,6 @@ method.  One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
 the supplied \code{theta}. One of \code{"ML"} (maximum likelihood, default) or
 \code{"meanBR"} (reduced mean-bias estimator).}
 
-\item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level
-for the Wald confidence interval.}
-
 \item{on_gradient}{Optional function returning the gradient of
 \code{on}; if \code{NULL} (default), the gradient is computed numerically using
 \code{\link[numDeriv:grad]{numDeriv::grad()}}.}
@@ -54,8 +50,8 @@ if \code{NULL} (default), the Hessian is computed numerically using
 \code{on_hessian}.}
 }
 \value{
-A list with the same components as \code{\link[=focus]{focus()}} for Wald inference:
-\code{estimate}, \code{se}, \code{ci_type}, and \code{confint}.
+A list with the same main components as \code{\link[=focus]{focus()}}, namely \code{estimate}
+and \code{se}.
 }
 \description{
 Estimate and perform inference on a scalar function of a supplied
@@ -85,12 +81,15 @@ therefore performs only minimal validation of its inputs. In particular,
 needed by the requested correction, \code{components$P} and \code{components$Q} are
 assumed to be supplied in the format required by the computation.
 
-Confidence intervals returned by \code{focus_engine()} are Wald-type intervals
-using the delta-method and the supplied covariance matrix
-\code{components$V}.
+Standard errors are computed using the delta method, with covariance
+matrix and gradients evaluated at the supplied \code{theta}. They are therefore
+not re-evaluated at the corrected estimates.
+
+Confidence intervals can be constructed from the returned \code{estimate}
+and \code{se}, for example through the normal approximation.
 }
 \seealso{
-\code{\link[=focus]{focus()}}, \code{\link[=ci_control]{ci_control()}}
+\code{\link[=focus]{focus()}}
 
 Kosmidis I (2014). Bias in parametric estimation: reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
