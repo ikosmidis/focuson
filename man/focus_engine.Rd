@@ -50,8 +50,16 @@ if \code{NULL} (default), the Hessian is computed numerically using
 \code{on_hessian}.}
 }
 \value{
-A list with the same main components as \code{\link[=focus]{focus()}}, namely \code{estimate},
-\code{se}, and \code{correction}.
+A list similar to the output of \code{\link[=focus]{focus()}}, with components:
+\describe{
+\item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.}
+\item{\code{se}}{Numeric scalar, the delta-method standard error.}
+\item{\code{correction}}{Character string recording the bias correction method used.}
+\item{\code{on}}{A list containing the supplied \code{on}, \code{on_gradient}, and
+\code{on_hessian} functions.}
+\item{\code{dots}}{A list with the additional arguments supplied through \code{...}.}
+\item{\code{call}}{The matched call to \code{focus_engine()}.}
+}
 }
 \description{
 Estimate and perform inference on a scalar function of a supplied

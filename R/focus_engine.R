@@ -120,8 +120,16 @@ estimate_focus_components <- function(theta,
 #'     `on_hessian`.
 #'
 #' @return
-#' A list with the same main components as [focus()], namely `estimate`,
-#' `se`, and `correction`.
+#' A list similar to the output of [focus()], with components:
+#' \describe{
+#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
+#'   \item{`se`}{Numeric scalar, the delta-method standard error.}
+#'   \item{`correction`}{Character string recording the bias correction method used.}
+#'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
+#'     `on_hessian` functions.}
+#'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
+#'   \item{`call`}{The matched call to `focus_engine()`.}
+#' }
 #'
 #' @details
 #' `focus_engine()` assumes that the supplied `theta` is either the maximum
@@ -165,6 +173,8 @@ focus_engine <- function(theta,
                          estimator = "ML",
                          on_gradient = NULL,
                          on_hessian = NULL, ...) {
+    cl <- match.call()
+    dots <- list(...)
     theta <- as.numeric(theta)
     correction <- match.arg(correction, c("no", "median", "mean"))
     estimator <- match.arg(estimator, c("ML", "meanBR"))
@@ -205,5 +215,16 @@ focus_engine <- function(theta,
     }
     se <- sqrt(var_psi)
     out <- unname(out)
-    list(estimate = out, se = se, correction = correction)
+    out <- list(
+        call = cl,
+        on = list(on = on,
+                  on_gradient = on_gradient,
+                  on_hessian = on_hessian),
+        dots = dots,
+        correction = correction,
+        estimate = out,
+        se = se
+    )
+    class(out) <- c("focus_list", class(out))
+    out
 }

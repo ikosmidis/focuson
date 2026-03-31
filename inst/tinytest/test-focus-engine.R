@@ -20,6 +20,12 @@ engine_out <- focus_engine(
     correction = "mean"
 )
 expect_identical(engine_out$correction, "mean")
+expect_true(inherits(engine_out, "focus_list"))
+expect_true(is.language(engine_out$call))
+expect_true(is.function(engine_out$on$on))
+expect_null(engine_out$on$on_gradient)
+expect_null(engine_out$on$on_hessian)
+expect_identical(engine_out$dots, list())
 focus_out <- focus(
     coalition_fit,
     on = function(theta) exp(theta[1]),
@@ -28,6 +34,12 @@ focus_out <- focus(
 
 expect_equal(engine_out$estimate, focus_out$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out$se, focus_out$se, tolerance = 1e-8)
+expect_equal(
+    unname(confint(engine_out)),
+    unname(engine_out$estimate) + c(-1, 1) * qnorm(0.975) * engine_out$se,
+    check.attributes = FALSE
+)
+expect_error(confint(engine_out, method = "hulc"))
 
 coalition_mean <- update(coalition_fit, type = "AS_mean")
 afuns_mean <- enrichwith::get_auxiliary_functions(coalition_mean)
@@ -140,6 +152,8 @@ ff_engine <- focus_engine(
     x0 = 1,
     p = 0.95
 )
+expect_identical(ff_engine$correction, "median")
+expect_identical(ff_engine$dots, list(x0 = 1, p = 0.95))
 expect_equal(ff$estimate, ff_engine$estimate, check.attributes = FALSE)
 expect_equal(ff$se, ff_engine$se, check.attributes = FALSE)
 

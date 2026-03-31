@@ -45,6 +45,10 @@ confint.focus_list <- function(object,
         return(ci)
     }
 
+    if (is.null(object$object)) {
+        stop("`method = \"hulc\"` requires a `focus()` result with a stored fitted object.")
+    }
+
     correction <- object$correction
     on_funs <- object$on
     on <- on_funs$on
