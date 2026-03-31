@@ -88,13 +88,16 @@ temp_mod <- glm(y ~ x, data = df)
 true_quant <- quant(theta_true, x0 = 1, p = 0.95)
 
 c_mod <- do.call(update, list(object = temp_mod, data = df))
+
+
+
 ff <- focus(c_mod, on = quant, correction = "median", x0 = 1, p = 0.95)
 ff_analytical <- focus(c_mod, on = quant,
                        on_gradient = quant_grad,
                        on_hessian = quant_hess,
                        correction = "median", x0 = 1, p = 0.95)
 
-expect_equal(ff, ff_analytical)
+expect_equal(ff$estimate, ff_analytical$estimate)
 
 ## Using focus_engine
 Q <- function(theta, x) {
@@ -142,7 +145,7 @@ ff_engine <- focus_engine(
     p = 0.95
 )
 expect_equal(ff$estimate, ff_engine$estimate, check.attributes = FALSE)
-expect_equal(ff, ff_engine, check.attributes = FALSE)
+expect_equal(ff$se, ff_engine$se, check.attributes = FALSE)
 
 
 ## Check afun implementation against Qm

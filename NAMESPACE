@@ -2,6 +2,7 @@
 
 S3method(focus,default)
 S3method(focus,glm)
+S3method(print,focus_list)
 export(ci_control)
 export(compute_B)
 export(estimate_focus_components)

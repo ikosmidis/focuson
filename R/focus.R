@@ -179,6 +179,31 @@ focus.default <- function(object, ...) {
 }
 
 #' @export
+print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...) {
+    alpha <- attr(x$confint, "alpha")
+    if (!is.null(x$call)) {
+        cat("Call:\n")
+        print(x$call)
+        cat("\n")
+    }
+    out <- cbind(
+        unname(x$estimate),
+        unname(x$se),
+        unname(x$confint[1]),
+        unname(x$confint[2])
+    )
+    rownames(out) <- "on"
+    colnames(out) <- c("Estimate", "Std. Error", "Lower", "Upper")
+    cat("Focus estimate\n")
+    printCoefmat(out, digits = digits, P.values = FALSE, has.Pvalue = FALSE)
+    cat("\n")
+    cat("Type of correction:", attr(x$estimate, "correction"), "\n")
+    cat("Type of confidence interval:", x$ci_type, "\n")
+    cat("Miscoverage rate:", format(alpha, digits = digits), "\n")
+    invisible(x)
+}
+
+#' @export
 focus.glm <- function(object,
                       on = function(theta, ...) theta[1],
                       correction = "median",
@@ -187,6 +212,7 @@ focus.glm <- function(object,
                       control_ci = ci_control(),
                       on_gradient = NULL,
                       on_hessian = NULL, ...) {
+    cl <- match.call()
     if (!inherits(control_ci, "ci_control")) {
         stop("Please use `ci_control()` to construct the list for `control_ci`.")
     }
@@ -282,7 +308,9 @@ focus.glm <- function(object,
     }
     out <- unname(out)
     attr(out, "correction") <- correction
-    list(estimate = out, se = se, ci_type = ci, confint = confint)
+    out <- list(call = cl, estimate = out, se = se, ci_type = ci, confint = confint)
+    class(out) <- c("focus_list", class(out))
+    out
 }
 
 #' Control options for confidence intervals returned by [focus()]

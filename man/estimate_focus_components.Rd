@@ -8,8 +8,6 @@ estimate_focus_components(
   theta,
   loglik,
   simulate,
-  correction = "median",
-  estimator = "ML",
   nsim = 1000,
   parallelize = FALSE,
   ...
@@ -26,15 +24,8 @@ form \code{loglik(theta, data, ...)} and to return a single numeric value.}
 parameter vector \code{theta}. It is expected to have an interface of the form
 \code{simulate(theta, ...)} and to return one simulated dataset at each call.}
 
-\item{correction}{Character string specifying the bias correction method.
-One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
-
-\item{estimator}{Character string specifying the estimator represented by
-the supplied \code{theta}. One of \code{"ML"} (maximum likelihood, default) or
-\code{"meanBR"} (reduced mean-bias estimator).}
-
 \item{nsim}{Integer. The number of simulated datasets used to estimate the
-required components.}
+components.}
 
 \item{parallelize}{Logical. If \code{TRUE}, use
 \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for the repeated derivative
@@ -45,8 +36,7 @@ calculations. This requires the suggested package
 }
 \value{
 A named list suitable for the \code{components} argument of \code{\link[=focus_engine]{focus_engine()}}.
-It always contains \code{V}, and also contains \code{P} and \code{Q} when they are needed
-by the requested \code{correction} and \code{estimator}.
+It contains \code{V}, \code{P}, and \code{Q}.
 }
 \description{
 Estimate the model-side components used by \code{\link[=focus_engine]{focus_engine()}} through repeated
@@ -62,9 +52,8 @@ through calls of the form \code{loglik(theta, data = data, ...)}.
 The returned \code{V} is obtained by averaging the observed information matrices
 across the simulated datasets and inverting the result.
 
-When required by the requested correction, \code{P} and \code{Q} are estimated by
-averaging the corresponding simulation-based quantities across the simulated
-datasets.
+The returned \code{P} and \code{Q} are estimated by averaging the corresponding
+simulation-based quantities across the simulated datasets.
 }
 \seealso{
 \code{\link[=focus_engine]{focus_engine()}}
