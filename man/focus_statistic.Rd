@@ -77,6 +77,7 @@ focus(endo, correction = "no")$estimate
 
 \dontrun{
 if (requireNamespace("boot", quietly = TRUE)) {
+  set.seed(123)
   boot_fun <- function(data, indices) {
     d <- data[indices, ]
     focus_statistic(d, endo, correction = "mean")

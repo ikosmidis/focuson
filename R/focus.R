@@ -166,27 +166,6 @@ focus.default <- function(object, ...) {
 }
 
 #' @export
-print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...) {
-    if (!is.null(x$call)) {
-        cat("Call:\n")
-        print(x$call)
-        cat("\n")
-    }
-    out <- cbind(
-        unname(x$estimate),
-        unname(x$se)
-    )
-    rownames(out) <- "on"
-    colnames(out) <- c("Estimate", "Std. Error")
-    cat("Focus estimate\n")
-    printCoefmat(out, digits = digits, P.values = FALSE, has.Pvalue = FALSE)
-    cat("\n")
-    cat("Type of correction:", x$correction, "\n")
-    invisible(x)
-}
-
-
-#' @export
 focus.glm <- function(object,
                       on = function(theta, ...) theta[1],
                       correction = "median",
@@ -333,6 +312,7 @@ focus.glm <- function(object,
 #'
 #' \dontrun{
 #' if (requireNamespace("boot", quietly = TRUE)) {
+#'   set.seed(123)
 #'   boot_fun <- function(data, indices) {
 #'     d <- data[indices, ]
 #'     focus_statistic(d, endo, correction = "mean")
@@ -352,4 +332,26 @@ focus_statistic <- function(data, object,
     object <- do.call(update, list(object = object, data = data))
     focus(object, on = on, correction = correction,
           on_gradient = on_gradient, on_hessian = on_hessian, ...)$estimate
+}
+
+
+
+#' @export
+print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...) {
+    if (!is.null(x$call)) {
+        cat("Call:\n")
+        print(x$call)
+        cat("\n")
+    }
+    out <- cbind(
+        unname(x$estimate),
+        unname(x$se)
+    )
+    rownames(out) <- "on"
+    colnames(out) <- c("Estimate", "Std. Error")
+    cat("Focus estimate\n")
+    printCoefmat(out, digits = digits, P.values = FALSE, has.Pvalue = FALSE)
+    cat("\n")
+    cat("Type of correction:", x$correction, "\n")
+    invisible(x)
 }
