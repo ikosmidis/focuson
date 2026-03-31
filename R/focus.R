@@ -276,47 +276,6 @@ focus.glm <- function(object,
     out
 }
 
-#' Control options for HulC confidence intervals
-#'
-#' Create a control object specifying options for [hulc_ci()].
-#'
-#' @param Delta Numeric scalar in `[0, 1/2)`. Median bias of the
-#'     statistic; see [hulc_ci()] for details.
-#'
-#' @param randomize Logical. If `TRUE`, use the randomization to
-#'     determine the number of partitions; see [hulc_ci()] for details.
-#'
-#' @param check_statistic Logical. If `TRUE`, check whether the statistic can
-#'     be evaluated on the smallest partition before computing the
-#'     interval; see [hulc_ci()] for details.
-#'
-#' @param ... Currently unused. Included for future extensions.
-#'
-#' @return
-#'
-#' A named list of class `"ci_control"` with components `Delta`,
-#' `randomize`, and `check_statistic` with the values supplied.
-#'
-#' @details
-#'
-#' This function does not perform extensive validation of the
-#' arguments. It is primarily a convenience constructor to group
-#' options related to [hulc_ci()].
-#'
-#' @seealso [hulc_ci()], [confint.focus_list()]
-#'
-#' @examples
-#' ci_control()
-#'
-#' ci_control(Delta = 0.05, randomize = FALSE)
-#'
-#'
-#' @export
-ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...) {
-    out <- list(Delta = Delta, randomize = randomize, check_statistic = check_statistic)
-    class(out) <- c("ci_control", class(out))
-    out
-}
 
 #' Focus on a scalar function of the model parameters for new data
 #'
