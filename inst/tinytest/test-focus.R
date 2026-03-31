@@ -40,6 +40,54 @@ expect_equal(
 )
 
 
+out_wald <- focus(endo, correction = "mean")
+expect_identical(confint(out_wald), out_wald$confint)
+expect_equal(
+    unname(confint(out_wald, level = 0.9)),
+    unname(out_wald$estimate) + c(-1, 1) * qnorm(0.95) * out_wald$se,
+    check.attributes = FALSE
+)
+
+on_index <- function(theta, i = 1) theta[i]
+grad_index <- function(theta, i = 1) {
+    out <- rep(0, length(theta))
+    out[i] <- 1
+    out
+}
+hess_index <- function(theta, i = 1) matrix(0, nrow = length(theta), ncol = length(theta))
+
+set.seed(1)
+out_wald_i2 <- focus(
+    endo,
+    on = on_index,
+    on_gradient = grad_index,
+    on_hessian = hess_index,
+    i = 2,
+    correction = "no"
+)
+set.seed(1)
+ci_hulc_method <- confint(
+    out_wald_i2,
+    method = "hulc",
+    randomize = FALSE,
+    check_statistic = FALSE
+)
+set.seed(1)
+ci_hulc_focus <- focus(
+    endo,
+    on = on_index,
+    on_gradient = grad_index,
+    on_hessian = hess_index,
+    i = 2,
+    correction = "no",
+    ci = "hulc",
+    control_ci = ci_control(randomize = FALSE, check_statistic = FALSE)
+)$confint
+
+expect_equal(ci_hulc_method, ci_hulc_focus, check.attributes = FALSE)
+expect_identical(attr(ci_hulc_method, "type"), "hulc")
+
+
 for (correction in c("no", "mean", "median")) {
     out <- focus(endo, on = function(theta) pi, correction = correction)
 
