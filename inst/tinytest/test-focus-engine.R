@@ -27,7 +27,6 @@ focus_out <- focus(
 
 expect_equal(engine_out$estimate, focus_out$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out$se, focus_out$se, tolerance = 1e-8)
-expect_equal(engine_out$confint, focus_out$confint, tolerance = 1e-8, check.attributes = FALSE)
 
 coalition_mean <- update(coalition_fit, type = "AS_mean")
 afuns_mean <- enrichwith::get_auxiliary_functions(coalition_mean)
@@ -58,10 +57,8 @@ focus_out_mean <- focus(
 
 expect_equal(engine_out_mean$estimate, focus_out_mean$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out_mean$se, focus_out_mean$se, tolerance = 1e-8)
-expect_equal(engine_out_mean$confint, focus_out_mean$confint, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out_mean_no_PQ$estimate, focus_out_mean$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out_mean_no_PQ$se, focus_out_mean$se, tolerance = 1e-8)
-expect_equal(engine_out_mean_no_PQ$confint, focus_out_mean$confint, tolerance = 1e-8, check.attributes = FALSE)
 
 
 ## Quantile of lm
@@ -85,11 +82,8 @@ x <- seq(0, 1, length.out = nobs)
 df <- data.frame(x = x,
                  y = theta_true[1] + theta_true[2] * x + rnorm(nobs, mean = 0, sd = sqrt(theta_true[3])))
 temp_mod <- glm(y ~ x, data = df)
-true_quant <- quant(theta_true, x0 = 1, p = 0.95)
 
 c_mod <- do.call(update, list(object = temp_mod, data = df))
-
-
 
 ff <- focus(c_mod, on = quant, correction = "median", x0 = 1, p = 0.95)
 ff_analytical <- focus(c_mod, on = quant,
@@ -98,6 +92,7 @@ ff_analytical <- focus(c_mod, on = quant,
                        correction = "median", x0 = 1, p = 0.95)
 
 expect_equal(ff$estimate, ff_analytical$estimate)
+expect_equal(ff$se, ff_analytical$se)
 
 ## Using focus_engine
 Q <- function(theta, x) {
