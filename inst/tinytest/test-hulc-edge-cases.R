@@ -5,7 +5,7 @@ expect_warning(
     ci <- hulc_ci(
         data = x,
         statistic = function(d) if (nrow(d) == 2) Inf else mean(d$y),
-        alpha = 0.2,
+        level = 0.8,
         randomize = FALSE,
         check_statistic = FALSE
     )
@@ -24,7 +24,7 @@ x <- data.frame(y = rnorm(20))
 ci <- hulc_ci(
     data = x,
     statistic = function(d) mean(d$y),
-    alpha = 0.2,
+    level = 0.8,
     randomize = FALSE
 )
 
@@ -39,7 +39,7 @@ expect_warning(
     ci <- hulc_ci(
         data = x,
         statistic = function(d) c(mean(d$y), sd(d$y)),
-        alpha = 0.05,
+        level = 0.95,
         randomize = FALSE,
         check_statistic = TRUE
     )
@@ -61,7 +61,7 @@ expect_warning(
     ci <- hulc_ci(
         data = x,
         statistic = function(d) if (nrow(d) < 3) NA_real_ else mean(d$y),
-        alpha = 0.05,
+        level = 0.95,
         randomize = FALSE,
         check_statistic = TRUE
     )

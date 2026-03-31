@@ -4,10 +4,10 @@
 \alias{compute_B}
 \title{Compute the number of HulC partitions}
 \usage{
-compute_B(alpha, Delta)
+compute_B(level, Delta)
 }
 \arguments{
-\item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level.}
+\item{level}{Numeric scalar in \verb{(0, 1)}. Target coverage level.}
 
 \item{Delta}{Numeric scalar in \verb{[0, 1/2)}. The median bias of the
 statistic; see \code{\link[=focus]{focus()}}. \code{Delta = 0} corresponds to zero
@@ -17,15 +17,17 @@ median bias.}
 An integer scalar giving the required number of partitions.
 }
 \description{
-Determine the number of data partitions, \code{B}, required to construct a
-HulC confidence interval with nominal miscoverage level \code{alpha} and
-asymmetry parameter \code{Delta}.
+Determine the number of data partitions, \code{B}, required to construct
+a HulC confidence interval with nominal coverage \code{level} and median
+bias parameter \code{Delta}.
 }
 \details{
 The value of \code{B} is chosen as the smallest integer satisfying the
 HulC inequality
 
 \deqn{(1/2 - \Delta)^B + (1/2 + \Delta)^B \le \alpha.}
+
+where \eqn{\alpha} is \code{1 - level}.
 
 This implementation follows the HulC construction of Kuchibhotla et al. (2024)
 
@@ -36,8 +38,8 @@ Compared with Kuchibhotla et al. (2024, expression (7)), the upper search
 bound here uses \code{ceiling()} to be slightly more conservative.
 }
 \examples{
-compute_B(alpha = 0.05, Delta = 0)
-compute_B(alpha = 0.1, Delta = 0.05)
+compute_B(level = 0.95, Delta = 0)
+compute_B(level = 0.90, Delta = 0.05)
 
 }
 \references{

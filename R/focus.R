@@ -211,8 +211,8 @@ print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...)
 #' on each partition. This requires that [stats::model.frame()] and
 #' [stats::update()] work for the stored fitted object.
 #'
-#' The miscoverage rate is determined by `level`; users should not supply
-#' `alpha` in `...`.
+#' The coverage rate is determined by `level`; users should not supply
+#' `level` in `...`.
 #'
 #' @seealso [focus()], [hulc_ci()], [focus_statistic()]
 #'
@@ -228,7 +228,7 @@ confint.focus_list <- function(object,
     if (identical(method, "wald")) {
         ci <- unname(object$estimate) + c(-1, 1) * qnorm(1 - alpha / 2) * object$se
         names(ci) <- c("lower", "upper")
-        attr(ci, "alpha") <- alpha
+        attr(ci, "level") <- level
         attr(ci, "type") <- "wald"
         return(ci)
     }
@@ -255,7 +255,7 @@ confint.focus_list <- function(object,
     do.call(hulc_ci,
             c(list(data = model.frame(object$object),
                    statistic = statistic,
-                   alpha = alpha),
+                   level = level),
               list(...)))
 }
 

@@ -87,7 +87,7 @@ ci_hulc_direct <- hulc_ci(
             i = 2
         )
     },
-    alpha = 0.05,
+    level = 0.95,
     randomize = FALSE,
     check_statistic = FALSE
 )

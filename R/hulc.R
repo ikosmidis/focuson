@@ -1,18 +1,20 @@
 #' Compute the number of HulC partitions
 #'
-#' Determine the number of data partitions, `B`, required to construct a
-#' HulC confidence interval with nominal miscoverage level `alpha` and
-#' asymmetry parameter `Delta`.
+#' Determine the number of data partitions, `B`, required to construct
+#' a HulC confidence interval with nominal coverage `level` and median
+#' bias parameter `Delta`.
 #'
 #' The value of `B` is chosen as the smallest integer satisfying the
 #' HulC inequality
 #'
 #' \deqn{(1/2 - \Delta)^B + (1/2 + \Delta)^B \le \alpha.}
 #'
+#' where \eqn{\alpha} is `1 - level`.
+#'
 #' This implementation follows the HulC construction of Kuchibhotla et al. (2024)
 #'
 #'
-#' @param alpha Numeric scalar in `(0, 1)`. Target miscoverage level.
+#' @param level Numeric scalar in `(0, 1)`. Target coverage level.
 #' @param Delta Numeric scalar in `[0, 1/2)`. The median bias of the
 #'     statistic; see [focus()]. `Delta = 0` corresponds to zero
 #'     median bias.
@@ -32,13 +34,14 @@
 #' Methodology*, **86**, 586-622. \doi{10.1093/jrsssb/qkad134}.
 #'
 #' @examples
-#' compute_B(alpha = 0.05, Delta = 0)
-#' compute_B(alpha = 0.1, Delta = 0.05)
+#' compute_B(level = 0.95, Delta = 0)
+#' compute_B(level = 0.90, Delta = 0.05)
 #'
 #' @export
-compute_B <- function(alpha, Delta){
-    stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
+compute_B <- function(level, Delta){
+    stopifnot(length(level) == 1L, is.numeric(level), !is.na(level), level > 0, level < 1)
     stopifnot(length(Delta) == 1L, is.numeric(Delta), !is.na(Delta), Delta >= 0, Delta < 1/2)
+    alpha <- 1 - level
     log2 <- log(2)
     loga <- log(alpha)
     Dp <- 1/2 + Delta
@@ -60,14 +63,14 @@ compute_B <- function(alpha, Delta){
 #' partitioning the data into `B` subsets, evaluating the statistic on each
 #' subset, and taking the range of the resulting values.
 #'
-#' The number of partitions is chosen to achieve nominal miscoverage level
-#' `alpha` under the HulC construction, optionally with randomization as
-#' described in the original method.
+#' The number of partitions is chosen to achieve nominal coverage
+#' level `level` under the HulC construction, optionally with
+#' randomization as described in the original method.
 #'
 #' @param data A [`data.frame`] object with observations in rows.
 #' @param statistic A function that takes a [`data.frame`] as its first argument
 #'   and returns a single numeric value.
-#' @param alpha Numeric scalar in `(0, 1)`. Target miscoverage level.
+#' @param level Numeric scalar in `(0, 1)`. Target coverage level.
 #' @param Delta Numeric scalar in `[0, 1/2)`. The median bias of the `statistic`.
 #' @param randomize Logical. If `TRUE` (default), randomize between `B` and `B - 1` to
 #'   obtain less conservative finite-sample coverage.
@@ -81,7 +84,7 @@ compute_B <- function(alpha, Delta){
 #' The return value has the following attributes:
 #' \describe{
 #'   \item{`Delta`}{The supplied median bias.}
-#'   \item{`alpha`}{The supplied target miscoverage level.}
+#'   \item{`level`}{The supplied target coverage level.}
 #'   \item{`B`}{The number of partitions used.}
 #'   \item{`error`}{`NA` on success, or the captured error message if
 #'     evaluating `statistic` failed.}
@@ -125,32 +128,33 @@ compute_B <- function(alpha, Delta){
 #' hulc_ci(
 #'   data = x,
 #'   statistic = function(d) mean(d$y),
-#'   alpha = 0.05
+#'   level = 0.95
 #' )
 #'
 #' hulc_ci(
 #'   data = x,
 #'   statistic = function(d, trim = 0.1) mean(d$y, trim = trim),
-#'   alpha = 0.1,
+#'   level = 0.0,
 #'   trim = 0.2
 #' )
 #'
 #' @export
 hulc_ci <- function(data,
                     statistic,
-                    alpha = 0.05,
+                    level = 0.95,
                     Delta = 0,
                     randomize = TRUE,
                     check_statistic = TRUE,
                     ...) {
     nobs <- nrow(data)
     stopifnot(is.data.frame(data), is.function(statistic),
-        length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1,
+        length(level) == 1L, is.numeric(level), !is.na(level), level > 0, level < 1,
         length(Delta) == 1L, is.numeric(Delta), !is.na(Delta), Delta >= 0, Delta < 1/2,
         length(randomize) == 1L, is.logical(randomize), !is.na(randomize),
         length(check_statistic) == 1L, is.logical(check_statistic), !is.na(check_statistic))
     data <- data[sample(nobs), , drop = FALSE]
-    B <- compute_B(alpha, Delta)
+    B <- compute_B(level, Delta)
+    alpha <- 1 - level
     if (randomize) {
         Dp <- 0.5 + Delta
         Dm <- 0.5 - Delta
@@ -207,7 +211,7 @@ hulc_ci <- function(data,
 
     names(ci) <- c("lower", "upper")
     attr(ci, "Delta") <- Delta
-    attr(ci, "alpha") <- alpha
+    attr(ci, "level") <- level
     attr(ci, "B") <- B
     attr(ci, "error") <- error_msg
     attr(ci, "type") <- "hulc"

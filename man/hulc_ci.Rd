@@ -7,7 +7,7 @@
 hulc_ci(
   data,
   statistic,
-  alpha = 0.05,
+  level = 0.95,
   Delta = 0,
   randomize = TRUE,
   check_statistic = TRUE,
@@ -20,7 +20,7 @@ hulc_ci(
 \item{statistic}{A function that takes a \code{\link{data.frame}} as its first argument
 and returns a single numeric value.}
 
-\item{alpha}{Numeric scalar in \verb{(0, 1)}. Target miscoverage level.}
+\item{level}{Numeric scalar in \verb{(0, 1)}. Target coverage level.}
 
 \item{Delta}{Numeric scalar in \verb{[0, 1/2)}. The median bias of the \code{statistic}.}
 
@@ -38,7 +38,7 @@ A numeric vector of length 2 with elements \code{"lower"} and \code{"upper"}.
 The return value has the following attributes:
 \describe{
 \item{\code{Delta}}{The supplied median bias.}
-\item{\code{alpha}}{The supplied target miscoverage level.}
+\item{\code{level}}{The supplied target coverage level.}
 \item{\code{B}}{The number of partitions used.}
 \item{\code{error}}{\code{NA} on success, or the captured error message if
 evaluating \code{statistic} failed.}
@@ -54,9 +54,9 @@ partitioning the data into \code{B} subsets, evaluating the statistic on each
 subset, and taking the range of the resulting values.
 }
 \details{
-The number of partitions is chosen to achieve nominal miscoverage level
-\code{alpha} under the HulC construction, optionally with randomization as
-described in the original method.
+The number of partitions is chosen to achieve nominal coverage
+level \code{level} under the HulC construction, optionally with
+randomization as described in the original method.
 
 The observations are first randomly permuted, then split into \code{B} roughly
 equal-sized partitions. The user-supplied \code{statistic} is evaluated on each
@@ -85,13 +85,13 @@ x <- data.frame(y = rnorm(100))
 hulc_ci(
   data = x,
   statistic = function(d) mean(d$y),
-  alpha = 0.05
+  level = 0.95
 )
 
 hulc_ci(
   data = x,
   statistic = function(d, trim = 0.1) mean(d$y, trim = trim),
-  alpha = 0.1,
+  level = 0.0,
   trim = 0.2
 )
 

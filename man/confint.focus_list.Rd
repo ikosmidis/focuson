@@ -35,8 +35,8 @@ stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as 
 on each partition. This requires that \code{\link[stats:model.frame]{stats::model.frame()}} and
 \code{\link[stats:update]{stats::update()}} work for the stored fitted object.
 
-The miscoverage rate is determined by \code{level}; users should not supply
-\code{alpha} in \code{...}.
+The coverage rate is determined by \code{level}; users should not supply
+\code{level} in \code{...}.
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=hulc_ci]{hulc_ci()}}, \code{\link[=focus_statistic]{focus_statistic()}}
