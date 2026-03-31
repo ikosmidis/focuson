@@ -254,7 +254,6 @@ focus.glm <- function(object,
     out
 }
 
-
 #' Focus on a scalar function of the model parameters for new data
 #'
 #' Evaluate a scalar function of the model parameters after refitting
@@ -354,4 +353,9 @@ print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...)
     cat("\n")
     cat("Type of correction:", x$correction, "\n")
     invisible(x)
+}
+
+#' @export
+coef.focus_list <- function(object, ...) {
+    object$estimate
 }
