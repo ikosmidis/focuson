@@ -91,7 +91,7 @@ hulc_ci(
 hulc_ci(
   data = x,
   statistic = function(d, trim = 0.1) mean(d$y, trim = trim),
-  level = 0.0,
+  level = 0.90,
   trim = 0.2
 )
 

@@ -53,7 +53,7 @@
 #' @import brglm2
 #' @import enrichwith
 #' @importFrom numDeriv grad hessian
-#' @importFrom stats coef model.frame qnorm runif update vcov
+#' @importFrom stats coef model.frame qnorm runif update vcov printCoefmat
 #' @importFrom utils capture.output
 #'
 "_PACKAGE"

@@ -4,14 +4,18 @@
 \alias{focus}
 \title{Focus on a scalar function of the model parameters}
 \usage{
-focus(object, ...)
+focus(
+  object,
+  on = function(theta, ...) theta[1],
+  correction = "median",
+  on_gradient = NULL,
+  on_hessian = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{A fitted model object of class \code{\link[stats:glm]{"glm"}} or
 \code{\link[brglm2:brglmFit]{"brglmFit"}}.}
-
-\item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
-\code{on_hessian}.}
 
 \item{on}{A function specifying the scalar parameter of interest.
 It must take the model parameter vector as first argument and return
@@ -41,6 +45,9 @@ column per model parameter. If \code{NULL} (default), the Hessian is computed
 numerically using \code{\link[numDeriv:hessian]{numDeriv::hessian()}}. Apart from basic checks on type
 and dimension, \code{focus()} does not verify that the supplied Hessian is
 correct.}
+
+\item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
+\code{on_hessian}.}
 }
 \value{
 A list with components:

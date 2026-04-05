@@ -155,7 +155,11 @@
 #' }
 #'
 #' @export
-focus <- function(object, ...) {
+focus <- function(object,
+                  on = function(theta, ...) theta[1],
+                  correction = "median",
+                  on_gradient = NULL,
+                  on_hessian = NULL, ...) {
     UseMethod("focus")
 }
 
