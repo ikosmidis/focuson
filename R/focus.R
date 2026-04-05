@@ -6,7 +6,6 @@
 #'
 #' The function evaluates a user-specified scalar function of the full
 #' parameter vector and optionally applies mean or median bias correction.
-#' Confidence intervals can be constructed using either Wald or HULC methods.
 #'
 #' @param object A fitted model object of class [`"glm"`][stats::glm] or
 #'   [`"brglmFit"`][brglm2::brglmFit].
@@ -18,20 +17,10 @@
 #' @param correction Character string specifying the bias correction method.
 #'   One of:
 #'   \describe{
-#'     \item{`"no"`}{No bias correction.}
-#'     \item{`"median"`}{Median bias correction.}
+#'     \item{`"no"`}{No correction.}
+#'     \item{`"median"`}{Median bias correction; default.}
 #'     \item{`"mean"`}{Mean bias correction.}
 #'   }
-#' @param ci Character string specifying the confidence interval method.
-#'   One of:
-#'   \describe{
-#'     \item{`"wald"`}{Wald-type confidence interval based on the delta method.}
-#'     \item{`"hulc"`}{HulC confidence interval; see [hulc_ci()].}
-#'   }
-#' @param alpha Numeric scalar in `(0, 1)`. Target miscoverage level for the
-#'   confidence interval.
-#' @param control_ci A list of control options for confidence interval
-#'   construction as returned by [ci_control()].
 #' @param on_gradient Optional function returning the gradient of `on` with
 #'   respect to the model parameter vector. It must take the parameter vector
 #'   as first argument and return a numeric vector of the same length.
@@ -51,13 +40,14 @@
 #' @return
 #' A list with components:
 #' \describe{
-#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.
-#'     The returned value has a `"correction"` attribute recording the bias
-#'     correction method used.}
+#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
-#'   \item{`ci_type`}{Character string indicating the confidence interval method.}
-#'   \item{`confint`}{Numeric vector of length 2 with names `"lower"` and `"upper"` if
-#'     `ci = "wald"`, or the result of [hulc_ci()] if `ci = "hulc"`.}
+#'   \item{`correction`}{Character string recording the bias correction method used.}
+#'   \item{`object`}{The fitted model object used internally by `focus()`,
+#'     after any refitting described below.}
+#'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
+#'     `on_hessian` functions.}
+#'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
 #' }
 #'
 #' @details
@@ -75,10 +65,7 @@
 #'
 #' The current implementation assumes that `object` supports
 #' [stats::coef()] and [stats::vcov()] for the full parameter vector
-#' and the inverse of the expected information. If `ci = "hulc"`, then
-#' [stats::model.frame()] and [stats::update()] must also work for
-#' `object`, because the model is repeatedly refit on data partitions
-#' through [focus_statistic()].
+#' and the inverse of the expected information.
 #'
 #' Let \eqn{\psi(\theta)} denote the scalar function specified by `on`.
 #' The plug-in estimator is `on(theta, ...)`, where `theta` is the estimated
@@ -93,21 +80,19 @@
 #'
 #' Arguments in `...` are reserved for `on`, `on_gradient`, and
 #' `on_hessian`. However, names that coincide with formal arguments of
-#' `focus()` itself, such as `ci`, `correction`, `alpha`, `control_ci`,
-#' and `object`, are matched before `...` is formed and therefore cannot
-#' be passed through `...`.
+#' `focus()` itself, such as `correction` and `object`, are matched
+#' before `...` is formed and therefore cannot be passed through `...`.
 #'
 #' Standard errors are computed using the delta method, with
 #' covariance matrix and gradients evaluated at the estimated
 #' parameters from `object` or the refit version of it, as described
-#' above.  They are therefore not re-evaluated at the corrected
+#' above. They are therefore not re-evaluated at the corrected
 #' estimates.
 #'
-#' When `ci = "hulc"`, the HulC interval is computed by applying
-#' [hulc_ci()] to the model frame using [focus_statistic()] as the
-#' statistic evaluated on each partition.
+#' Confidence intervals can be obtained from the returned object using
+#' [confint()].
 #'
-#' @seealso [ci_control()], [hulc_ci()]
+#' @seealso [confint.focus_list()], [hulc_ci()]
 #'
 #' @examples
 #'
@@ -159,16 +144,22 @@
 #' ## equivariant to linear transformations
 #' coef(endo)[2] - coef(endo)[3]
 #'
-#' \dontrun{
+#' ## Wald confidence interval
+#' confint(focus(endo), level = 0.9)
 #'
-#' ## HulC and Wald confidence intervals
+#' \dontrun{
+#' ## HulC confidence interval
 #' set.seed(678)
-#' focus(endo, ci = "hulc", alpha = 0.1, control_ci = ci_control(Delta = 0, check_statistic = FALSE))
-#' focus(endo, ci = "wald", alpha = 0.1)
+#' confint(focus(endo), method = "hulc", level = 0.9,
+#'         Delta = 0, check_statistic = FALSE)
 #' }
 #'
 #' @export
-focus <- function(object, ...) {
+focus <- function(object,
+                  on = function(theta, ...) theta[1],
+                  correction = "median",
+                  on_gradient = NULL,
+                  on_hessian = NULL, ...) {
     UseMethod("focus")
 }
 
@@ -182,15 +173,10 @@ focus.default <- function(object, ...) {
 focus.glm <- function(object,
                       on = function(theta, ...) theta[1],
                       correction = "median",
-                      ci = "wald",
-                      alpha = 0.05,
-                      control_ci = ci_control(),
                       on_gradient = NULL,
                       on_hessian = NULL, ...) {
-    if (!inherits(control_ci, "ci_control")) {
-        stop("Please use `ci_control()` to construct the list for `control_ci`.")
-    }
-    stopifnot(length(alpha) == 1L, is.numeric(alpha), !is.na(alpha), alpha > 0, alpha < 1)
+    cl <- match.call()
+    dots <- list(...)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
     stopifnot(is.null(on_hessian) || is.function(on_hessian))
     is_glm <- identical(class(object)[1], "glm")
@@ -207,7 +193,6 @@ focus.glm <- function(object,
         }
     }
     correction <- match.arg(correction, c("no", "median", "mean"))
-    ci <- match.arg(ci, c("wald", "hulc"))
     V <- vcov(object, model = "full")
     theta <- coef(object, model = "full")
     if (object$family$family %in% c("poisson", "binomial")) {
@@ -258,76 +243,18 @@ focus.glm <- function(object,
     ## theta at the original estimates (i.e. ML or
     ## AS_mean/correction).
     se <- sqrt(var_psi)
-    if (identical(ci, "wald")) {
-        confint <- out + c(-1, 1) * qnorm(1 - alpha / 2) * se
-        names(confint) <- c("lower", "upper")
-        attr(confint, "alpha") <- alpha
-    }
-    if (identical(ci, "hulc")) {
-        statistic <- function(data, object, on, correction) {
-            do.call(focus_statistic,
-                    c(list(data = data, object = object, on = on, correction = correction,
-                           on_gradient = on_gradient, on_hessian = on_hessian),
-                      list(...)))
-        }
-        confint <- hulc_ci(model.frame(object),
-                           statistic = statistic,
-                           object = object,
-                           on = on,
-                           correction = correction,
-                           alpha = alpha,
-                           Delta = control_ci$Delta,
-                           randomize = control_ci$randomize,
-                           check_statistic = control_ci$check_statistic)
-    }
     out <- unname(out)
-    attr(out, "correction") <- correction
-    list(estimate = out, se = se, ci_type = ci, confint = confint)
-}
-
-#' Control options for confidence intervals returned by [focus()]
-#'
-#' Create a control object specifying options for confidence intervals
-#' returned by [focus()]
-#'
-#' @param Delta Numeric scalar in `[0, 1/2)`. Median bias of the
-#'     estimator of the `on` function for when `ci = "hulc"` in
-#'     [focus()]; see [hulc_ci()] for details.
-#'
-#' @param randomize Logical. If `TRUE`, use the randomization to
-#'     determine the number of partitions when `ci = "hulc"` in
-#'     [focus()]; see [hulc_ci()] for details.
-#'
-#' @param check_statistic Logical. If `TRUE` and `ci = "hulc"` in
-#'     [focus()], check whether the estimator of the `on` function can
-#'     be evaluated on the smallest partition before computing the
-#'     interval; see [hulc_ci()] for details.
-#'
-#' @param ... Currently unused. Included for future extensions.
-#'
-#' @return
-#'
-#' A named list of class `"ci_control"` with components `Delta`,
-#' `randomize`, and `check_statistic` with the values supplied.
-#'
-#' @details
-#'
-#' This function does not perform extensive validation of the
-#' arguments. It is primarily a convenience constructor to group
-#' options related to confidence intervals.
-#'
-#' @seealso [hulc_ci()], [focus()]
-#'
-#' @examples
-#' ci_control()
-#'
-#' ci_control(Delta = 0.05, randomize = FALSE)
-#'
-#'
-#' @export
-ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...) {
-    out <- list(Delta = Delta, randomize = randomize, check_statistic = check_statistic)
-    class(out) <- c("ci_control", class(out))
+    out <- list(
+        call = cl,
+        object = object,
+        on = list(on = on,
+                  on_gradient = on_gradient,
+                  on_hessian = on_hessian),
+        dots = dots,
+        correction = correction,
+        estimate = out,
+        se = se)
+    class(out) <- c("focus_list", class(out))
     out
 }
 
@@ -357,8 +284,7 @@ ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...)
 #'   [focus()].
 #' @param ... Additional arguments passed to [focus()]. These can be used
 #'   to supply further arguments to `on`, `on_gradient`, and
-#'   `on_hessian`, and also to specify options such as `ci`, `alpha`, and
-#'   `control_ci`.
+#'   `on_hessian`.
 #'
 #' @return
 #' A numeric scalar: the estimate of the quantity defined by `on`.
@@ -389,6 +315,7 @@ ci_control <- function(Delta = 0, randomize = TRUE, check_statistic = TRUE, ...)
 #'
 #' \dontrun{
 #' if (requireNamespace("boot", quietly = TRUE)) {
+#'   set.seed(123)
 #'   boot_fun <- function(data, indices) {
 #'     d <- data[indices, ]
 #'     focus_statistic(d, endo, correction = "mean")
@@ -408,4 +335,31 @@ focus_statistic <- function(data, object,
     object <- do.call(update, list(object = object, data = data))
     focus(object, on = on, correction = correction,
           on_gradient = on_gradient, on_hessian = on_hessian, ...)$estimate
+}
+
+
+
+#' @export
+print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...) {
+    if (!is.null(x$call)) {
+        cat("Call:\n")
+        print(x$call)
+        cat("\n")
+    }
+    out <- cbind(
+        unname(x$estimate),
+        unname(x$se)
+    )
+    rownames(out) <- "on"
+    colnames(out) <- c("Estimate", "Std. Error")
+    cat("Focus estimate\n")
+    printCoefmat(out, digits = digits, P.values = FALSE, has.Pvalue = FALSE)
+    cat("\n")
+    cat("Type of correction:", x$correction, "\n")
+    invisible(x)
+}
+
+#' @export
+coef.focus_list <- function(object, ...) {
+    object$estimate
 }

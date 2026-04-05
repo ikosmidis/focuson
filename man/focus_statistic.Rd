@@ -38,8 +38,7 @@ One of \code{"no"}, \code{"median"}, or \code{"mean"}.}
 
 \item{...}{Additional arguments passed to \code{\link[=focus]{focus()}}. These can be used
 to supply further arguments to \code{on}, \code{on_gradient}, and
-\code{on_hessian}, and also to specify options such as \code{ci}, \code{alpha}, and
-\code{control_ci}.}
+\code{on_hessian}.}
 }
 \value{
 A numeric scalar: the estimate of the quantity defined by \code{on}.
@@ -78,6 +77,7 @@ focus(endo, correction = "no")$estimate
 
 \dontrun{
 if (requireNamespace("boot", quietly = TRUE)) {
+  set.seed(123)
   boot_fun <- function(data, indices) {
     d <- data[indices, ]
     focus_statistic(d, endo, correction = "mean")

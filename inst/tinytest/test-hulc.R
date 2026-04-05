@@ -1,11 +1,12 @@
-B <- compute_B(alpha = 0.05, Delta = 0)
+B <- compute_B(level = 0.95, Delta = 0)
 expect_true(is.integer(B))
 expect_length(B, 1)
 expect_true(B >= 1)
 
 alpha <- 0.05
+level <- 1 - alpha
 Delta <- 0.1
-B <- compute_B(alpha, Delta)
+B <- compute_B(level, Delta)
 Dm <- 0.5 - Delta
 Dp <- 0.5 + Delta
 expect_true(Dm^B + Dp^B <= alpha)
@@ -17,7 +18,7 @@ x <- data.frame(y = rnorm(100))
 ci <- hulc_ci(
     data = x,
     statistic = function(d) mean(d$y),
-    alpha = 0.2,
+    level = 0.8,
     Delta = 0.123,
     randomize = FALSE
 )
@@ -28,9 +29,9 @@ expect_true(ci["lower"] <= ci["upper"])
 expect_identical(attr(ci, "type"), "hulc")
 
 
-expect_equal(attr(ci, "alpha"), 0.2)
+expect_equal(attr(ci, "level"), 0.8)
 expect_equal(attr(ci, "Delta"), 0.123)
-expect_equal(attr(ci, "B"), compute_B(0.2, 0.123))
+expect_equal(attr(ci, "B"), compute_B(0.8, 0.123))
 expect_identical(attr(ci, "type"), "hulc")
 
 
@@ -42,7 +43,7 @@ stat <- function(d) {
 }
 
 expect_warning(
-    ci <- hulc_ci(data = x, statistic = stat, alpha = 0.05,
+    ci <- hulc_ci(data = x, statistic = stat, level = 0.95,
                   randomize = FALSE, check_statistic = TRUE)
 )
 
