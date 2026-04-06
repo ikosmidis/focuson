@@ -41,6 +41,7 @@ expect_equal(
 out_wald <- focus(endo, correction = "mean")
 expect_identical(out_wald$correction, "mean")
 expect_identical(unname(coef(out_wald)), unname(out_wald$estimate))
+expect_equal(drop(vcov(out_wald)), out_wald$se^2)
 expect_equal(
     unname(confint(out_wald)),
     unname(out_wald$estimate) + c(-1, 1) * qnorm(0.975) * out_wald$se,

@@ -21,6 +21,7 @@ engine_out <- focus_engine(
 )
 expect_identical(engine_out$correction, "mean")
 expect_identical(unname(coef(engine_out)), unname(engine_out$estimate))
+expect_equal(drop(vcov(engine_out)), engine_out$se^2)
 expect_true(inherits(engine_out, "focus_list"))
 expect_true(is.language(engine_out$call))
 expect_true(is.function(engine_out$on$on))

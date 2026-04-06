@@ -363,3 +363,10 @@ print.focus_list <- function(x, digits = max(3L, getOption("digits") - 2L), ...)
 coef.focus_list <- function(object, ...) {
     object$estimate
 }
+
+#' @export
+vcov.focus_list <- function(object, ...) {
+    out <- matrix(object$se^2, nrow = 1, ncol = 1)
+    rownames(out) <- colnames(out) <- "on"
+    out
+}
