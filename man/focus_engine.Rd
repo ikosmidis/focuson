@@ -60,6 +60,8 @@ A list similar to the output of \code{\link[=focus]{focus()}}, with components:
 \item{\code{dots}}{A list with the additional arguments supplied through \code{...}.}
 \item{\code{call}}{The matched call to \code{focus_engine()}.}
 }
+The returned object has class \code{"focus_engine_list"} and inherits from
+\code{"focus_list"}.
 }
 \description{
 Estimate and perform inference on a scalar function of a supplied
