@@ -7,6 +7,8 @@
 estimate_focus_components(
   theta,
   loglik,
+  score = NULL,
+  information = NULL,
   simulate,
   nsim = 1000,
   parallelize = FALSE,
@@ -20,6 +22,17 @@ estimate_focus_components(
 parameter vector and dataset. It is expected to have an interface of the
 form \code{loglik(theta, data, ...)} and to return a single numeric value.}
 
+\item{score}{Optional function returning the gradient of the log-likelihood
+at a supplied parameter vector and dataset. It is expected to have an
+interface of the form \code{score(theta, data, ...)}. If \code{NULL} (default), the
+score is computed numerically from \code{loglik}.}
+
+\item{information}{Optional function returning the observed information
+matrix, namely the negative Hessian of the log-likelihood, at a supplied
+parameter vector and dataset. It is expected to have an interface of the
+form \code{information(theta, data, ...)}. If \code{NULL} (default), the information
+matrix is computed numerically from \code{loglik}.}
+
 \item{simulate}{A function that simulates one dataset at the supplied
 parameter vector \code{theta}. It is expected to have an interface of the form
 \code{simulate(theta, ...)} and to return one simulated dataset at each call.}
@@ -32,7 +45,8 @@ components.}
 calculations. This requires the suggested package
 \pkg{future.apply}.}
 
-\item{...}{Additional arguments passed to \code{simulate} and \code{loglik}.}
+\item{...}{Additional arguments passed to \code{simulate}, \code{loglik}, and, when
+supplied, to \code{score} and \code{information}.}
 }
 \value{
 A named list suitable for the \code{components} argument of \code{\link[=focus_engine]{focus_engine()}}.

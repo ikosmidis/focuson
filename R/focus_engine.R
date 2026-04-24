@@ -25,7 +25,8 @@
 #'   [future.apply::future_lapply()] for the repeated derivative
 #'   calculations. This requires the suggested package
 #'   \pkg{future.apply}.
-#' @param ... Additional arguments passed to `simulate` and `loglik`.
+#' @param ... Additional arguments passed to `simulate`, `loglik`, and, when
+#'   supplied, to `score` and `information`.
 #'
 #' @return
 #' A named list suitable for the `components` argument of [focus_engine()].
