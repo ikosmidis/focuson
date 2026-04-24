@@ -60,20 +60,29 @@ estimate_focus_components <- function(theta,
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
     }
-    s_fun <- if (is.null(score)) {
-                 function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
-             } else {
-                 score
+    if (is.null(score) && is.null(information)) {
+        simu_one <- function(i) {
+            data <- simulate(theta, ...)
+            ders <- grad_hess(loglik, theta, data = data, ...)
+            list(S = ders$grad,
+                 I = -ders$hess)
+        }
+    } else {
+        s_fun <- if (is.null(score)) {
+                     function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
+                 } else {
+                     score
              }
-    i_fun <- if (is.null(information)) {
-                 function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
-             } else {
-                 information
-             }
-    simu_one <- function(i) {
-        data <- simulate(theta, ...)
-        list(S = s_fun(theta, data, ...),
-             I = i_fun(theta, data, ...))
+        i_fun <- if (is.null(information)) {
+                     function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
+                 } else {
+                     information
+                 }
+        simu_one <- function(i) {
+            data <- simulate(theta, ...)
+            list(S = s_fun(theta, data, ...),
+                 I = i_fun(theta, data, ...))
+        }
     }
 
     derivatives <- if (parallelize) {
