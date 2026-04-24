@@ -1,5 +1,6 @@
 inst/doc
 inst/notes*
+inst/tinytest/test-estimate_focus_components.R
 
 ### macOS ###
 # General

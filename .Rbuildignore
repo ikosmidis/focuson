@@ -1,6 +1,7 @@
 ^LICENSE\.md$
 inst/notes
 
+
 ^\.github$
 ^\.gitignore
 ^\._*
@@ -18,3 +19,5 @@ README_cache
 ^CRAN-SUBMISSION$
 ^doc$
 ^Meta$
+
+inst/tinytest/test-estimate_focus_components.R

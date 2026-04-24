@@ -7,6 +7,15 @@
 #' @param loglik A function returning the log-likelihood evaluated at a supplied
 #'   parameter vector and dataset. It is expected to have an interface of the
 #'   form `loglik(theta, data, ...)` and to return a single numeric value.
+#' @param score Optional function returning the gradient of the log-likelihood
+#'   at a supplied parameter vector and dataset. It is expected to have an
+#'   interface of the form `score(theta, data, ...)`. If `NULL` (default), the
+#'   score is computed numerically from `loglik`.
+#' @param information Optional function returning the observed information
+#'   matrix, namely the negative Hessian of the log-likelihood, at a supplied
+#'   parameter vector and dataset. It is expected to have an interface of the
+#'   form `information(theta, data, ...)`. If `NULL` (default), the information
+#'   matrix is computed numerically from `loglik`.
 #' @param simulate A function that simulates one dataset at the supplied
 #'   parameter vector `theta`. It is expected to have an interface of the form
 #'   `simulate(theta, ...)` and to return one simulated dataset at each call.
@@ -40,6 +49,8 @@
 #' @export
 estimate_focus_components <- function(theta,
                                       loglik,
+                                      score = NULL,
+                                      information = NULL,
                                       simulate,
                                       nsim = 1000,
                                       parallelize = FALSE,
@@ -48,13 +59,22 @@ estimate_focus_components <- function(theta,
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
     }
+    s_fun <- if (is.null(score)) {
+                 function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
+             } else {
+                 score
+             }
+    i_fun <- if (is.null(information)) {
+                 function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
+             } else {
+                 information
+             }
     simu_one <- function(i) {
         data <- simulate(theta, ...)
-        list(
-            S = numDeriv::grad(loglik, theta, data = data, ...),
-            I = -numDeriv::hessian(loglik, theta, data = data, ...)
-        )
+        list(S = s_fun(theta, data, ...),
+             I = i_fun(theta, data, ...))
     }
+
     derivatives <- if (parallelize) {
         future.apply::future_lapply(
             seq_len(nsim),
@@ -65,20 +85,22 @@ estimate_focus_components <- function(theta,
         lapply(seq_len(nsim), simu_one)
     }
 
+    nobs <- nrow(simulate(theta, ...))
+
     Ihat <- Reduce("+", lapply(derivatives, `[[`, "I")) / nsim
     out <- list(V = solve(Ihat))
     out$P <- lapply(seq_along(theta), function(t) {
         Reduce(
             "+",
-            lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t])
-        ) / nsim
+            lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] / nobs)
+        ) * nobs / nsim
     })
 
     out$Q <- lapply(seq_along(theta), function(t) {
         Reduce(
             "+",
-            lapply(derivatives, function(der) -der$I * der$S[t])
-        ) / nsim
+            lapply(derivatives, function(der) -der$I * der$S[t] / nobs)
+        ) * nobs / nsim
     })
 
     out
