@@ -162,6 +162,8 @@ estimate_focus_components <- function(theta,
 #'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
 #'   \item{`call`}{The matched call to `focus_engine()`.}
 #' }
+#' The returned object has class `"focus_engine_list"` and inherits from
+#' `"focus_list"`.
 #'
 #' @details
 #' `focus_engine()` assumes that the supplied `theta` is either the maximum
@@ -257,6 +259,6 @@ focus_engine <- function(theta,
         estimate = out,
         se = se
     )
-    class(out) <- c("focus_list", class(out))
+    class(out) <- c("focus_engine_list", "focus_list", class(out))
     out
 }
