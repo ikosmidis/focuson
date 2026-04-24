@@ -86,22 +86,22 @@ estimate_focus_components <- function(theta,
         lapply(seq_len(nsim), simu_one)
     }
 
-    nobs <- nrow(simulate(theta, ...))
-
     Ihat <- Reduce("+", lapply(derivatives, `[[`, "I")) / nsim
     out <- list(V = solve(Ihat))
+    sc <- mean(diag(out$V))
+    if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
     out$P <- lapply(seq_along(theta), function(t) {
         Reduce(
             "+",
-            lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] / nobs)
-        ) * nobs / nsim
+            lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] * sc)
+        ) / (sc * nsim)
     })
 
     out$Q <- lapply(seq_along(theta), function(t) {
         Reduce(
             "+",
-            lapply(derivatives, function(der) -der$I * der$S[t] / nobs)
-        ) * nobs / nsim
+            lapply(derivatives, function(der) -der$I * der$S[t] * sc)
+        ) / (sc * nsim)
     })
 
     out
