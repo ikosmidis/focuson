@@ -31,11 +31,15 @@
 #'     [future.apply::future_lapply()] for the repeated derivative
 #'     calculations. This requires the suggested package
 #'     \pkg{future.apply}.
+#' @param diagnostics Logical. If `TRUE`, return simple Monte Carlo
+#'     diagnostics for the estimated components.
 #' @param ... Additional arguments passed to `simulate`, `loglik`,
 #'     and, when supplied, to `score` and `information`.
 #'
-#' @return A named list suitable for the `components` argument of
-#'     [focus_engine()], with elements `V`, `P`, and `Q`.
+#' @return An object of class `"focus_components"`, suitable for the
+#'     `components` argument of [focus_engine()], with elements `V`,
+#'     `P`, and `Q`. If `diagnostics = TRUE`, an additional element
+#'     `diagnostics` is included.
 #'
 #' @details
 #' The supplied `simulate` function is called repeatedly as
@@ -62,6 +66,10 @@
 #' corresponding simulation-based quantities across the simulated
 #' datasets.
 #'
+#' If `diagnostics = TRUE`, simple Monte Carlo diagnostics are
+#' returned for `I`, `P`, and `Q`, based on sample variability of the
+#' simulated contributions.
+#'
 #' @seealso [focus_engine()]
 #'
 #' @export
@@ -72,7 +80,9 @@ estimate_focus_components <- function(theta,
                                       simulate,
                                       nsim = 1000,
                                       parallelize = FALSE,
+                                      diagnostics = FALSE,
                                       ...) {
+    cl <- match.call()
     theta <- as.numeric(theta)
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
@@ -118,23 +128,111 @@ estimate_focus_components <- function(theta,
         lapply(seq_len(nsim), simu_one)
     }
 
+    diagnostics_matrix <- function(draws, mean_mat) {
+        second_moment <- Reduce("+", lapply(draws, function(x) x^2)) / nsim
+        var_mat <- if (nsim > 1L) {
+            pmax((second_moment - mean_mat^2) * nsim / (nsim - 1), 0)
+        } else {
+            mean_mat * 0
+        }
+        mcse_mat <- sqrt(var_mat / nsim)
+        frob_mean <- sqrt(sum(mean_mat^2))
+        list(
+            mcse_max = max(mcse_mat),
+            mcse_frobenius = sqrt(sum(mcse_mat^2)),
+            rel_mcse_frobenius = sqrt(sum(mcse_mat^2)) /
+                max(frob_mean, .Machine$double.eps)
+        )
+    }
+
     Ihat <- Reduce("+", lapply(derivatives, `[[`, "I")) / nsim
     out <- list(V = solve(Ihat))
     sc <- mean(diag(out$V))
     if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
+    p_diag <- vector("list", length(theta))
     out$P <- lapply(seq_along(theta), function(t) {
-        Reduce(
+        draws_t <- lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] * sc)
+        mean_t <- Reduce(
             "+",
-            lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] * sc)
+            draws_t
         ) / (sc * nsim)
+        if (diagnostics) {
+            p_diag[[t]] <<- diagnostics_matrix(draws_t, mean_t)
+        }
+        mean_t
     })
 
+    q_diag <- vector("list", length(theta))
     out$Q <- lapply(seq_along(theta), function(t) {
-        Reduce(
+        draws_t <- lapply(derivatives, function(der) -der$I * der$S[t] * sc)
+        mean_t <- Reduce(
             "+",
-            lapply(derivatives, function(der) -der$I * der$S[t] * sc)
+            draws_t
         ) / (sc * nsim)
+        if (diagnostics) {
+            q_diag[[t]] <<- diagnostics_matrix(draws_t, mean_t)
+        }
+        mean_t
     })
 
+    if (diagnostics) {
+        I_diag <- diagnostics_matrix(lapply(derivatives, `[[`, "I"), Ihat)
+        I_diag$kappa <- kappa(Ihat)
+        I_diag$min_eigen <- min(Re(eigen((Ihat + t(Ihat)) / 2,
+                                         only.values = TRUE)$values))
+        out$diagnostics <- list(I = I_diag,
+                                P = p_diag,
+                                Q = q_diag)
+    }
+
+    out$call <- cl
+    out$meta <- list(score_supplied = !no_score,
+                     information_supplied = !no_info,
+                     parallelize = parallelize,
+                     diagnostics = diagnostics,
+                     nsim = nsim)
+    class(out) <- c("focus_components", class(out))
     out
+}
+
+#' @export
+print.focus_components <- function(x,
+                                   digits = max(3L, getOption("digits") - 2L),
+                                   ...) {
+    cat("Call:\n")
+    print(x$call)
+    cat("\n")
+    meta <- x$meta
+    derivative_mode <-
+        if (isTRUE(meta$score_supplied) && isTRUE(meta$information_supplied)) {
+            "supplied score, supplied information"
+        } else if (isTRUE(meta$score_supplied) && !isTRUE(meta$information_supplied)) {
+            "supplied score, Jacobian-based information"
+        } else if (!isTRUE(meta$score_supplied) && isTRUE(meta$information_supplied)) {
+            "numerical score, supplied information"
+        } else {
+            "numerical score and information"
+        }
+    cat("Monte Carlo component estimates\n")
+    cat("Parameters:", length(x$P), "\n")
+    cat("Simulations:", meta$nsim, "\n")
+    cat("Derivatives:", derivative_mode, "\n")
+    cat("Diagnostics:", if (isTRUE(meta$diagnostics)) "yes" else "no", "\n")
+    cat("Parallelized:", if (isTRUE(meta$parallelize)) "yes" else "no", "\n")
+    if (isTRUE(meta$diagnostics) && !is.null(x$diagnostics)) {
+        cat("\nDiagnostics\n")
+        I_diag <- x$diagnostics$I
+        cat("I: kappa = ", format(signif(I_diag$kappa, digits)),
+            ", min eigen = ", format(signif(I_diag$min_eigen, digits)),
+            ", MCSE(Frobenius) = ", format(signif(I_diag$mcse_frobenius, digits)),
+            ", relative MCSE(Frobenius) = ", format(signif(I_diag$rel_mcse_frobenius, digits)),
+            "\n", sep = "")
+        p_rel <- vapply(x$diagnostics$P, `[[`, numeric(1), "rel_mcse_frobenius")
+        q_rel <- vapply(x$diagnostics$Q, `[[`, numeric(1), "rel_mcse_frobenius")
+        cat("P: max relative MCSE(Frobenius) = ",
+            format(signif(max(p_rel), digits)), "\n")
+        cat("Q: max relative MCSE(Frobenius) = ",
+            format(signif(max(q_rel), digits)), "\n")
+    }
+    invisible(x)
 }

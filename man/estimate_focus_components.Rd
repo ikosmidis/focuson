@@ -12,6 +12,7 @@ estimate_focus_components(
   simulate,
   nsim = 1000,
   parallelize = FALSE,
+  diagnostics = FALSE,
   ...
 )
 }
@@ -50,12 +51,17 @@ estimate the components.}
 calculations. This requires the suggested package
 \pkg{future.apply}.}
 
+\item{diagnostics}{Logical. If \code{TRUE}, return simple Monte Carlo
+diagnostics for the estimated components.}
+
 \item{...}{Additional arguments passed to \code{simulate}, \code{loglik},
 and, when supplied, to \code{score} and \code{information}.}
 }
 \value{
-A named list suitable for the \code{components} argument of
-\code{\link[=focus_engine]{focus_engine()}}, with elements \code{V}, \code{P}, and \code{Q}.
+An object of class \code{"focus_components"}, suitable for the
+\code{components} argument of \code{\link[=focus_engine]{focus_engine()}}, with elements \code{V},
+\code{P}, and \code{Q}. If \code{diagnostics = TRUE}, an additional element
+\code{diagnostics} is included.
 }
 \description{
 Estimate the model-side components used by \code{\link[=focus_engine]{focus_engine()}} through
@@ -85,6 +91,10 @@ matrices across the simulated datasets and inverting the result.
 The returned \code{P} and \code{Q} are estimated by averaging the
 corresponding simulation-based quantities across the simulated
 datasets.
+
+If \code{diagnostics = TRUE}, simple Monte Carlo diagnostics are
+returned for \code{I}, \code{P}, and \code{Q}, based on sample variability of the
+simulated contributions.
 }
 \seealso{
 \code{\link[=focus_engine]{focus_engine()}}

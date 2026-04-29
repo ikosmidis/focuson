@@ -170,3 +170,48 @@ expect_equal(Q(cml, df$x)[[3]], afuns$Qmat()[[3]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[1]], afuns$Pmat()[[1]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[2]], afuns$Pmat()[[2]], check.attributes = FALSE)
 expect_equal(P(cml, df$x)[[3]], afuns$Pmat()[[3]], check.attributes = FALSE)
+
+
+## estimate_focus_components() diagnostics
+norm_loglik <- function(theta, data, ...) {
+    sum(dnorm(data, mean = theta[1], sd = 1, log = TRUE))
+}
+
+norm_score <- function(theta, data, ...) {
+    sum(data - theta[1])
+}
+
+norm_info <- function(theta, data, ...) {
+    matrix(length(data), 1, 1)
+}
+
+sim_norm <- function(theta, n, ...) {
+    rnorm(n, mean = theta[1], sd = 1)
+}
+
+set.seed(1)
+comp_diag <- estimate_focus_components(
+    theta = 0,
+    loglik = norm_loglik,
+    score = norm_score,
+    information = norm_info,
+    simulate = sim_norm,
+    nsim = 6,
+    diagnostics = TRUE,
+    n = 5
+)
+
+expect_true(inherits(comp_diag, "focus_components"))
+expect_true("diagnostics" %in% names(comp_diag))
+expect_true(all(c("I", "P", "Q") %in% names(comp_diag$diagnostics)))
+expect_true(all(c("mcse_max", "mcse_frobenius", "rel_mcse_frobenius",
+                  "kappa", "min_eigen") %in% names(comp_diag$diagnostics$I)))
+expect_identical(length(comp_diag$diagnostics$P), 1L)
+expect_identical(length(comp_diag$diagnostics$Q), 1L)
+
+printed_comp_diag <- capture.output(print(comp_diag))
+expect_true(any(grepl("^Monte Carlo component estimates$", printed_comp_diag)))
+expect_true(any(grepl("^Parameters: 1\\s*$", printed_comp_diag)))
+expect_true(any(grepl("^Simulations: 6\\s*$", printed_comp_diag)))
+expect_true(any(grepl("^Diagnostics: yes\\s*$", printed_comp_diag)))
+expect_true(any(grepl("^Diagnostics$", printed_comp_diag)))
