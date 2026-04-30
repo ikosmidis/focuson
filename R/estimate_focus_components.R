@@ -95,7 +95,8 @@ estimate_focus_components <- function(theta,
             data <- simulate(theta, ...)
             ders <- grad_hess(loglik, theta, data = data, ...)
             list(S = ders$grad,
-                 I = -ders$hess)
+                 I = -ders$hess,
+                 SS = tcrossprod(ders$grad))
         }
     } else {
         if (no_score) {
@@ -114,8 +115,10 @@ estimate_focus_components <- function(theta,
         }
         simu_one <- function(i) {
             data <- simulate(theta, ...)
-            list(S = s_fun(theta, data, ...),
-                 I = i_fun(theta, data, ...))
+            S <- s_fun(theta, data, ...)
+            I <- i_fun(theta, data, ...)
+            SS <- tcrossprod(S)
+            list(S = S, I = I, SS = SS)
         }
     }
 
@@ -146,13 +149,13 @@ estimate_focus_components <- function(theta,
         )
     }
 
-    Ihat <- Reduce("+", lapply(derivatives, function(der) tcrossprod(der$S))) / nsim
+    Ihat <- Reduce("+", lapply(derivatives, function(der) der$SS)) / nsim
     out <- list(V = solve(Ihat))
     sc <- mean(diag(out$V))
     if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
     p_diag <- vector("list", length(theta))
     out$P <- lapply(seq_along(theta), function(t) {
-        draws_t <- lapply(derivatives, function(der) tcrossprod(der$S) * der$S[t] * sc)
+        draws_t <- lapply(derivatives, function(der) der$SS * der$S[t] * sc)
         mean_t <- Reduce(
             "+",
             draws_t
@@ -177,7 +180,7 @@ estimate_focus_components <- function(theta,
     })
 
     if (diagnostics) {
-        I_diag <- diagnostics_matrix(lapply(derivatives, function(der) tcrossprod(der$S)), Ihat)
+        I_diag <- diagnostics_matrix(lapply(derivatives, function(der) der$SS), Ihat)
         I_diag$kappa <- kappa(Ihat)
         I_diag$min_eigen <- min(Re(eigen((Ihat + t(Ihat)) / 2,
                                          only.values = TRUE)$values))
