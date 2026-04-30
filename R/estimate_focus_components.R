@@ -59,8 +59,9 @@
 #' If `information` is supplied, it is used directly, regardless of
 #' whether `score` is also supplied.
 #'
-#' The returned `V` is obtained by averaging the observed information
-#' matrices across the simulated datasets and inverting the result.
+#' The returned `V` is obtained by averaging the outer products of the
+#' simulated score vectors across the simulated datasets and inverting
+#' the result.
 #'
 #' The returned `P` and `Q` are estimated by averaging the
 #' corresponding simulation-based quantities across the simulated
@@ -145,7 +146,7 @@ estimate_focus_components <- function(theta,
         )
     }
 
-    Ihat <- Reduce("+", lapply(derivatives, `[[`, "I")) / nsim
+    Ihat <- Reduce("+", lapply(derivatives, function(der) tcrossprod(der$S))) / nsim
     out <- list(V = solve(Ihat))
     sc <- mean(diag(out$V))
     if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
@@ -176,7 +177,7 @@ estimate_focus_components <- function(theta,
     })
 
     if (diagnostics) {
-        I_diag <- diagnostics_matrix(lapply(derivatives, `[[`, "I"), Ihat)
+        I_diag <- diagnostics_matrix(lapply(derivatives, function(der) tcrossprod(der$S)), Ihat)
         I_diag$kappa <- kappa(Ihat)
         I_diag$min_eigen <- min(Re(eigen((Ihat + t(Ihat)) / 2,
                                          only.values = TRUE)$values))
