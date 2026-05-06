@@ -215,3 +215,51 @@ expect_true(any(grepl("^Parameters: 1\\s*$", printed_comp_diag)))
 expect_true(any(grepl("^Simulations: 6\\s*$", printed_comp_diag)))
 expect_true(any(grepl("^Diagnostics: yes\\s*$", printed_comp_diag)))
 expect_true(any(grepl("^Diagnostics$", printed_comp_diag)))
+
+## estimate_focus_components_fef()
+obs_norm <- c(-1, 0, 1, 2, 3)
+
+set.seed(3)
+comp_diag_fef <- estimate_focus_components_fef(
+    theta = 0,
+    data = obs_norm,
+    loglik = norm_loglik,
+    score = norm_score,
+    information = norm_info,
+    simulate = sim_norm,
+    nsim = 6,
+    diagnostics = TRUE,
+    n = 5
+)
+
+expect_true(inherits(comp_diag_fef, "focus_components"))
+expect_true(isTRUE(comp_diag_fef$meta$fef))
+expect_equal(drop(comp_diag_fef$V), 1 / length(obs_norm))
+expect_equal(drop(comp_diag_fef$Q[[1]]), 0)
+printed_comp_diag_fef <- capture.output(print(comp_diag_fef))
+expect_true(any(grepl("^Structure: full exponential family shortcut\\s*$", printed_comp_diag_fef)))
+
+## estimate_focus_components_iid()
+sim_norm_one <- function(theta, ...) {
+    rnorm(1, mean = theta[1], sd = 1)
+}
+
+set.seed(2)
+comp_diag_iid <- estimate_focus_components_iid(
+    theta = 0,
+    n = 5,
+    loglik = norm_loglik,
+    score = norm_score,
+    information = norm_info,
+    simulate = sim_norm_one,
+    nsim = 400,
+    diagnostics = TRUE
+)
+
+expect_true(inherits(comp_diag_iid, "focus_components"))
+expect_true(isTRUE(comp_diag_iid$meta$iid))
+expect_identical(comp_diag_iid$meta$n, 5L)
+expect_equal(drop(comp_diag_iid$V), 1 / 5, tolerance = 0.15)
+printed_comp_diag_iid <- capture.output(print(comp_diag_iid))
+expect_true(any(grepl("^Sampling: iid contributions\\s*$", printed_comp_diag_iid)))
+expect_true(any(grepl("^Target sample size: 5\\s*$", printed_comp_diag_iid)))

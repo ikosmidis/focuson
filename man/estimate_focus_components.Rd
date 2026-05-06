@@ -85,8 +85,9 @@ Jacobian of \code{score}.
 If \code{information} is supplied, it is used directly, regardless of
 whether \code{score} is also supplied.
 
-The returned \code{V} is obtained by averaging the observed information
-matrices across the simulated datasets and inverting the result.
+The returned \code{V} is obtained by averaging the outer products of the
+simulated score vectors across the simulated datasets and inverting
+the result.
 
 The returned \code{P} and \code{Q} are estimated by averaging the
 corresponding simulation-based quantities across the simulated
