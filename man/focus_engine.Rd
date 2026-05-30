@@ -12,7 +12,10 @@ focus_engine(
   estimator = "ML",
   on_gradient = NULL,
   on_hessian = NULL,
-  ...
+  ...,
+  se_at = c("naive", "corrected"),
+  V_function = NULL,
+  se_control = list()
 )
 }
 \arguments{
@@ -47,13 +50,30 @@ if \code{NULL} (default), the Hessian is computed numerically using
 \code{\link[numDeriv:hessian]{numDeriv::hessian()}}.}
 
 \item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
-\code{on_hessian}.}
+\code{on_hessian}. Arguments after \code{...} must be matched exactly.}
+
+\item{se_at}{Character string specifying where the delta-method standard
+error is evaluated. \code{"naive"} uses the usual plug-in delta-method
+standard error at the supplied \code{theta}; \code{"corrected"} reconstructs a
+model parameter vector consistent with the reported focus estimate and
+corrected estimates of the model parameters.}
+
+\item{V_function}{Optional function returning the covariance matrix at a
+supplied model parameter vector. Required when \code{se_at = "corrected"}.}
+
+\item{se_control}{A list of control parameters passed to \code{\link[=focus_se]{focus_se()}} when
+\code{se_at = "corrected"}.}
 }
 \value{
 A list similar to the output of \code{\link[=focus]{focus()}}, with components:
 \describe{
 \item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.}
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
+\item{\code{se_at}}{Character string recording where the standard error was
+evaluated.}
+\item{\code{se_info}}{A list with details about the standard error computation,
+present only when \code{se_at = "corrected"} and the corrected standard error
+computation succeeds.}
 \item{\code{correction}}{Character string recording the bias correction method used.}
 \item{\code{theta}}{Numeric vector, the supplied model parameter estimates.}
 \item{\code{components}}{The supplied model-side components.}
@@ -95,9 +115,11 @@ therefore performs only minimal validation of its inputs. In particular,
 needed by the requested correction, \code{components$P} and \code{components$Q} are
 assumed to be supplied in the format required by the computation.
 
-Standard errors are computed using the delta method, with covariance
-matrix and gradients evaluated at the supplied \code{theta}. They are therefore
-not re-evaluated at the corrected estimates.
+By default, standard errors are computed using the delta method, with
+covariance matrix and gradients evaluated at the supplied \code{theta}. If
+\code{se_at = "corrected"}, \code{focus_engine()} uses \code{\link[=focus_se]{focus_se()}} to evaluate the
+standard error at a reconstructed model parameter vector whose focus value
+agrees with the reported focus estimate.
 
 Confidence intervals can be constructed from the returned \code{estimate}
 and \code{se}, for example through the normal approximation.

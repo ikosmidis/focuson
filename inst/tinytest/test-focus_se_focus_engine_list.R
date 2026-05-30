@@ -55,6 +55,56 @@ expect_equal(engine_all["se", 1],
              coordinate_one$se,
              check.attributes = FALSE)
 
+p_mean <- length(coef(coalition_fit, model = "mean"))
+V_function <- function(theta) {
+    solve(afuns$information(coefficients = theta[seq_len(p_mean)],
+                            dispersion = theta[-seq_len(p_mean)]))
+}
+
+engine_square <- focus_engine(theta = theta,
+                              components = components,
+                              on = function(theta, k) theta[k]^2,
+                              correction = "median",
+                              k = 2)
+engine_square_se <- focus_se(engine_square, V_function = V_function)
+
+expect_true(is.numeric(engine_square_se$se))
+expect_equal(dim(engine_square_se$V), rep(length(engine_square_se$theta), 2))
+expect_equal(length(engine_square_se$gradient), length(engine_square_se$theta))
+expect_equal(length(engine_square_se$replace), 1L)
+
+engine_square_corrected <- focus_engine(theta = theta,
+                                        components = components,
+                                        on = function(theta, k) theta[k]^2,
+                                        correction = "median",
+                                        se_at = "corrected",
+                                        V_function = V_function,
+                                        k = 2)
+
+expect_equal(engine_square_corrected$se_at, "corrected")
+expect_true(is.list(engine_square_corrected$se_info))
+expect_equal(engine_square_corrected$se,
+             engine_square_corrected$se_info$se,
+             check.attributes = FALSE)
+expect_equal(engine_square_corrected$se_info$theta,
+             engine_square_se$theta,
+             tolerance = 1e-8,
+             check.attributes = FALSE)
+
+expect_error(focus_se(engine_square),
+             pattern = "`V_function` must be a function")
+
+expect_warning(
+    engine_square_fallback <- focus_engine(theta = theta,
+                                           components = components,
+                                           on = function(theta, k) theta[k]^2,
+                                           correction = "median",
+                                           se_at = "corrected",
+                                           k = 2)
+)
+expect_equal(engine_square_fallback$se_at, "naive")
+expect_true(is.null(engine_square_fallback$se_info))
+
 coalition_mean <- update(coalition_fit, type = "AS_mean")
 theta_mean <- coef(coalition_mean, model = "full")
 components_mean <- list(V = vcov(coalition_mean, model = "full"),
@@ -114,7 +164,7 @@ data("endometrial", package = "brglm2")
 endo <- glm(HG ~ NV + PI + EH,
             data = endometrial,
             family = binomial("probit"),
-            method = "brglmFit")
+            method = "brglmFit", type = "AS_mean")
 
 afuns <- enrichwith::get_auxiliary_functions(endo)
 comps <- list(V = solve(afuns$information()),
@@ -124,8 +174,8 @@ comps <- list(V = solve(afuns$information()),
 focus_fun <- function(theta, i = 1, j = 2) theta[i] - theta[j]
 
 fdiff0 <- focus(endo, on = focus_fun, i = 2, j = 3)
-fdiff1 <- focus_engine(coef(endo), comps, focus_fun, i = 2, j = 3,
-                       estimator = "meanBR")
+fdiff1 <- focus_engine(coef(endo), comps, focus_fun,
+                       estimator = "meanBR", i = 2, j = 3)
 
 expect_equal(coef(fdiff0), coef(fdiff1))
 engine_ests <- focus_on_all(fdiff1)
@@ -135,3 +185,12 @@ expect_warning(
 )
 
 expect_equal(coef(one_step_endo), engine_ests["estimate", ], tol = 1e-06)
+
+focus_all_correction <- sapply(1:4, function(j) {
+    out <- focus_engine(coef(endo), comps, on = function(theta) theta[j], se_at = "corrected", estimator = "meanBR", V_function = function(theta) solve(afuns$information(theta)))
+    c(estimate = coef(out), se = out$se)
+    })
+
+expect_equal(coef(summary(one_step_endo))[, 1:2], t(focus_all_correction),
+             check.attributes = FALSE, tol = 1e-06)
+

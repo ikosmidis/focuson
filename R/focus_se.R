@@ -46,12 +46,13 @@ focus_on_all <- function(object, ...) {
 #' }
 #'
 #' @details
-#' For `focus_list_glm` objects, the method first obtains focused estimates for
-#' all model parameters using [`focus_on_all()`]. It then selects an active
-#' coordinate of the original focus function, replaces that coordinate so that
-#' the focus function matches the reported focus estimate, evaluates the model
-#' information at the reconstructed parameter vector, and applies the delta
-#' method.
+#' For `focus_list_glm` and `focus_engine_list` objects, the method first
+#' obtains focused estimates for all model parameters using [`focus_on_all()`].
+#' It then selects an active coordinate of the original focus function,
+#' replaces that coordinate so that the focus function matches the reported
+#' focus estimate, evaluates the model information at the reconstructed
+#' parameter vector, and applies the delta method. The `focus_engine_list`
+#' method requires a `V_function` function.
 #'
 #' @seealso [`focus()`], [`focus_on_all()`]
 #'
@@ -120,6 +121,7 @@ focus_on_all.focus_engine_list <- function(object, ...) {
             estimator = object$estimator,
             on_gradient = on_coordinate_gradient,
             on_hessian = on_coordinate_hessian,
+            se_at = "naive",
             j = j
         )
         c(estimate = coef(res), se = res$se)
@@ -183,6 +185,60 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
                                   dispersion = estimates[-seq_len(p_mean)])
     }
     V <- solve(info)
+    d1_psi <- do.call(numDeriv::grad,
+                      c(list(func = on_fun, x = estimates), dots))
+    se <- sqrt(sum(d1_psi * drop(V %*% d1_psi)))
+    list(
+        se = se,
+        theta = estimates,
+        V = V,
+        gradient = d1_psi,
+        replace = id
+    )
+}
+
+#' @rdname focus_se
+#' @param V_function Function returning the covariance matrix at a supplied
+#'   model parameter vector. Required for `focus_engine_list` objects.
+#' @export
+focus_se.focus_engine_list <- function(object, V_function, control = list(), ...) {
+    if (missing(V_function) || !is.function(V_function)) {
+        stop("`V_function` must be a function.")
+    }
+    if (!is.list(control)) {
+        stop("`control` must be a list.")
+    }
+    control <- do.call(focus_se_control, control)
+    tol_deriv <- control$tol_deriv
+    tol_opt <- control$tol_opt
+    all_coefs <- focus_on_all(object)
+    estimates <- all_coefs["estimate", ]
+    ses <- all_coefs["se", ]
+    on_estimate <- coef(object)
+    on_fun <- object$on$on
+    dots <- object$dots
+    ders <- do.call(numDeriv::grad,
+                    c(list(func = on_fun, x = estimates), dots))
+    id <- which.max(abs(ders))
+    if (!is.finite(ders[id]) || abs(ders[id]) <= tol_deriv) {
+        stop("Could not identify an active parameter to replace. ",
+             "All derivatives of the focus function at the corrected estimates are zero, ",
+             "non-finite, or below `tol_deriv`.")
+    }
+    fun <- function(co, id) {
+        theta <- estimates
+        theta[id] <- co
+        (do.call(on_fun, c(list(theta), dots)) - on_estimate)^2
+    }
+    scale <- max(abs(ses[id]), abs(estimates[id]), 1e-02, na.rm = TRUE)
+    lims <- estimates[id] + c(-10, 10) * scale
+    opt <- optimize(fun, lims, id = id)
+    if (!is.finite(opt$objective) || sqrt(opt$objective) > tol_opt) {
+        stop("Could not reconstruct the model parameter vector by replacing parameter `",
+            names(estimates)[id], "` over interval [", lims[1], ", ", lims[2], "].")
+    }
+    estimates[id] <- opt$minimum
+    V <- V_function(estimates, ...)
     d1_psi <- do.call(numDeriv::grad,
                       c(list(func = on_fun, x = estimates), dots))
     se <- sqrt(sum(d1_psi * drop(V %*% d1_psi)))

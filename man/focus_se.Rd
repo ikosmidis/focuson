@@ -3,11 +3,14 @@
 \name{focus_se}
 \alias{focus_se}
 \alias{focus_se.focus_list_glm}
+\alias{focus_se.focus_engine_list}
 \title{Compute standard errors for focus objects}
 \usage{
 focus_se(object, control = list(), ...)
 
 \method{focus_se}{focus_list_glm}(object, control = list(), ...)
+
+\method{focus_se}{focus_engine_list}(object, V_function, control = list(), ...)
 }
 \arguments{
 \item{object}{An object returned by \code{\link[=focus]{focus()}}.}
@@ -15,6 +18,9 @@ focus_se(object, control = list(), ...)
 \item{control}{A list of control parameters used by methods.}
 
 \item{...}{Additional arguments passed to methods.}
+
+\item{V_function}{Function returning the covariance matrix at a supplied
+model parameter vector. Required for \code{focus_engine_list} objects.}
 }
 \value{
 For the \code{focus_list_glm} method, a list with components:
@@ -33,12 +39,13 @@ reconstructing the model parameter vector at which the standard error is
 evaluated.
 }
 \details{
-For \code{focus_list_glm} objects, the method first obtains focused estimates for
-all model parameters using \code{\link[=focus_on_all]{focus_on_all()}}. It then selects an active
-coordinate of the original focus function, replaces that coordinate so that
-the focus function matches the reported focus estimate, evaluates the model
-information at the reconstructed parameter vector, and applies the delta
-method.
+For \code{focus_list_glm} and \code{focus_engine_list} objects, the method first
+obtains focused estimates for all model parameters using \code{\link[=focus_on_all]{focus_on_all()}}.
+It then selects an active coordinate of the original focus function,
+replaces that coordinate so that the focus function matches the reported
+focus estimate, evaluates the model information at the reconstructed
+parameter vector, and applies the delta method. The \code{focus_engine_list}
+method requires a \code{V_function} function.
 
 The \code{focus_list_glm} method recognizes the following \code{control} entries:
 \describe{
