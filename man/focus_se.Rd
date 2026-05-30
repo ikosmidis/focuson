@@ -5,21 +5,16 @@
 \alias{focus_se.focus_list_glm}
 \title{Compute standard errors for focus objects}
 \usage{
-focus_se(object, ...)
+focus_se(object, control = list(), ...)
 
-\method{focus_se}{focus_list_glm}(object, tol_deriv = 1e-10, tol_opt = 1e-04, ...)
+\method{focus_se}{focus_list_glm}(object, control = list(), ...)
 }
 \arguments{
 \item{object}{An object returned by \code{\link[=focus]{focus()}}.}
 
+\item{control}{A list of control parameters used by methods.}
+
 \item{...}{Additional arguments passed to methods.}
-
-\item{tol_deriv}{Numeric scalar. Tolerance used to decide whether a
-derivative is large enough for the corresponding parameter to be treated
-as active.}
-
-\item{tol_opt}{Numeric scalar. Tolerance for the one-dimensional
-reconstruction of the replaced parameter coordinate.}
 }
 \value{
 For the \code{focus_list_glm} method, a list with components:
@@ -44,6 +39,15 @@ coordinate of the original focus function, replaces that coordinate so that
 the focus function matches the reported focus estimate, evaluates the model
 information at the reconstructed parameter vector, and applies the delta
 method.
+
+The \code{focus_list_glm} method recognizes the following \code{control} entries:
+\describe{
+\item{\code{tol_deriv}}{Numeric scalar. Tolerance used to decide whether a
+derivative is large enough for the corresponding parameter to be treated
+as active.}
+\item{\code{tol_opt}}{Numeric scalar. Tolerance for the one-dimensional
+reconstruction of the replaced parameter coordinate.}
+}
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=focus_on_all]{focus_on_all()}}

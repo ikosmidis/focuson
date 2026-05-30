@@ -11,6 +11,7 @@ focus(
   on_gradient = NULL,
   on_hessian = NULL,
   se_at = "naive",
+  se_control = list(),
   ...
 )
 }
@@ -52,6 +53,9 @@ error is evaluated. \code{"naive"} uses the usual plug-in delta-method standard
 error at the fitted object used by \code{focus()}; \code{"corrected"} reconstructs a
 model parameter vector consistent with the reported focus estimate and
 corrected estimates of the model parameters.}
+
+\item{se_control}{A list of control parameters passed to \code{\link[=focus_se]{focus_se()}} when
+\code{se_at = "corrected"}.}
 
 \item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
 \code{on_hessian}.}
