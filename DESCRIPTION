@@ -6,7 +6,6 @@ Description: Provides methods for estimation and inference for user-specified pa
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports: 
     brglm2,
     enrichwith (>= 0.4.1),
@@ -14,3 +13,4 @@ Imports:
 Suggests: 
     future.apply,
     tinytest
+Config/roxygen2/version: 8.0.0

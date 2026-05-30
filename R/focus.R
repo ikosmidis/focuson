@@ -62,6 +62,8 @@
 #' the first-order term in the bias expansion of the maximum likelihood
 #' estimator is removed, and helps avoid separation issues in categorical
 #' response models.
+#' Hence, the `object` component returned by the `glm` method always inherits
+#' from [`"brglmFit"`][brglm2::brglmFit].
 #'
 #' The current implementation assumes that `object` supports
 #' [stats::coef()] and [stats::vcov()] for the full parameter vector
@@ -254,7 +256,7 @@ focus.glm <- function(object,
         correction = correction,
         estimate = out,
         se = se)
-    class(out) <- c("focus_list", class(out))
+    class(out) <- c("focus_list_glm", "focus_list", class(out))
     out
 }
 

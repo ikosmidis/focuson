@@ -81,6 +81,8 @@ then \code{focus()} refits the model with \code{type = "AS_mean"}. This ensures 
 the first-order term in the bias expansion of the maximum likelihood
 estimator is removed, and helps avoid separation issues in categorical
 response models.
+Hence, the \code{object} component returned by the \code{glm} method always inherits
+from \code{\link[brglm2:brglmFit]{"brglmFit"}}.
 
 The current implementation assumes that \code{object} supports
 \code{\link[stats:coef]{stats::coef()}} and \code{\link[stats:vcov]{stats::vcov()}} for the full parameter vector
