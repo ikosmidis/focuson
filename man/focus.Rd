@@ -10,6 +10,7 @@ focus(
   correction = "median",
   on_gradient = NULL,
   on_hessian = NULL,
+  se_at = "object",
   ...
 )
 }
@@ -46,6 +47,12 @@ numerically using \code{\link[numDeriv:hessian]{numDeriv::hessian()}}. Apart fro
 and dimension, \code{focus()} does not verify that the supplied Hessian is
 correct.}
 
+\item{se_at}{Character string specifying where the delta-method standard
+error is evaluated. \code{"object"} evaluates it at the fitted object used by
+\code{focus()}; \code{"corrected"} reconstructs a model parameter vector consistent
+with the reported focus estimate and corrected estimates of the model
+parameters.}
+
 \item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
 \code{on_hessian}.}
 }
@@ -54,6 +61,10 @@ A list with components:
 \describe{
 \item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.}
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
+\item{\code{se_at}}{Character string recording where the standard error was
+evaluated.}
+\item{\code{se_info}}{A list with details about the standard error computation,
+present only when \code{se_at = "corrected"}.}
 \item{\code{correction}}{Character string recording the bias correction method used.}
 \item{\code{object}}{The fitted model object used internally by \code{focus()},
 after any refitting described below.}
@@ -104,11 +115,12 @@ Arguments in \code{...} are reserved for \code{on}, \code{on_gradient}, and
 \code{focus()} itself, such as \code{correction} and \code{object}, are matched
 before \code{...} is formed and therefore cannot be passed through \code{...}.
 
-Standard errors are computed using the delta method, with
-covariance matrix and gradients evaluated at the estimated
-parameters from \code{object} or the refit version of it, as described
-above. They are therefore not re-evaluated at the corrected
-estimates.
+By default, standard errors are computed using the delta method, with
+covariance matrix and gradients evaluated at the estimated parameters from
+\code{object} or the refit version of it, as described above. If
+\code{se_at = "corrected"}, \code{focus()} uses \code{\link[=focus_se]{focus_se()}} to evaluate the
+standard error at a reconstructed model parameter vector whose focus value
+agrees with the reported focus estimate.
 
 Confidence intervals can be obtained from the returned object using
 \code{\link[=confint]{confint()}}.
