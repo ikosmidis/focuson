@@ -39,6 +39,10 @@
 #'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
 #'   \item{`correction`}{Character string recording the bias correction method used.}
+#'   \item{`theta`}{Numeric vector, the supplied model parameter estimates.}
+#'   \item{`components`}{The supplied model-side components.}
+#'   \item{`estimator`}{Character string recording the estimator represented by
+#'     `theta`.}
 #'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
 #'     `on_hessian` functions.}
 #'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
@@ -133,6 +137,9 @@ focus_engine <- function(theta,
     out <- unname(out)
     out <- list(
         call = cl,
+        theta = theta,
+        components = components,
+        estimator = estimator,
         on = list(on = on,
                   on_gradient = on_gradient,
                   on_hessian = on_hessian),

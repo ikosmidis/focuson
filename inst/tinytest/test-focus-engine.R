@@ -25,6 +25,9 @@ expect_equal(drop(vcov(engine_out)), engine_out$se^2)
 expect_true(inherits(engine_out, "focus_engine_list"))
 expect_true(inherits(engine_out, "focus_list"))
 expect_true(is.language(engine_out$call))
+expect_equal(engine_out$theta, theta, check.attributes = FALSE)
+expect_identical(engine_out$components, list(V = V, P = P, Q = Q))
+expect_identical(engine_out$estimator, "ML")
 expect_true(is.function(engine_out$on$on))
 expect_null(engine_out$on$on_gradient)
 expect_null(engine_out$on$on_hessian)
@@ -65,6 +68,10 @@ engine_out_mean_no_PQ <- focus_engine(
     correction = "mean",
     estimator = "meanBR"
 )
+expect_equal(engine_out_mean$theta, theta_mean, check.attributes = FALSE)
+expect_identical(engine_out_mean$components, list(V = V_mean, P = P_mean, Q = Q_mean))
+expect_identical(engine_out_mean$estimator, "meanBR")
+expect_identical(engine_out_mean_no_PQ$components, list(V = V_mean))
 focus_out_mean <- focus(
     coalition_mean,
     on = function(theta) theta[1] - theta[4],
