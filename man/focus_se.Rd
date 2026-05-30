@@ -15,7 +15,8 @@ focus_se(object, control = list(), ...)
 \arguments{
 \item{object}{An object returned by \code{\link[=focus]{focus()}}.}
 
-\item{control}{A list of control parameters used by methods.}
+\item{control}{A list of control parameters used by methods; see
+\code{\link[=focus_se_control]{focus_se_control()}}.}
 
 \item{...}{Additional arguments passed to methods.}
 
@@ -47,13 +48,17 @@ focus estimate, evaluates the model information at the reconstructed
 parameter vector, and applies the delta method. The \code{focus_engine_list}
 method requires a \code{V_function} function.
 
-The \code{focus_list_glm} method recognizes the following \code{control} entries:
+The current \code{focus_list_glm} and \code{focus_engine_list} methods recognize the
+following \code{control} entries:
 \describe{
 \item{\code{tol_deriv}}{Numeric scalar. Tolerance used to decide whether a
 derivative is large enough for the corresponding parameter to be treated
 as active.}
 \item{\code{tol_opt}}{Numeric scalar. Tolerance for the one-dimensional
-reconstruction of the replaced parameter coordinate.}
+reconstruction of the replaced parameter coordinate. The optimization
+objective is the squared reconstruction error divided by
+\code{max(abs(estimate), 1)^2}, so \code{tol_opt} is applied to the corresponding
+unitless absolute error.}
 }
 }
 \seealso{

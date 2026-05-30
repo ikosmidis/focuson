@@ -94,7 +94,7 @@ focus_warpbreaks <- focus(warpbreaks_fit,
                           on = function(theta, k) theta[k]^2,
                           correction = "median",
                           k = 2)
-se_warpbreaks <- focus_se(focus_warpbreaks, tol_opt = 1e-5)
+se_warpbreaks <- focus_se(focus_warpbreaks, control = list(tol_opt = 1e-5))
 
 expect_true(is.numeric(se_warpbreaks$se))
 expect_equal(dim(se_warpbreaks$V), rep(length(se_warpbreaks$theta), 2))

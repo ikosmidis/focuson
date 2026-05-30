@@ -31,7 +31,8 @@ focus_on_all <- function(object, ...) {
 #' evaluated.
 #'
 #' @param object An object returned by [`focus()`].
-#' @param control A list of control parameters used by methods.
+#' @param control A list of control parameters used by methods; see
+#'   [`focus_se_control()`].
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return
@@ -133,13 +134,17 @@ focus_on_all.focus_engine_list <- function(object, ...) {
 
 #' @rdname focus_se
 #' @details
-#' The `focus_list_glm` method recognizes the following `control` entries:
+#' The current `focus_list_glm` and `focus_engine_list` methods recognize the
+#' following `control` entries:
 #' \describe{
 #'   \item{`tol_deriv`}{Numeric scalar. Tolerance used to decide whether a
 #'     derivative is large enough for the corresponding parameter to be treated
 #'     as active.}
 #'   \item{`tol_opt`}{Numeric scalar. Tolerance for the one-dimensional
-#'     reconstruction of the replaced parameter coordinate.}
+#'     reconstruction of the replaced parameter coordinate. The optimization
+#'     objective is the squared reconstruction error divided by
+#'     `max(abs(estimate), 1)^2`, so `tol_opt` is applied to the corresponding
+#'     unitless absolute error.}
 #' }
 #' @export
 focus_se.focus_list_glm <- function(object, control = list(), ...) {
@@ -155,6 +160,7 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
     on_estimate <- coef(object)
     on_fun <- object$on$on
     dots <- object$dots
+    objective_scale <- max(abs(on_estimate), 1)
     ders <- do.call(numDeriv::grad,
                     c(list(func = on_fun, x = estimates), dots))
     id <- which.max(abs(ders))
@@ -166,7 +172,8 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
     fun <- function(co, id) {
         theta <- estimates
         theta[id] <- co
-        (do.call(on_fun, c(list(theta), dots)) - on_estimate)^2
+        ((do.call(on_fun, c(list(theta), dots)) - on_estimate) /
+             objective_scale)^2
     }
     scale <- max(abs(ses[id]), abs(estimates[id]), 1e-02, na.rm = TRUE)
     lims <- estimates[id] + c(-10, 10) * scale
@@ -217,6 +224,7 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     on_estimate <- coef(object)
     on_fun <- object$on$on
     dots <- object$dots
+    objective_scale <- max(abs(on_estimate), 1)
     ders <- do.call(numDeriv::grad,
                     c(list(func = on_fun, x = estimates), dots))
     id <- which.max(abs(ders))
@@ -228,7 +236,8 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     fun <- function(co, id) {
         theta <- estimates
         theta[id] <- co
-        (do.call(on_fun, c(list(theta), dots)) - on_estimate)^2
+        ((do.call(on_fun, c(list(theta), dots)) - on_estimate) /
+             objective_scale)^2
     }
     scale <- max(abs(ses[id]), abs(estimates[id]), 1e-02, na.rm = TRUE)
     lims <- estimates[id] + c(-10, 10) * scale
@@ -251,6 +260,25 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     )
 }
 
+#' Control parameters for corrected focus standard errors
+#'
+#' Construct the control list used by [`focus_se()`] when reconstructing the
+#' model parameter vector for corrected standard errors.
+#'
+#' @param tol_deriv Numeric scalar. Tolerance used to decide whether a
+#'   derivative is large enough for the corresponding parameter to be treated as
+#'   active.
+#' @param tol_opt Numeric scalar. Tolerance for the one-dimensional
+#'   reconstruction of the replaced parameter coordinate. The optimization
+#'   objective is the squared reconstruction error divided by
+#'   `max(abs(estimate), 1)^2`, so `tol_opt` is applied to the corresponding
+#'   unitless absolute error.
+#'
+#' @return A list with components `tol_deriv` and `tol_opt`.
+#'
+#' @seealso [`focus_se()`]
+#'
+#' @export
 focus_se_control <- function(tol_deriv = 1e-10, tol_opt = 1e-04) {
     list(tol_deriv = tol_deriv, tol_opt = tol_opt)
 }
