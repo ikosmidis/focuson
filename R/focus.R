@@ -39,6 +39,8 @@
 #'   error at the fitted object used by `focus()`; `"corrected"` reconstructs a
 #'   model parameter vector consistent with the reported focus estimate and
 #'   corrected estimates of the model parameters.
+#' @param se_control A list of control parameters passed to [`focus_se()`] when
+#'   `se_at = "corrected"`.
 #' @param ... Additional arguments passed to `on`, `on_gradient`, and
 #'   `on_hessian`.
 #'
@@ -172,7 +174,8 @@ focus <- function(object,
                   correction = "median",
                   on_gradient = NULL,
                   on_hessian = NULL,
-                  se_at = "naive", ...) {
+                  se_at = "naive",
+                  se_control = list(), ...) {
     UseMethod("focus")
 }
 
@@ -188,11 +191,15 @@ focus.glm <- function(object,
                       correction = "median",
                       on_gradient = NULL,
                       on_hessian = NULL,
-                      se_at = c("naive", "corrected"), ...) {
+                      se_at = c("naive", "corrected"),
+                      se_control = list(), ...) {
     cl <- match.call()
     dots <- list(...)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
     stopifnot(is.null(on_hessian) || is.function(on_hessian))
+    if (!is.list(se_control)) {
+        stop("`se_control` must be a list.")
+    }
     is_glm <- identical(class(object)[1], "glm")
     is_brglmFit <- inherits(object, "brglmFit")
     if (!(is_glm || is_brglmFit)) {
@@ -267,7 +274,7 @@ focus.glm <- function(object,
         se_at = se_at)
     class(out) <- c("focus_list_glm", "focus_list", class(out))
     if (identical(se_at, "corrected")) {
-        se_info <- focus_se(out)
+        se_info <- focus_se(out, control = se_control)
         out$se <- se_info$se
         out$se_info <- se_info
     }

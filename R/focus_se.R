@@ -30,6 +30,7 @@ focus_on_all <- function(object, ...) {
 #' evaluated.
 #'
 #' @param object An object returned by [`focus()`].
+#' @param control A list of control parameters used by methods.
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return
@@ -54,7 +55,7 @@ focus_on_all <- function(object, ...) {
 #' @seealso [`focus()`], [`focus_on_all()`]
 #'
 #' @export
-focus_se <- function(object, ...) {
+focus_se <- function(object, control = list(), ...) {
     UseMethod("focus_se")
 }
 
@@ -96,13 +97,23 @@ focus_on_all.focus_list_glm <- function(object, ...) {
 
 
 #' @rdname focus_se
-#' @param tol_deriv Numeric scalar. Tolerance used to decide whether a
-#'   derivative is large enough for the corresponding parameter to be treated
-#'   as active.
-#' @param tol_opt Numeric scalar. Tolerance for the one-dimensional
-#'   reconstruction of the replaced parameter coordinate.
+#' @details
+#' The `focus_list_glm` method recognizes the following `control` entries:
+#' \describe{
+#'   \item{`tol_deriv`}{Numeric scalar. Tolerance used to decide whether a
+#'     derivative is large enough for the corresponding parameter to be treated
+#'     as active.}
+#'   \item{`tol_opt`}{Numeric scalar. Tolerance for the one-dimensional
+#'     reconstruction of the replaced parameter coordinate.}
+#' }
 #' @export
-focus_se.focus_list_glm <- function(object, tol_deriv = 1e-10, tol_opt = 1e-04, ...) {
+focus_se.focus_list_glm <- function(object, control = list(), ...) {
+    if (!is.list(control)) {
+        stop("`control` must be a list.")
+    }
+    control <- do.call(focus_se_control, control)
+    tol_deriv <- control$tol_deriv
+    tol_opt <- control$tol_opt
     all_coefs <- focus_on_all(object, ...)
     estimates <- all_coefs["estimate", ]
     ses <- all_coefs["se", ]
@@ -149,4 +160,8 @@ focus_se.focus_list_glm <- function(object, tol_deriv = 1e-10, tol_opt = 1e-04, 
         gradient = d1_psi,
         replace = id
     )
+}
+
+focus_se_control <- function(tol_deriv = 1e-10, tol_opt = 1e-04) {
+    list(tol_deriv = tol_deriv, tol_opt = tol_opt)
 }

@@ -13,12 +13,18 @@ focus_square <- focus(coalition_fit,
                       k = 2)
 se_square <- focus_se(focus_square)
 theta_square <- se_square$theta
+se_square_control <- focus_se(focus_square, control = list(tol_opt = 1e-5))
+se_square_partial_control <- focus_se(focus_square, control = list(tol_op = 1e-5))
 
 expect_true(abs(unname(theta_square[2]^2) - unname(coef(focus_square))) < 1e-8)
 expect_true(is.numeric(se_square$se))
 expect_equal(dim(se_square$V), rep(length(theta_square), 2))
 expect_equal(length(se_square$gradient), length(theta_square))
 expect_equal(length(se_square$replace), 1L)
+expect_true(is.numeric(se_square_control$se))
+expect_true(is.numeric(se_square_partial_control$se))
+expect_error(focus_se(focus_square, control = 1),
+             pattern = "`control` must be a list")
 
 all_square <- focus_on_all(focus_square)
 
@@ -35,6 +41,7 @@ focus_square_corrected <- focus(coalition_fit,
                                 on = function(theta, k) theta[k]^2,
                                 correction = "median",
                                 se_at = "corrected",
+                                se_control = list(tol_opt = 1e-5),
                                 k = 2)
 
 expect_equal(focus_square_default$estimate,
@@ -48,9 +55,16 @@ expect_equal(focus_square_corrected$se,
              focus_square_corrected$se_info$se,
              check.attributes = FALSE)
 expect_equal(focus_square_corrected$se_info$theta,
-             se_square$theta,
+             se_square_control$theta,
              tolerance = 1e-8,
              check.attributes = FALSE)
+expect_error(focus(coalition_fit,
+                   on = function(theta, k) theta[k]^2,
+                   correction = "median",
+                   se_at = "corrected",
+                   se_control = 1,
+                   k = 2),
+             pattern = "`se_control` must be a list")
 
 focus_exp <- focus(coalition_fit,
                    on = function(theta) exp(theta[2]),
