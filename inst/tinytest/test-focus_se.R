@@ -29,7 +29,7 @@ expect_equal(length(theta_square), ncol(all_square))
 focus_square_default <- focus(coalition_fit,
                               on = function(theta, k) theta[k]^2,
                               correction = "median",
-                              se_at = "object",
+                              se_at = "naive",
                               k = 2)
 focus_square_corrected <- focus(coalition_fit,
                                 on = function(theta, k) theta[k]^2,
@@ -40,7 +40,7 @@ focus_square_corrected <- focus(coalition_fit,
 expect_equal(focus_square_default$estimate,
              focus_square_corrected$estimate,
              check.attributes = FALSE)
-expect_equal(focus_square_default$se_at, "object")
+expect_equal(focus_square_default$se_at, "naive")
 expect_equal(focus_square_corrected$se_at, "corrected")
 expect_true(is.null(focus_square_default$se_info))
 expect_true(is.list(focus_square_corrected$se_info))

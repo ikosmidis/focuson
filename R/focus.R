@@ -35,10 +35,10 @@
 #'   and dimension, `focus()` does not verify that the supplied Hessian is
 #'   correct.
 #' @param se_at Character string specifying where the delta-method standard
-#'   error is evaluated. `"object"` evaluates it at the fitted object used by
-#'   `focus()`; `"corrected"` reconstructs a model parameter vector consistent
-#'   with the reported focus estimate and corrected estimates of the model
-#'   parameters.
+#'   error is evaluated. `"naive"` uses the usual plug-in delta-method standard
+#'   error at the fitted object used by `focus()`; `"corrected"` reconstructs a
+#'   model parameter vector consistent with the reported focus estimate and
+#'   corrected estimates of the model parameters.
 #' @param ... Additional arguments passed to `on`, `on_gradient`, and
 #'   `on_hessian`.
 #'
@@ -172,7 +172,7 @@ focus <- function(object,
                   correction = "median",
                   on_gradient = NULL,
                   on_hessian = NULL,
-                  se_at = "object", ...) {
+                  se_at = "naive", ...) {
     UseMethod("focus")
 }
 
@@ -188,7 +188,7 @@ focus.glm <- function(object,
                       correction = "median",
                       on_gradient = NULL,
                       on_hessian = NULL,
-                      se_at = c("object", "corrected"), ...) {
+                      se_at = c("naive", "corrected"), ...) {
     cl <- match.call()
     dots <- list(...)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
