@@ -55,6 +55,10 @@ A list similar to the output of \code{\link[=focus]{focus()}}, with components:
 \item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.}
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
 \item{\code{correction}}{Character string recording the bias correction method used.}
+\item{\code{theta}}{Numeric vector, the supplied model parameter estimates.}
+\item{\code{components}}{The supplied model-side components.}
+\item{\code{estimator}}{Character string recording the estimator represented by
+\code{theta}.}
 \item{\code{on}}{A list containing the supplied \code{on}, \code{on_gradient}, and
 \code{on_hessian} functions.}
 \item{\code{dots}}{A list with the additional arguments supplied through \code{...}.}

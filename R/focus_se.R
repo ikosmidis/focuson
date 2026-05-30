@@ -7,14 +7,15 @@
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return
-#' For the `focus_list_glm` method, a numeric matrix with one column per
+#' For the currently implemented methods, a numeric matrix with one column per
 #' parameter. The first row contains the focused estimates and the second row
 #' contains their standard errors.
 #'
 #' @details
 #' It applies the same focus correction recorded in `object` to each coordinate
-#' of the model parameter vector. The `focus_list_glm` method uses analytic
-#' coordinate gradients and Hessians for those coordinate functions.
+#' of the model parameter vector. The `focus_list_glm` and `focus_engine_list`
+#' methods use analytic coordinate gradients and Hessians for those coordinate
+#' functions.
 #'
 #' @seealso [`focus()`], [`focus_se()`]
 #'
@@ -87,6 +88,38 @@ focus_on_all.focus_list_glm <- function(object, ...) {
             on_gradient = on_coordinate_gradient,
             on_hessian = on_coordinate_hessian,
             se_at = "naive",
+            j = j
+        )
+        c(estimate = coef(res), se = res$se)
+    }, numeric(2))
+    colnames(out) <- names(theta)
+    out
+}
+
+#' @rdname focus_on_all
+#' @export
+focus_on_all.focus_engine_list <- function(object, ...) {
+    theta <- object$theta
+    on_coordinate <- function(theta, j) {
+        theta[j]
+    }
+    on_coordinate_gradient <- function(theta, j) {
+        out <- numeric(length(theta))
+        out[j] <- 1
+        out
+    }
+    on_coordinate_hessian <- function(theta, j) {
+        matrix(0, nrow = length(theta), ncol = length(theta))
+    }
+    out <- vapply(seq_along(theta), function(j) {
+        res <- focus_engine(
+            theta = theta,
+            components = object$components,
+            on = on_coordinate,
+            correction = object$correction,
+            estimator = object$estimator,
+            on_gradient = on_coordinate_gradient,
+            on_hessian = on_coordinate_hessian,
             j = j
         )
         c(estimate = coef(res), se = res$se)

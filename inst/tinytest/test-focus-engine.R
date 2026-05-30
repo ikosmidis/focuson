@@ -32,6 +32,18 @@ expect_true(is.function(engine_out$on$on))
 expect_null(engine_out$on$on_gradient)
 expect_null(engine_out$on$on_hessian)
 expect_identical(engine_out$dots, list())
+
+engine_all <- focus_on_all(engine_out)
+expect_equal(rownames(engine_all), c("estimate", "se"))
+expect_equal(colnames(engine_all), names(theta))
+expect_equal(engine_all["estimate", 1],
+             focus_engine(theta = theta,
+                          components = list(V = V, P = P, Q = Q),
+                          on = function(theta) theta[1],
+                          on_gradient = function(theta) c(1, rep(0, length(theta) - 1)),
+                          on_hessian = function(theta) matrix(0, length(theta), length(theta)),
+                          correction = "mean")$estimate,
+             check.attributes = FALSE)
 focus_out <- focus(
     coalition_fit,
     on = function(theta) exp(theta[1]),
@@ -72,6 +84,18 @@ expect_equal(engine_out_mean$theta, theta_mean, check.attributes = FALSE)
 expect_identical(engine_out_mean$components, list(V = V_mean, P = P_mean, Q = Q_mean))
 expect_identical(engine_out_mean$estimator, "meanBR")
 expect_identical(engine_out_mean_no_PQ$components, list(V = V_mean))
+engine_all_mean_no_PQ <- focus_on_all(engine_out_mean_no_PQ)
+expect_equal(rownames(engine_all_mean_no_PQ), c("estimate", "se"))
+expect_equal(colnames(engine_all_mean_no_PQ), names(theta_mean))
+expect_equal(engine_all_mean_no_PQ["estimate", 1],
+             focus_engine(theta = theta_mean,
+                          components = list(V = V_mean),
+                          on = function(theta) theta[1],
+                          on_gradient = function(theta) c(1, rep(0, length(theta) - 1)),
+                          on_hessian = function(theta) matrix(0, length(theta), length(theta)),
+                          correction = "mean",
+                          estimator = "meanBR")$estimate,
+             check.attributes = FALSE)
 focus_out_mean <- focus(
     coalition_mean,
     on = function(theta) theta[1] - theta[4],

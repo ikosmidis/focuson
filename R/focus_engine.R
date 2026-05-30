@@ -95,7 +95,9 @@ focus_engine <- function(theta,
                          on_hessian = NULL, ...) {
     cl <- match.call()
     dots <- list(...)
+    theta_names <- names(theta)
     theta <- as.numeric(theta)
+    names(theta) <- theta_names
     correction <- match.arg(correction, c("no", "median", "mean"))
     estimator <- match.arg(estimator, c("ML", "meanBR"))
     stopifnot(is.list(components), !is.null(components$V))

@@ -3,11 +3,14 @@
 \name{focus_on_all}
 \alias{focus_on_all}
 \alias{focus_on_all.focus_list_glm}
+\alias{focus_on_all.focus_engine_list}
 \title{Focus on all model parameters}
 \usage{
 focus_on_all(object, ...)
 
 \method{focus_on_all}{focus_list_glm}(object, ...)
+
+\method{focus_on_all}{focus_engine_list}(object, ...)
 }
 \arguments{
 \item{object}{An object returned by \code{\link[=focus]{focus()}}.}
@@ -15,7 +18,7 @@ focus_on_all(object, ...)
 \item{...}{Additional arguments passed to methods.}
 }
 \value{
-For the \code{focus_list_glm} method, a numeric matrix with one column per
+For the currently implemented methods, a numeric matrix with one column per
 parameter. The first row contains the focused estimates and the second row
 contains their standard errors.
 }
@@ -25,8 +28,9 @@ each coordinate of the model parameter vector used by a \code{\link[=focus]{focu
 }
 \details{
 It applies the same focus correction recorded in \code{object} to each coordinate
-of the model parameter vector. The \code{focus_list_glm} method uses analytic
-coordinate gradients and Hessians for those coordinate functions.
+of the model parameter vector. The \code{focus_list_glm} and \code{focus_engine_list}
+methods use analytic coordinate gradients and Hessians for those coordinate
+functions.
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=focus_se]{focus_se()}}
