@@ -99,3 +99,29 @@ se_warpbreaks <- focus_se(focus_warpbreaks, tol_opt = 1e-5)
 expect_true(is.numeric(se_warpbreaks$se))
 expect_equal(dim(se_warpbreaks$V), rep(length(se_warpbreaks$theta), 2))
 expect_equal(length(se_warpbreaks$theta), length(coef(focus_warpbreaks$object, model = "mean")))
+
+
+data("endometrial", package = "brglm2")
+endo <- glm(HG ~ NV + PI + EH,
+            data = endometrial,
+            family = binomial("probit"),
+            method = "brglmFit")
+
+focus_fun <- function(theta, i = 1, j = 2) theta[i] - theta[j]
+fdiff0 <- focus(endo, on = focus_fun, i = 2, j = 3)
+
+focus_all <- focus_on_all(fdiff0)
+
+expect_warning(
+    one_step_endo <- update(endo, type = "AS_median", start = coef(endo), maxit = 1, max_step_factor = 0)
+)
+
+expect_equal(focus_all["estimate", ], coef(one_step_endo), tol = 1e-06)
+
+focus_all_correction <- sapply(1:4, function(j) {
+    out <- focus(endo, on = function(theta) theta[j], se_at = "corrected")
+    c(estimate = coef(out), se = out$se)
+    })
+
+expect_equal(coef(summary(one_step_endo))[, 1:2], t(focus_all_correction),
+             check.attributes = FALSE, tol = 1e-06)
