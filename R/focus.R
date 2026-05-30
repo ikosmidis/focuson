@@ -274,9 +274,16 @@ focus.glm <- function(object,
         se_at = se_at)
     class(out) <- c("focus_list_glm", "focus_list", class(out))
     if (identical(se_at, "corrected")) {
-        se_info <- focus_se(out, control = se_control)
-        out$se <- se_info$se
-        out$se_info <- se_info
+        se_info <- try(focus_se(out, control = se_control), silent = TRUE)
+        if (inherits(se_info, "try-error")) {
+            warning("Could not compute corrected standard error; using naive standard error instead. ",
+                    "Original error: ", conditionMessage(attr(se_info, "condition")),
+                    call. = FALSE)
+            out$se_at <- "naive"
+        } else {
+            out$se <- se_info$se
+            out$se_info <- se_info
+        }
     }
     out
 }

@@ -74,6 +74,16 @@ se_exp <- focus_se(focus_exp)
 expect_true(abs(unname(exp(se_exp$theta[2]) - coef(focus_exp))) < 1e-4)
 expect_true(is.numeric(se_exp$se))
 
+expect_warning(
+    focus_exp_fallback <- focus(coalition_fit,
+                                on = function(theta) exp(theta[2]),
+                                correction = "median",
+                                se_at = "corrected",
+                                se_control = list(tol_opt = 1e-10))
+)
+expect_equal(focus_exp_fallback$se_at, "naive")
+expect_true(is.null(focus_exp_fallback$se_info))
+
 warpbreaks_fit <- glm(breaks ~ wool + tension,
                       data = warpbreaks,
                       family = poisson,
