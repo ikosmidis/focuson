@@ -73,13 +73,13 @@ expect_equal(dim(engine_square_se$V), rep(length(engine_square_se$theta), 2))
 expect_equal(length(engine_square_se$gradient), length(engine_square_se$theta))
 expect_equal(length(engine_square_se$replace), 1L)
 
-engine_square_corrected <- confint(engine_square,
-                                   se_at = "corrected",
-                                   V_function = V_function)
+engine_square_compatible <- confint(engine_square,
+                                    se_at = "compatible",
+                                    V_function = V_function)
 
-expect_equal(attr(engine_square_corrected, "se_at"), "corrected")
-expect_true(is.list(attr(engine_square_corrected, "se_info")))
-expect_equal(attr(engine_square_corrected, "se_info")$theta,
+expect_equal(attr(engine_square_compatible, "se_at"), "compatible")
+expect_true(is.list(attr(engine_square_compatible, "se_info")))
+expect_equal(attr(engine_square_compatible, "se_info")$theta,
              engine_square_se$theta,
              tolerance = 1e-8,
              check.attributes = FALSE)
@@ -89,9 +89,9 @@ expect_error(focus_se(engine_square),
 
 expect_warning(
     engine_square_fallback <- confint(engine_square,
-                                      se_at = "corrected")
+                                      se_at = "compatible")
 )
-expect_equal(attr(engine_square_fallback, "se_at"), "naive")
+expect_equal(attr(engine_square_fallback, "se_at"), "supplied")
 expect_true(is.null(attr(engine_square_fallback, "se_info")))
 
 coalition_mean <- update(coalition_fit, type = "AS_mean")

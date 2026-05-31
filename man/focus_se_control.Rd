@@ -2,7 +2,7 @@
 % Please edit documentation in R/focus_se.R
 \name{focus_se_control}
 \alias{focus_se_control}
-\title{Control parameters for corrected focus standard errors}
+\title{Control parameters for compatible focus standard errors}
 \usage{
 focus_se_control(tol_deriv = 1e-10, tol_opt = 1e-04)
 }
@@ -23,7 +23,7 @@ A list with components \code{tol_deriv} and \code{tol_opt}.
 }
 \description{
 Construct the control list used by \code{\link[=focus_se]{focus_se()}} when reconstructing the
-model parameter vector for corrected standard errors.
+model parameter vector for compatible standard errors.
 }
 \seealso{
 \code{\link[=focus_se]{focus_se()}}

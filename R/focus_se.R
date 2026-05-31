@@ -235,10 +235,10 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
          replace = id)
 }
 
-#' Control parameters for corrected focus standard errors
+#' Control parameters for compatible focus standard errors
 #'
 #' Construct the control list used by [`focus_se()`] when reconstructing the
-#' model parameter vector for corrected standard errors.
+#' model parameter vector for compatible standard errors.
 #'
 #' @param tol_deriv Numeric scalar. Tolerance used to decide whether a
 #'   derivative is large enough for the corresponding parameter to be treated as

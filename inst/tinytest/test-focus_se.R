@@ -37,23 +37,23 @@ focus_square_default <- focus(coalition_fit,
                               correction = "median",
                               k = 2)
 ci_square_default <- confint(focus_square_default)
-ci_square_corrected <- confint(focus_square_default,
-                               se_at = "corrected",
-                               se_control = list(tol_opt = 1e-5))
+ci_square_compatible <- confint(focus_square_default,
+                                se_at = "compatible",
+                                se_control = list(tol_opt = 1e-5))
 
 expect_equal(focus_square_default$estimate,
              focus_square$estimate,
              check.attributes = FALSE)
-expect_equal(attr(ci_square_default, "se_at"), "naive")
-expect_equal(attr(ci_square_corrected, "se_at"), "corrected")
+expect_equal(attr(ci_square_default, "se_at"), "supplied")
+expect_equal(attr(ci_square_compatible, "se_at"), "compatible")
 expect_true(is.null(attr(ci_square_default, "se_info")))
-expect_true(is.list(attr(ci_square_corrected, "se_info")))
-expect_equal(attr(ci_square_corrected, "se_info")$theta,
+expect_true(is.list(attr(ci_square_compatible, "se_info")))
+expect_equal(attr(ci_square_compatible, "se_info")$theta,
              se_square_control$theta,
              tolerance = 1e-8,
              check.attributes = FALSE)
 expect_error(confint(focus_square_default,
-                     se_at = "corrected",
+                     se_at = "compatible",
                      se_control = 1),
              pattern = "`se_control` must be a list")
 
@@ -67,10 +67,10 @@ expect_true(is.numeric(se_exp$se))
 
 expect_warning(
     ci_exp_fallback <- confint(focus_exp,
-                               se_at = "corrected",
+                               se_at = "compatible",
                                se_control = list(tol_opt = 1e-10))
 )
-expect_equal(attr(ci_exp_fallback, "se_at"), "naive")
+expect_equal(attr(ci_exp_fallback, "se_at"), "supplied")
 expect_true(is.null(attr(ci_exp_fallback, "se_info")))
 
 warpbreaks_fit <- glm(breaks ~ wool + tension,

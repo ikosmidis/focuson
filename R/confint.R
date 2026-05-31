@@ -8,19 +8,19 @@
 #' @param method Character string specifying the confidence interval method.
 #'   One of `"wald"` or `"hulc"`.
 #' @param se_at Character string specifying where the delta-method standard
-#'   error is evaluated for `method = "wald"`. `"naive"` uses the standard
-#'   error stored in `object`; `"corrected"` tries to evaluate the standard
-#'   error at a reconstructed model parameter vector consistent with the
-#'   corrected focus estimate.
+#'   error is evaluated for `method = "wald"`. `"supplied"` uses the standard
+#'   error stored in `object`; `"compatible"` tries to evaluate the standard
+#'   error at a reconstructed model parameter vector compatible with the
+#'   reported focus estimate.
 #' @param V_function Optional function returning the covariance matrix at a
 #'   supplied model parameter vector. Required for `focus_engine_list` objects
-#'   when `se_at = "corrected"`.
+#'   when `se_at = "compatible"`.
 #' @param se_control A list of control parameters passed to [focus_se()] when
-#'   `se_at = "corrected"`.
+#'   `se_at = "compatible"`.
 #' @param ... Additional arguments for the confidence interval method. For
 #'   `method = "hulc"`, these are passed to [hulc_ci()], except that the
 #'   miscoverage rate is determined by `level`. For `method = "wald"` and
-#'   `se_at = "corrected"` with `focus_engine_list` objects, these are passed
+#'   `se_at = "compatible"` with `focus_engine_list` objects, these are passed
 #'   to `V_function`.
 #'
 #' @return
@@ -29,8 +29,8 @@
 #' @details
 #' For `method = "wald"`, the interval is computed from the stored point
 #' estimate and a delta-method standard error using the normal approximation.
-#' By default, the stored standard error is used. If `se_at = "corrected"`,
-#' `focus_se()` is used to compute a corrected standard error lazily. If that
+#' By default, the stored standard error is used. If `se_at = "compatible"`,
+#' `focus_se()` is used to compute a compatible standard error lazily. If that
 #' computation fails, a warning is issued and the stored standard error is used.
 #'
 #' For `method = "hulc"`, [hulc_ci()] is applied to the model frame of the
@@ -48,7 +48,7 @@ confint.focus_list <- function(object,
                                parm,
                                level = 0.95,
                                method = "wald",
-                               se_at = c("naive", "corrected"),
+                               se_at = c("supplied", "compatible"),
                                V_function = NULL,
                                se_control = list(),
                                ...) {
@@ -61,7 +61,7 @@ confint.focus_list <- function(object,
 
     if (identical(method, "wald")) {
         se <- object$se
-        if (identical(se_at, "corrected")) {
+        if (identical(se_at, "compatible")) {
             se_info <- if (inherits(object, "focus_engine_list")) {
                 try(focus_se(object,
                              V_function = V_function,
@@ -73,10 +73,10 @@ confint.focus_list <- function(object,
                     silent = TRUE)
             }
             if (inherits(se_info, "try-error")) {
-                warning("Could not compute corrected standard error; using naive standard error instead. ",
+                warning("Could not compute compatible standard error; using supplied standard error instead. ",
                         "Original error: ", conditionMessage(attr(se_info, "condition")),
                         call. = FALSE)
-                se_at <- "naive"
+                se_at <- "supplied"
             } else {
                 se <- se_info$se
             }
