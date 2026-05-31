@@ -89,7 +89,6 @@ focus_on_all.focus_list_glm <- function(object, ...) {
             correction = object$correction,
             on_gradient = on_coordinate_gradient,
             on_hessian = on_coordinate_hessian,
-            se_at = "naive",
             j = j
         )
         c(estimate = coef(res), se = res$se)
@@ -122,7 +121,6 @@ focus_on_all.focus_engine_list <- function(object, ...) {
             estimator = object$estimator,
             on_gradient = on_coordinate_gradient,
             on_hessian = on_coordinate_hessian,
-            se_at = "naive",
             j = j
         )
         c(estimate = coef(res), se = res$se)

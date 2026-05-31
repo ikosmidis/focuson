@@ -30,28 +30,14 @@
 #' @param on_hessian Optional function returning the Hessian of `on`;
 #'     if `NULL` (default), the Hessian is computed numerically using
 #'     [numDeriv::hessian()].
-#' @param se_at Character string specifying where the delta-method standard
-#'     error is evaluated. `"naive"` uses the usual plug-in delta-method
-#'     standard error at the supplied `theta`; `"corrected"` reconstructs a
-#'     model parameter vector consistent with the reported focus estimate and
-#'     corrected estimates of the model parameters.
-#' @param V_function Optional function returning the covariance matrix at a
-#'     supplied model parameter vector. Required when `se_at = "corrected"`.
-#' @param se_control A list of control parameters passed to [focus_se()] when
-#'     `se_at = "corrected"`.
 #' @param ... Additional arguments passed to `on`, `on_gradient`, and
-#'     `on_hessian`. Arguments after `...` must be matched exactly.
+#'     `on_hessian`.
 #'
 #' @return
 #' A list similar to the output of [focus()], with components:
 #' \describe{
 #'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
-#'   \item{`se_at`}{Character string recording where the standard error was
-#'     evaluated.}
-#'   \item{`se_info`}{A list with details about the standard error computation,
-#'     present only when `se_at = "corrected"` and the corrected standard error
-#'     computation succeeds.}
 #'   \item{`correction`}{Character string recording the bias correction method used.}
 #'   \item{`theta`}{Numeric vector, the supplied model parameter estimates.}
 #'   \item{`components`}{The supplied model-side components.}
@@ -86,11 +72,10 @@
 #' needed by the requested correction, `components$P` and `components$Q` are
 #' assumed to be supplied in the format required by the computation.
 #'
-#' By default, standard errors are computed using the delta method, with
-#' covariance matrix and gradients evaluated at the supplied `theta`. If
-#' `se_at = "corrected"`, `focus_engine()` uses [focus_se()] to evaluate the
-#' standard error at a reconstructed model parameter vector whose focus value
-#' agrees with the reported focus estimate.
+#' Standard errors are computed using the delta method, with covariance matrix
+#' and gradients evaluated at the supplied `theta`. Corrected standard errors
+#' can be computed explicitly with [focus_se()] or requested lazily in
+#' [confint.focus_list()].
 #'
 #' Confidence intervals can be constructed from the returned `estimate`
 #' and `se`, for example through the normal approximation.
@@ -109,21 +94,14 @@ focus_engine <- function(theta,
                          estimator = "ML",
                          on_gradient = NULL,
                          on_hessian = NULL,
-                         ...,
-                         se_at = c("naive", "corrected"),
-                         V_function = NULL,
-                         se_control = list()) {
+                         ...) {
     cl <- match.call()
     dots <- list(...)
-    if (!is.list(se_control)) {
-        stop("`se_control` must be a list.")
-    }
     theta_names <- names(theta)
     theta <- as.numeric(theta)
     names(theta) <- theta_names
     correction <- match.arg(correction, c("no", "median", "mean"))
     estimator <- match.arg(estimator, c("ML", "meanBR"))
-    se_at <- match.arg(se_at)
     stopifnot(is.list(components), !is.null(components$V))
     V <- components$V
     P <- components$P
@@ -172,21 +150,8 @@ focus_engine <- function(theta,
         dots = dots,
         correction = correction,
         estimate = out,
-        se = se,
-        se_at = se_at
+        se = se
     )
     class(out) <- c("focus_engine_list", "focus_list", class(out))
-    if (identical(se_at, "corrected")) {
-        se_info <- try(focus_se(out, V_function = V_function, control = se_control), silent = TRUE)
-        if (inherits(se_info, "try-error")) {
-            warning("Could not compute corrected standard error; using naive standard error instead. ",
-                    "Original error: ", conditionMessage(attr(se_info, "condition")),
-                    call. = FALSE)
-            out$se_at <- "naive"
-        } else {
-            out$se <- se_info$se
-            out$se_info <- se_info
-        }
-    }
     out
 }

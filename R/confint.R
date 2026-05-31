@@ -7,16 +7,31 @@
 #' @param level Confidence level.
 #' @param method Character string specifying the confidence interval method.
 #'   One of `"wald"` or `"hulc"`.
+#' @param se_at Character string specifying where the delta-method standard
+#'   error is evaluated for `method = "wald"`. `"naive"` uses the standard
+#'   error stored in `object`; `"corrected"` tries to evaluate the standard
+#'   error at a reconstructed model parameter vector consistent with the
+#'   corrected focus estimate.
+#' @param V_function Optional function returning the covariance matrix at a
+#'   supplied model parameter vector. Required for `focus_engine_list` objects
+#'   when `se_at = "corrected"`.
+#' @param se_control A list of control parameters passed to [focus_se()] when
+#'   `se_at = "corrected"`.
 #' @param ... Additional arguments for the confidence interval method. For
 #'   `method = "hulc"`, these are passed to [hulc_ci()], except that the
-#'   miscoverage rate is determined by `level`.
+#'   miscoverage rate is determined by `level`. For `method = "wald"` and
+#'   `se_at = "corrected"` with `focus_engine_list` objects, these are passed
+#'   to `V_function`.
 #'
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`.
 #'
 #' @details
 #' For `method = "wald"`, the interval is computed from the stored point
-#' estimate and standard error using the normal approximation.
+#' estimate and a delta-method standard error using the normal approximation.
+#' By default, the stored standard error is used. If `se_at = "corrected"`,
+#' `focus_se()` is used to compute a corrected standard error lazily. If that
+#' computation fails, a warning is issued and the stored standard error is used.
 #'
 #' For `method = "hulc"`, [hulc_ci()] is applied to the model frame of the
 #' stored fitted object using [focus_statistic()] as the statistic evaluated
@@ -33,15 +48,47 @@ confint.focus_list <- function(object,
                                parm,
                                level = 0.95,
                                method = "wald",
+                               se_at = c("naive", "corrected"),
+                               V_function = NULL,
+                               se_control = list(),
                                ...) {
     method <- match.arg(method, c("wald", "hulc"))
+    se_at <- match.arg(se_at)
+    if (!is.list(se_control)) {
+        stop("`se_control` must be a list.")
+    }
     alpha <- 1 - level
 
     if (identical(method, "wald")) {
-        ci <- unname(object$estimate) + c(-1, 1) * qnorm(1 - alpha / 2) * object$se
+        se <- object$se
+        if (identical(se_at, "corrected")) {
+            se_info <- if (inherits(object, "focus_engine_list")) {
+                try(focus_se(object,
+                             V_function = V_function,
+                             control = se_control,
+                             ...),
+                    silent = TRUE)
+            } else {
+                try(focus_se(object, control = se_control),
+                    silent = TRUE)
+            }
+            if (inherits(se_info, "try-error")) {
+                warning("Could not compute corrected standard error; using naive standard error instead. ",
+                        "Original error: ", conditionMessage(attr(se_info, "condition")),
+                        call. = FALSE)
+                se_at <- "naive"
+            } else {
+                se <- se_info$se
+            }
+        }
+        ci <- unname(object$estimate) + c(-1, 1) * qnorm(1 - alpha / 2) * se
         names(ci) <- c("lower", "upper")
         attr(ci, "level") <- level
         attr(ci, "type") <- "wald"
+        attr(ci, "se_at") <- se_at
+        if (exists("se_info", inherits = FALSE) && !inherits(se_info, "try-error")) {
+            attr(ci, "se_info") <- se_info
+        }
         return(ci)
     }
 

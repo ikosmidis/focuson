@@ -34,13 +34,6 @@
 #'   numerically using [numDeriv::hessian()]. Apart from basic checks on type
 #'   and dimension, `focus()` does not verify that the supplied Hessian is
 #'   correct.
-#' @param se_at Character string specifying where the delta-method standard
-#'   error is evaluated. `"naive"` uses the usual plug-in delta-method standard
-#'   error at the fitted object used by `focus()`; `"corrected"` reconstructs a
-#'   model parameter vector consistent with the reported focus estimate and
-#'   corrected estimates of the model parameters.
-#' @param se_control A list of control parameters passed to [`focus_se()`] when
-#'   `se_at = "corrected"`.
 #' @param ... Additional arguments passed to `on`, `on_gradient`, and
 #'   `on_hessian`.
 #'
@@ -49,10 +42,6 @@
 #' \describe{
 #'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
-#'   \item{`se_at`}{Character string recording where the standard error was
-#'     evaluated.}
-#'   \item{`se_info`}{A list with details about the standard error computation,
-#'     present only when `se_at = "corrected"`.}
 #'   \item{`correction`}{Character string recording the bias correction method used.}
 #'   \item{`object`}{The fitted model object used internally by `focus()`,
 #'     after any refitting described below.}
@@ -96,12 +85,11 @@
 #' `focus()` itself, such as `correction` and `object`, are matched
 #' before `...` is formed and therefore cannot be passed through `...`.
 #'
-#' By default, standard errors are computed using the delta method, with
-#' covariance matrix and gradients evaluated at the estimated parameters from
-#' `object` or the refit version of it, as described above. If
-#' `se_at = "corrected"`, `focus()` uses [`focus_se()`] to evaluate the
-#' standard error at a reconstructed model parameter vector whose focus value
-#' agrees with the reported focus estimate.
+#' Standard errors are computed using the delta method, with covariance matrix
+#' and gradients evaluated at the estimated parameters from `object` or the
+#' refit version of it, as described above. Corrected standard errors can be
+#' computed explicitly with [`focus_se()`] or requested lazily in
+#' [confint.focus_list()].
 #'
 #' Confidence intervals can be obtained from the returned object using
 #' [confint()].
@@ -173,9 +161,7 @@ focus <- function(object,
                   on = function(theta, ...) theta[1],
                   correction = "median",
                   on_gradient = NULL,
-                  on_hessian = NULL,
-                  se_at = "naive",
-                  se_control = list(), ...) {
+                  on_hessian = NULL, ...) {
     UseMethod("focus")
 }
 
@@ -190,16 +176,11 @@ focus.glm <- function(object,
                       on = function(theta, ...) theta[1],
                       correction = "median",
                       on_gradient = NULL,
-                      on_hessian = NULL,
-                      se_at = c("naive", "corrected"),
-                      se_control = list(), ...) {
+                      on_hessian = NULL, ...) {
     cl <- match.call()
     dots <- list(...)
     stopifnot(is.null(on_gradient) || is.function(on_gradient))
     stopifnot(is.null(on_hessian) || is.function(on_hessian))
-    if (!is.list(se_control)) {
-        stop("`se_control` must be a list.")
-    }
     is_glm <- identical(class(object)[1], "glm")
     is_brglmFit <- inherits(object, "brglmFit")
     if (!(is_glm || is_brglmFit)) {
@@ -214,7 +195,6 @@ focus.glm <- function(object,
         }
     }
     correction <- match.arg(correction, c("no", "median", "mean"))
-    se_at <- match.arg(se_at)
     V <- vcov(object, model = "full")
     theta <- coef(object, model = "full")
     if (object$family$family %in% c("poisson", "binomial")) {
@@ -270,21 +250,8 @@ focus.glm <- function(object,
         dots = dots,
         correction = correction,
         estimate = out,
-        se = se,
-        se_at = se_at)
+        se = se)
     class(out) <- c("focus_list_glm", "focus_list", class(out))
-    if (identical(se_at, "corrected")) {
-        se_info <- try(focus_se(out, control = se_control), silent = TRUE)
-        if (inherits(se_info, "try-error")) {
-            warning("Could not compute corrected standard error; using naive standard error instead. ",
-                    "Original error: ", conditionMessage(attr(se_info, "condition")),
-                    call. = FALSE)
-            out$se_at <- "naive"
-        } else {
-            out$se <- se_info$se
-            out$se_info <- se_info
-        }
-    }
     out
 }
 

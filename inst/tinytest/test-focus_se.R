@@ -35,35 +35,26 @@ expect_equal(length(theta_square), ncol(all_square))
 focus_square_default <- focus(coalition_fit,
                               on = function(theta, k) theta[k]^2,
                               correction = "median",
-                              se_at = "naive",
                               k = 2)
-focus_square_corrected <- focus(coalition_fit,
-                                on = function(theta, k) theta[k]^2,
-                                correction = "median",
-                                se_at = "corrected",
-                                se_control = list(tol_opt = 1e-5),
-                                k = 2)
+ci_square_default <- confint(focus_square_default)
+ci_square_corrected <- confint(focus_square_default,
+                               se_at = "corrected",
+                               se_control = list(tol_opt = 1e-5))
 
 expect_equal(focus_square_default$estimate,
-             focus_square_corrected$estimate,
+             focus_square$estimate,
              check.attributes = FALSE)
-expect_equal(focus_square_default$se_at, "naive")
-expect_equal(focus_square_corrected$se_at, "corrected")
-expect_true(is.null(focus_square_default$se_info))
-expect_true(is.list(focus_square_corrected$se_info))
-expect_equal(focus_square_corrected$se,
-             focus_square_corrected$se_info$se,
-             check.attributes = FALSE)
-expect_equal(focus_square_corrected$se_info$theta,
+expect_equal(attr(ci_square_default, "se_at"), "naive")
+expect_equal(attr(ci_square_corrected, "se_at"), "corrected")
+expect_true(is.null(attr(ci_square_default, "se_info")))
+expect_true(is.list(attr(ci_square_corrected, "se_info")))
+expect_equal(attr(ci_square_corrected, "se_info")$theta,
              se_square_control$theta,
              tolerance = 1e-8,
              check.attributes = FALSE)
-expect_error(focus(coalition_fit,
-                   on = function(theta, k) theta[k]^2,
-                   correction = "median",
-                   se_at = "corrected",
-                   se_control = 1,
-                   k = 2),
+expect_error(confint(focus_square_default,
+                     se_at = "corrected",
+                     se_control = 1),
              pattern = "`se_control` must be a list")
 
 focus_exp <- focus(coalition_fit,
@@ -75,14 +66,12 @@ expect_true(abs(unname(exp(se_exp$theta[2]) - coef(focus_exp))) < 1e-4)
 expect_true(is.numeric(se_exp$se))
 
 expect_warning(
-    focus_exp_fallback <- focus(coalition_fit,
-                                on = function(theta) exp(theta[2]),
-                                correction = "median",
-                                se_at = "corrected",
-                                se_control = list(tol_opt = 1e-10))
+    ci_exp_fallback <- confint(focus_exp,
+                               se_at = "corrected",
+                               se_control = list(tol_opt = 1e-10))
 )
-expect_equal(focus_exp_fallback$se_at, "naive")
-expect_true(is.null(focus_exp_fallback$se_info))
+expect_equal(attr(ci_exp_fallback, "se_at"), "naive")
+expect_true(is.null(attr(ci_exp_fallback, "se_info")))
 
 warpbreaks_fit <- glm(breaks ~ wool + tension,
                       data = warpbreaks,
@@ -119,8 +108,8 @@ expect_warning(
 expect_equal(focus_all["estimate", ], coef(one_step_endo), tol = 1e-06)
 
 focus_all_correction <- sapply(1:4, function(j) {
-    out <- focus(endo, on = function(theta) theta[j], se_at = "corrected")
-    c(estimate = coef(out), se = out$se)
+    out <- focus(endo, on = function(theta) theta[j])
+    c(estimate = coef(out), se = focus_se(out)$se)
     })
 
 expect_equal(coef(summary(one_step_endo))[, 1:2], t(focus_all_correction),

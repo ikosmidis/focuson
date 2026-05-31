@@ -4,7 +4,16 @@
 \alias{confint.focus_list}
 \title{Confidence intervals for focus objects}
 \usage{
-\method{confint}{focus_list}(object, parm, level = 0.95, method = "wald", ...)
+\method{confint}{focus_list}(
+  object,
+  parm,
+  level = 0.95,
+  method = "wald",
+  se_at = c("naive", "corrected"),
+  V_function = NULL,
+  se_control = list(),
+  ...
+)
 }
 \arguments{
 \item{object}{An object of class \code{"focus_list"}.}
@@ -16,9 +25,24 @@
 \item{method}{Character string specifying the confidence interval method.
 One of \code{"wald"} or \code{"hulc"}.}
 
+\item{se_at}{Character string specifying where the delta-method standard
+error is evaluated for \code{method = "wald"}. \code{"naive"} uses the standard
+error stored in \code{object}; \code{"corrected"} tries to evaluate the standard
+error at a reconstructed model parameter vector consistent with the
+corrected focus estimate.}
+
+\item{V_function}{Optional function returning the covariance matrix at a
+supplied model parameter vector. Required for \code{focus_engine_list} objects
+when \code{se_at = "corrected"}.}
+
+\item{se_control}{A list of control parameters passed to \code{\link[=focus_se]{focus_se()}} when
+\code{se_at = "corrected"}.}
+
 \item{...}{Additional arguments for the confidence interval method. For
 \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}}, except that the
-miscoverage rate is determined by \code{level}.}
+miscoverage rate is determined by \code{level}. For \code{method = "wald"} and
+\code{se_at = "corrected"} with \code{focus_engine_list} objects, these are passed
+to \code{V_function}.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}.
@@ -28,7 +52,10 @@ Compute confidence intervals for objects returned by \code{\link[=focus]{focus()
 }
 \details{
 For \code{method = "wald"}, the interval is computed from the stored point
-estimate and standard error using the normal approximation.
+estimate and a delta-method standard error using the normal approximation.
+By default, the stored standard error is used. If \code{se_at = "corrected"},
+\code{focus_se()} is used to compute a corrected standard error lazily. If that
+computation fails, a warning is issued and the stored standard error is used.
 
 For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to the model frame of the
 stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as the statistic evaluated
