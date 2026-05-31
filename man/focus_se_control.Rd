@@ -14,8 +14,9 @@ active.}
 \item{tol_opt}{Numeric scalar. Tolerance for the one-dimensional
 reconstruction of the replaced parameter coordinate. The optimization
 objective is the squared reconstruction error divided by
-\code{max(abs(estimate), 1)^2}, so \code{tol_opt} is applied to the corresponding
-unitless absolute error.}
+\code{max(se, 1e-02)^2}, where \code{se} is the standard error stored in the focus
+object, so \code{tol_opt} is applied to the corresponding unitless absolute
+error.}
 }
 \value{
 A list with components \code{tol_deriv} and \code{tol_opt}.

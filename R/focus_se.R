@@ -143,8 +143,8 @@ focus_on_all.focus_engine_list <- function(object, ...) {
 #'   \item{`tol_opt`}{Numeric scalar. Tolerance for the one-dimensional
 #'     reconstruction of the replaced parameter coordinate. The optimization
 #'     objective is the squared reconstruction error divided by
-#'     `max(abs(estimate), 1)^2`, so `tol_opt` is applied to the corresponding
-#'     unitless absolute error.}
+#'     `max(se, 1e-02)^2`, where `se` is the standard error stored in `object`,
+#'     so `tol_opt` is applied to the corresponding unitless absolute error.}
 #' }
 #' @export
 focus_se.focus_list_glm <- function(object, control = list(), ...) {
@@ -160,7 +160,7 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
     on_estimate <- coef(object)
     on_fun <- object$on$on
     dots <- object$dots
-    objective_scale <- max(abs(on_estimate), 1)
+    objective_scale <- max(object$se, 1e-02)
     ders <- do.call(numDeriv::grad,
                     c(list(func = on_fun, x = estimates), dots))
     id <- which.max(abs(ders))
@@ -177,7 +177,7 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
     }
     scale <- max(abs(ses[id]), abs(estimates[id]), 1e-02, na.rm = TRUE)
     lims <- estimates[id] + c(-10, 10) * scale
-    opt <- optimize(fun, lims, id = id)
+    opt <- optimize(fun, lims, id = id, tol = sqrt(.Machine$double.eps))
     if (!is.finite(opt$objective) || sqrt(opt$objective) > tol_opt) {
         stop("Could not reconstruct the model parameter vector by replacing parameter `",
             names(estimates)[id], "` over interval [", lims[1], ", ", lims[2], "].")
@@ -194,6 +194,10 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
     V <- solve(info)
     d1_psi <- do.call(numDeriv::grad,
                       c(list(func = on_fun, x = estimates), dots))
+    if (any(!is.finite(d1_psi)) || sqrt(sum(d1_psi^2)) <= tol_deriv) {
+        stop("The gradient of the focus function at the reconstructed parameter ",
+             "vector is zero, non-finite, or below `tol_deriv`.")
+    }
     se <- sqrt(sum(d1_psi * drop(V %*% d1_psi)))
     list(
         se = se,
@@ -224,7 +228,7 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     on_estimate <- coef(object)
     on_fun <- object$on$on
     dots <- object$dots
-    objective_scale <- max(abs(on_estimate), 1)
+    objective_scale <- max(object$se, 1e-02)
     ders <- do.call(numDeriv::grad,
                     c(list(func = on_fun, x = estimates), dots))
     id <- which.max(abs(ders))
@@ -241,7 +245,7 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     }
     scale <- max(abs(ses[id]), abs(estimates[id]), 1e-02, na.rm = TRUE)
     lims <- estimates[id] + c(-10, 10) * scale
-    opt <- optimize(fun, lims, id = id)
+    opt <- optimize(fun, lims, id = id, tol = sqrt(.Machine$double.eps))
     if (!is.finite(opt$objective) || sqrt(opt$objective) > tol_opt) {
         stop("Could not reconstruct the model parameter vector by replacing parameter `",
             names(estimates)[id], "` over interval [", lims[1], ", ", lims[2], "].")
@@ -250,6 +254,10 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
     V <- V_function(estimates, ...)
     d1_psi <- do.call(numDeriv::grad,
                       c(list(func = on_fun, x = estimates), dots))
+    if (any(!is.finite(d1_psi)) || sqrt(sum(d1_psi^2)) <= tol_deriv) {
+        stop("The gradient of the focus function at the reconstructed parameter ",
+             "vector is zero, non-finite, or below `tol_deriv`.")
+    }
     se <- sqrt(sum(d1_psi * drop(V %*% d1_psi)))
     list(
         se = se,
@@ -271,8 +279,9 @@ focus_se.focus_engine_list <- function(object, V_function, control = list(), ...
 #' @param tol_opt Numeric scalar. Tolerance for the one-dimensional
 #'   reconstruction of the replaced parameter coordinate. The optimization
 #'   objective is the squared reconstruction error divided by
-#'   `max(abs(estimate), 1)^2`, so `tol_opt` is applied to the corresponding
-#'   unitless absolute error.
+#'   `max(se, 1e-02)^2`, where `se` is the standard error stored in the focus
+#'   object, so `tol_opt` is applied to the corresponding unitless absolute
+#'   error.
 #'
 #' @return A list with components `tol_deriv` and `tol_opt`.
 #'
