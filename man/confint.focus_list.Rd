@@ -22,27 +22,27 @@
 
 \item{level}{Confidence level.}
 
-\item{method}{Character string specifying the confidence interval method.
-One of \code{"wald"} or \code{"hulc"}.}
+\item{method}{Character string specifying the confidence interval
+method.  One of \code{"wald"} or \code{"hulc"}.}
 
-\item{se_at}{Character string specifying where the delta-method standard
-error is evaluated for \code{method = "wald"}. \code{"supplied"} uses the standard
-error stored in \code{object}; \code{"compatible"} tries to evaluate the standard
-error at a reconstructed model parameter vector compatible with the
-reported focus estimate.}
+\item{se_at}{Character string specifying where the delta-method
+standard error is evaluated for \code{method = "wald"}. \code{"supplied"}
+uses the standard error stored in \code{object}; \code{"compatible"}
+tries to evaluate the standard error at a reconstructed model
+parameter vector compatible with the reported focus estimate.}
 
-\item{V_function}{Optional function returning the covariance matrix at a
-supplied model parameter vector. Required for \code{focus_engine_list} objects
-when \code{se_at = "compatible"}.}
+\item{V_function}{Optional function returning the covariance matrix
+at a supplied model parameter vector. Required for
+\code{focus_engine_list} objects when \code{se_at = "compatible"}.}
 
-\item{se_control}{A list of control parameters passed to \code{\link[=focus_se]{focus_se()}} when
-\code{se_at = "compatible"}.}
+\item{se_control}{A list of control parameters passed to
+\code{\link[=focus_se]{focus_se()}} when \code{se_at = "compatible"}.}
 
-\item{...}{Additional arguments for the confidence interval method. For
-\code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}}, except that the
-miscoverage rate is determined by \code{level}. For \code{method = "wald"} and
-\code{se_at = "compatible"} with \code{focus_engine_list} objects, these are passed
-to \code{V_function}.}
+\item{...}{Additional arguments for the confidence interval
+method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
+except that the nominal level is determined by \code{level}. For
+\code{method = "wald"} and \code{se_at = "compatible"} with
+\code{focus_engine_list} objects, these are passed to \code{V_function}.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}.
@@ -62,8 +62,8 @@ stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as 
 on each partition. This requires that \code{\link[stats:model.frame]{stats::model.frame()}} and
 \code{\link[stats:update]{stats::update()}} work for the stored fitted object.
 
-The coverage rate is determined by \code{level}; users should not supply
-\code{level} in \code{...}.
+The nominal coverage level is determined by \code{level}; users should
+not supply \code{level} in \code{...}.
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=hulc_ci]{hulc_ci()}}, \code{\link[=focus_statistic]{focus_statistic()}}

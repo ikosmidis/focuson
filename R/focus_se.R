@@ -1,7 +1,7 @@
 #' Focus on all model parameters
 #'
 #' Compute focused estimates, and associated delta-method standard errors, for
-#' each coordinate of the model parameter vector used by a [`focus()`] result.
+#' each coordinate of the model parameter vector associated with a [`focus()`] result.
 #'
 #' @param object An object returned by [`focus()`].
 #' @param ... Additional arguments passed to methods.
@@ -18,6 +18,20 @@
 #' functions.
 #'
 #' @seealso [`focus()`], [`focus_se()`]
+#'
+#'
+#' @examples
+#'
+#' library("brglm2")
+#'
+#' data("endometrial", package = "brglm2")
+#' endo <- glm(HG ~ NV + PI + EH,
+#'             data = endometrial,
+#'             family = binomial("logit"),
+#'             method = "brglmFit")
+#'
+#' ff <- focus(endo)
+#' focus_on_all(ff)
 #'
 #' @export
 focus_on_all <- function(object, ...) {
@@ -53,7 +67,7 @@ focus_on_all <- function(object, ...) {
 #' replaces that coordinate so that the focus function matches the reported
 #' focus estimate, evaluates the model information at the reconstructed
 #' parameter vector, and applies the delta method. The `focus_engine_list`
-#' method requires a `V_function` function.
+#' method requires a use-supplied `V_function` function.
 #'
 #' @seealso [`focus()`], [`focus_on_all()`]
 #'
@@ -171,7 +185,7 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
 #' @param V_function Function returning the covariance matrix at a supplied
 #'   model parameter vector. Required for `focus_engine_list` objects.
 #' @export
-focus_se.focus_engine_list <- function(object, V_function, control = list(), ...) {
+focus_se.focus_engine_list <- function(object, control = list(), V_function, ...) {
     if (missing(V_function) || !is.function(V_function)) {
         stop("`V_function` must be a function.")
     }

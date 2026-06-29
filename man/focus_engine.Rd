@@ -103,10 +103,11 @@ can be computed explicitly with \code{\link[=focus_se]{focus_se()}} or requested
 Confidence intervals can be constructed from the returned \code{estimate}
 and \code{se}, for example through the normal approximation.
 }
-\seealso{
-\code{\link[=focus]{focus()}}
-
+\references{
 Kosmidis I (2014). Bias in parametric estimation: reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
 185-196. \doi{10.1002/wics.1296}.
+}
+\seealso{
+\code{\link[=focus]{focus()}}
 }

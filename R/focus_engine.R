@@ -82,6 +82,8 @@
 #'
 #' @seealso [focus()]
 #'
+#' @references
+#'
 #' Kosmidis I (2014). Bias in parametric estimation: reduction and
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
 #' 185-196. \doi{10.1002/wics.1296}.

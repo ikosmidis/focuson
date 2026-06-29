@@ -25,9 +25,9 @@ Kosmidis I (2014). Bias in parametric estimation: reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
 185-196. \doi{10.1002/wics.1296}.
 
-Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). HulC: high
-confidence level upper and lower confidence bounds. \emph{Journal of the
-Royal Statistical Society Series B: Statistical Methodology}, \strong{86},
+Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). The HulC:
+confidence regions from convex hulls. \emph{Journal of the Royal
+Statistical Society Series B: Statistical Methodology}, \strong{86},
 586-622. \doi{10.1093/jrsssb/qkad134}.
 }
 \seealso{

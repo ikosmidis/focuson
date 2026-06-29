@@ -97,6 +97,44 @@ If \code{diagnostics = TRUE}, simple Monte Carlo diagnostics are
 returned for \code{I}, \code{P}, and \code{Q}, based on sample variability of the
 simulated contributions.
 }
+\examples{
+
+\dontrun{
+## One-parameter normal location model with known variance
+loglik <- function(theta, data, ...) {
+    sum(dnorm(data, mean = theta, sd = 1, log = TRUE))
+}
+
+score <- function(theta, data, ...) {
+    sum(data - theta)
+}
+
+information <- function(theta, data, ...) {
+    matrix(length(data), 1, 1)
+}
+
+simulate <- function(theta, n = 4, ...) {
+    rnorm(n, mean = theta, sd = 1)
+}
+
+set.seed(1)
+comp <- estimate_focus_components(
+    theta = 0,
+    loglik = loglik,
+    score = score,
+    information = information,
+    simulate = simulate,
+    nsim = 10000,
+    n = 4
+)
+
+## In this model, the closed-form values are V = 1 / n, P = 0 and Q = 0.
+comp$V
+comp$P
+comp$Q
+}
+
+}
 \seealso{
 \code{\link[=focus_engine]{focus_engine()}}
 }

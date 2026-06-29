@@ -42,10 +42,11 @@
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
 #' 185-196. \doi{10.1002/wics.1296}.
 #'
-#' Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). HulC: high
-#' confidence level upper and lower confidence bounds. *Journal of the
-#' Royal Statistical Society Series B: Statistical Methodology*, **86**,
+#' Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). The HulC:
+#' confidence regions from convex hulls. *Journal of the Royal
+#' Statistical Society Series B: Statistical Methodology*, **86**,
 #' 586-622. \doi{10.1093/jrsssb/qkad134}.
+#'
 #'
 #' @docType package
 #' @aliases focuson-package
@@ -55,5 +56,6 @@
 #' @importFrom numDeriv grad hessian
 #' @importFrom stats coef model.frame qnorm runif update vcov printCoefmat
 #' @importFrom utils capture.output
+#' @importFrom stats optimize
 #'
 "_PACKAGE"

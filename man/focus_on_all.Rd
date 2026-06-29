@@ -24,13 +24,27 @@ contains their standard errors.
 }
 \description{
 Compute focused estimates, and associated delta-method standard errors, for
-each coordinate of the model parameter vector used by a \code{\link[=focus]{focus()}} result.
+each coordinate of the model parameter vector associated with a \code{\link[=focus]{focus()}} result.
 }
 \details{
 It applies the same focus correction recorded in \code{object} to each coordinate
 of the model parameter vector. The \code{focus_list_glm} and \code{focus_engine_list}
 methods use analytic coordinate gradients and Hessians for those coordinate
 functions.
+}
+\examples{
+
+library("brglm2")
+
+data("endometrial", package = "brglm2")
+endo <- glm(HG ~ NV + PI + EH,
+            data = endometrial,
+            family = binomial("logit"),
+            method = "brglmFit")
+
+ff <- focus(endo)
+focus_on_all(ff)
+
 }
 \seealso{
 \code{\link[=focus]{focus()}}, \code{\link[=focus_se]{focus_se()}}

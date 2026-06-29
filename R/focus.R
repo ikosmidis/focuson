@@ -146,13 +146,16 @@
 #' ## equivariant to linear transformations
 #' coef(endo)[2] - coef(endo)[3]
 #'
-#' ## Wald confidence interval
-#' confint(focus(endo), level = 0.9)
+#' ## Wald confidence interval with standard error based on supplied estimates
+#' confint(focus(endo), level = 0.95)
+#'
+#' ## Wald confidence interval with standard error based on compatible estimates
+#' confint(focus(endo), level = 0.95, se_at = "compatible")
 #'
 #' \dontrun{
 #' ## HulC confidence interval
 #' set.seed(678)
-#' confint(focus(endo), method = "hulc", level = 0.9,
+#' confint(focus(endo), method = "hulc", level = 0.95,
 #'         Delta = 0, check_statistic = FALSE)
 #' }
 #'

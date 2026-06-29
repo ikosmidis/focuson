@@ -5,23 +5,23 @@
 #' @param object An object of class `"focus_list"`.
 #' @param parm Currently unused.
 #' @param level Confidence level.
-#' @param method Character string specifying the confidence interval method.
-#'   One of `"wald"` or `"hulc"`.
-#' @param se_at Character string specifying where the delta-method standard
-#'   error is evaluated for `method = "wald"`. `"supplied"` uses the standard
-#'   error stored in `object`; `"compatible"` tries to evaluate the standard
-#'   error at a reconstructed model parameter vector compatible with the
-#'   reported focus estimate.
-#' @param V_function Optional function returning the covariance matrix at a
-#'   supplied model parameter vector. Required for `focus_engine_list` objects
-#'   when `se_at = "compatible"`.
-#' @param se_control A list of control parameters passed to [focus_se()] when
-#'   `se_at = "compatible"`.
-#' @param ... Additional arguments for the confidence interval method. For
-#'   `method = "hulc"`, these are passed to [hulc_ci()], except that the
-#'   miscoverage rate is determined by `level`. For `method = "wald"` and
-#'   `se_at = "compatible"` with `focus_engine_list` objects, these are passed
-#'   to `V_function`.
+#' @param method Character string specifying the confidence interval
+#'     method.  One of `"wald"` or `"hulc"`.
+#' @param se_at Character string specifying where the delta-method
+#'     standard error is evaluated for `method = "wald"`. `"supplied"`
+#'     uses the standard error stored in `object`; `"compatible"`
+#'     tries to evaluate the standard error at a reconstructed model
+#'     parameter vector compatible with the reported focus estimate.
+#' @param V_function Optional function returning the covariance matrix
+#'     at a supplied model parameter vector. Required for
+#'     `focus_engine_list` objects when `se_at = "compatible"`.
+#' @param se_control A list of control parameters passed to
+#'     [focus_se()] when `se_at = "compatible"`.
+#' @param ... Additional arguments for the confidence interval
+#'     method. For `method = "hulc"`, these are passed to [hulc_ci()],
+#'     except that the nominal level is determined by `level`. For
+#'     `method = "wald"` and `se_at = "compatible"` with
+#'     `focus_engine_list` objects, these are passed to `V_function`.
 #'
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`.
@@ -38,8 +38,8 @@
 #' on each partition. This requires that [stats::model.frame()] and
 #' [stats::update()] work for the stored fitted object.
 #'
-#' The coverage rate is determined by `level`; users should not supply
-#' `level` in `...`.
+#' The nominal coverage level is determined by `level`; users should
+#' not supply `level` in `...`.
 #'
 #' @seealso [focus()], [hulc_ci()], [focus_statistic()]
 #'
