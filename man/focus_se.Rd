@@ -46,7 +46,7 @@ It then selects an active coordinate of the original focus function,
 replaces that coordinate so that the focus function matches the reported
 focus estimate, evaluates the model information at the reconstructed
 parameter vector, and applies the delta method. The \code{focus_engine_list}
-method requires a use-supplied \code{V_function} function.
+method requires a user-supplied \code{V_function} function.
 
 The current \code{focus_list_glm} and \code{focus_engine_list} methods recognize the
 following \code{control} entries:

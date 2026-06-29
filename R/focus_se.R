@@ -67,7 +67,7 @@ focus_on_all <- function(object, ...) {
 #' replaces that coordinate so that the focus function matches the reported
 #' focus estimate, evaluates the model information at the reconstructed
 #' parameter vector, and applies the delta method. The `focus_engine_list`
-#' method requires a use-supplied `V_function` function.
+#' method requires a user-supplied `V_function` function.
 #'
 #' @seealso [`focus()`], [`focus_on_all()`]
 #'

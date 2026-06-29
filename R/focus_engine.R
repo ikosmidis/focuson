@@ -73,7 +73,7 @@
 #' assumed to be supplied in the format required by the computation.
 #'
 #' Standard errors are computed using the delta method, with covariance matrix
-#' and gradients evaluated at the supplied `theta`. Corrected standard errors
+#' and gradients evaluated at the supplied `theta`. Compatible standard errors
 #' can be computed explicitly with [focus_se()] or requested lazily in
 #' [confint.focus_list()].
 #'

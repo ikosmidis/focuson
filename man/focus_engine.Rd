@@ -96,7 +96,7 @@ needed by the requested correction, \code{components$P} and \code{components$Q} 
 assumed to be supplied in the format required by the computation.
 
 Standard errors are computed using the delta method, with covariance matrix
-and gradients evaluated at the supplied \code{theta}. Corrected standard errors
+and gradients evaluated at the supplied \code{theta}. Compatible standard errors
 can be computed explicitly with \code{\link[=focus_se]{focus_se()}} or requested lazily in
 \code{\link[=confint.focus_list]{confint.focus_list()}}.
 
