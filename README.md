@@ -1,6 +1,6 @@
 
 
-# focuson
+# focuson <img src="man/figures/hex_focuson.svg" width="320" align="right">
 
 <!-- badges: start -->
 
