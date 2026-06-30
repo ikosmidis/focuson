@@ -37,12 +37,10 @@ The following example uses the `endometrial` data set from the
 library("brglm2")
 library("focuson")
 data("endometrial", package = "brglm2")
-endo <- glm(
-  HG ~ NV + PI + EH,
-  data = endometrial,
-  family = binomial("logit"),
-  method = "brglmFit"
-)
+endo <- glm(HG ~ NV + PI + EH,
+            data = endometrial,
+            family = binomial("logit"),
+            method = "brglmFit")
 ```
 
 By default, `focus()` focuses on the first component of the model
@@ -154,28 +152,25 @@ supplied through `on_gradient` and `on_hessian`.
 
 ``` r
 focus_fun <- function(theta, i = 1, j = 2) {
-  theta[i] - theta[j]
+    theta[i] - theta[j]
 }
 
 focus_grad <- function(theta, i = 1, j = 2) {
-  out <- rep(0, length(theta))
-  out[i] <- 1
-  out[j] <- -1
-  out
+    out <- rep(0, length(theta))
+    out[i] <- 1
+    out[j] <- -1
+    out
 }
 
 focus_hessian <- function(theta, i = 1, j = 2) {
-  matrix(0, nrow = length(theta), ncol = length(theta))
+    matrix(0, nrow = length(theta), ncol = length(theta))
 }
 
-focus(
-  endo,
-  on = focus_fun,
-  on_gradient = focus_grad,
-  on_hessian = focus_hessian,
-  i = 2,
-  j = 3
-)
+focus(endo,
+      on = focus_fun,
+      on_gradient = focus_grad,
+      on_hessian = focus_hessian,
+      i = 2, j = 3)
 #> Call:
 #> focus.glm(object = endo, on = focus_fun, on_gradient = focus_grad, 
 #>     on_hessian = focus_hessian, i = 2, j = 3)
@@ -233,12 +228,11 @@ coalition_fit <- glm(duration ~ fract + numst2,
 afuns <- enrichwith::get_auxiliary_functions(coalition_fit)
 theta <- coef(coalition_fit, model = "full")
 engine_fit <- focus_engine(theta = theta,
-                           components = list(
-                               V = vcov(coalition_fit, model = "full"),
-                               P = afuns$Pmat(),
-                               Q = afuns$Qmat()),
-  on = function(theta) exp(theta[1]),
-  correction = "mean")
+                           components = list(V = vcov(coalition_fit, model = "full"),
+                                             P = afuns$Pmat(),
+                                             Q = afuns$Qmat()),
+                           on = function(theta) exp(theta[1]),
+                           correction = "mean")
 engine_fit
 #> Call:
 #> focus_engine(theta = theta, components = list(V = vcov(coalition_fit, 
