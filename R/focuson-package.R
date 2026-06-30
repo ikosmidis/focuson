@@ -38,7 +38,7 @@
 #' reduction in generalized linear models. *Statistics and Computing*,
 #' **30**, 43-59. \doi{10.1007/s11222-019-09860-6}.
 #'
-#' Kosmidis I (2014). Bias in parametric estimation: reduction and
+#' Kosmidis I (2014). Bias in parametric estimation: Reduction and
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
 #' 185-196. \doi{10.1002/wics.1296}.
 #'

@@ -104,7 +104,7 @@ Confidence intervals can be constructed from the returned \code{estimate}
 and \code{se}, for example through the normal approximation.
 }
 \references{
-Kosmidis I (2014). Bias in parametric estimation: reduction and
+Kosmidis I (2014). Bias in parametric estimation: Reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
 185-196. \doi{10.1002/wics.1296}.
 }

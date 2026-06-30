@@ -21,7 +21,7 @@ Kosmidis I, Kenne Pagui E C, Sartori N (2020). Mean and median bias
 reduction in generalized linear models. \emph{Statistics and Computing},
 \strong{30}, 43-59. \doi{10.1007/s11222-019-09860-6}.
 
-Kosmidis I (2014). Bias in parametric estimation: reduction and
+Kosmidis I (2014). Bias in parametric estimation: Reduction and
 useful side-effects. \emph{WIRE Computational Statistics}, \strong{6},
 185-196. \doi{10.1002/wics.1296}.
 
