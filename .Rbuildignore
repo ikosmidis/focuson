@@ -1,7 +1,7 @@
 ^LICENSE\.md$
 inst/notes
 inst/simulations
-
+README.qmd
 
 ^\.github$
 ^\.gitignore
