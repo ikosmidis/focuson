@@ -43,7 +43,8 @@ compute_B(level = 0.90, Delta = 0.05)
 
 }
 \references{
-Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). \emph{Journal of
-the Royal Statistical Society Series B: Statistical
-Methodology}, \strong{86}, 586-622. \doi{10.1093/jrsssb/qkad134}.
+Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). The HulC:
+confidence regions from convex hulls. \emph{Journal of the Royal
+Statistical Society Series B: Statistical Methodology}, \strong{86},
+586-622. \doi{10.1093/jrsssb/qkad134}.
 }

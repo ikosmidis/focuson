@@ -29,9 +29,11 @@
 #' bound here uses `ceiling()` to be slightly more conservative.
 #'
 #' @references
-#' Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). *Journal of
-#' the Royal Statistical Society Series B: Statistical
-#' Methodology*, **86**, 586-622. \doi{10.1093/jrsssb/qkad134}.
+#'
+#' Kuchibhotla A K, Balakrishnan S, Wasserman L (2024). The HulC:
+#' confidence regions from convex hulls. *Journal of the Royal
+#' Statistical Society Series B: Statistical Methodology*, **86**,
+#' 586-622. \doi{10.1093/jrsssb/qkad134}.
 #'
 #' @examples
 #' compute_B(level = 0.95, Delta = 0)
