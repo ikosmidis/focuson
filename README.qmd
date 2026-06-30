@@ -10,10 +10,6 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
-show_ci <- function(x) {
-  setNames(as.numeric(x), names(x))
-}
 ```
 
 # focuson <img src="man/figures/hex_focuson.svg" width="320" align="right">
@@ -99,7 +95,7 @@ reconstructed parameter vector compatible with the method used to
 estimate the focus parameter.
 
 ```{r}
-show_ci(confint(fo_or, se_at = "compatible"))
+confint(fo_or, se_at = "compatible")
 ```
 
 ## Analytic derivatives

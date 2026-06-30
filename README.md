@@ -116,9 +116,35 @@ parameter vector compatible with the method used to estimate the focus
 parameter.
 
 ``` r
-show_ci(confint(fo_or, se_at = "compatible"))
+confint(fo_or, se_at = "compatible")
 #>     lower     upper 
-#> -77.15505 135.74903
+#> -77.15505 135.74903 
+#> attr(,"level")
+#> [1] 0.95
+#> attr(,"type")
+#> [1] "wald"
+#> attr(,"se_at")
+#> [1] "compatible"
+#> attr(,"se_info")
+#> attr(,"se_info")$se
+#> [1] 54.31326
+#> 
+#> attr(,"se_info")$theta
+#> (Intercept)          NV          PI          EH 
+#>   3.9344345   3.3774848  -0.0377999  -2.6966726 
+#> 
+#> attr(,"se_info")$V
+#>             (Intercept)          NV           PI           EH
+#> (Intercept)   2.3609628 -0.19397817 -0.038598598 -1.072693017
+#> NV           -0.1939782  3.43689114 -0.011982259  0.191304781
+#> PI           -0.0385986 -0.01198226  0.001691114  0.006889167
+#> EH           -1.0726930  0.19130478  0.006889167  0.638663584
+#> 
+#> attr(,"se_info")$gradient
+#> [1]  0.00000 29.29699  0.00000  0.00000
+#> 
+#> attr(,"se_info")$replace
+#> [1] 2
 ```
 
 ## Analytic derivatives
