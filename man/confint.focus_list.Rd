@@ -9,7 +9,7 @@
   parm,
   level = 0.95,
   method = "wald",
-  se_at = c("supplied", "compatible"),
+  se_at = "supplied",
   V_function = NULL,
   se_control = list(),
   ...

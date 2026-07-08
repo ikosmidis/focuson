@@ -48,12 +48,12 @@ confint.focus_list <- function(object,
                                parm,
                                level = 0.95,
                                method = "wald",
-                               se_at = c("supplied", "compatible"),
+                               se_at = "supplied",
                                V_function = NULL,
                                se_control = list(),
                                ...) {
     method <- match.arg(method, c("wald", "hulc"))
-    se_at <- match.arg(se_at)
+    se_at <- match.arg(se_at, c("supplied", "compatible"))
     if (!is.list(se_control)) {
         stop("`se_control` must be a list.")
     }
