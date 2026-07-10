@@ -1,3 +1,87 @@
+#' Profile likelihood confidence intervals
+#'
+#' Compute a profile likelihood confidence interval for a scalar function of a
+#' model parameter vector using the endpoint equations of Venzon and
+#' Moolgavkar (1988).
+#'
+#' @param loglik Function returning the log-likelihood at a supplied
+#'     parameter vector. It must take the parameter vector as its
+#'     first argument.
+#' @param score Optional function returning the score vector at a
+#'     supplied parameter vector. It must take the parameter vector as
+#'     its first argument.  If `NULL`, the score is computed
+#'     numerically from `loglik`.
+#' @param information Optional function returning the observed or
+#'     expected information matrix at a supplied parameter vector. It
+#'     must take the parameter vector as its first argument. If
+#'     `NULL`, the information is computed numerically as minus the
+#'     Hessian of `loglik`.
+#' @param mle Numeric vector. The unrestricted maximum likelihood
+#'     estimate of the full model parameter vector.
+#' @param on Function specifying the scalar parameter of interest. It
+#'     must take the parameter vector as its first argument and return
+#'     a numeric scalar.
+#' @param on_gradient Optional function returning the gradient of `on`
+#'     with respect to the parameter vector. It must take the
+#'     parameter vector as its first argument. If `NULL`, the gradient
+#'     is computed numerically.
+#' @param likelihood_args List of additional arguments passed to
+#'     `loglik`, `score`, and `information`.
+#' @param nleqslv_args List of additional arguments passed to
+#'     [nleqslv::nleqslv()].
+#' @param level Confidence level. Default is `0.95`.
+#' @param ... Additional arguments passed to `on` and `on_gradient`.
+#'
+#' @return
+#' A numeric vector of length 2 with names `"lower"` and `"upper"`. The result
+#' has attributes:
+#' \describe{
+#'   \item{`"type"`}{The string `"profile"`.}
+#'   \item{`"max|fvec|"`}{The maximum absolute endpoint equation residual for
+#'     each endpoint.}
+#'   \item{`"messages"`}{The convergence messages returned by
+#'     [nleqslv::nleqslv()] for the lower and upper endpoint solves.}
+#' }
+#'
+#' @details
+#'
+#' The endpoint equations are
+#' \deqn{2\{\ell(\hat\theta) - \ell(\theta)\} - c = 0}
+#' and
+#' \deqn{\nabla \ell(\theta) - \lambda \nabla g(\theta) = 0,}
+#' where \eqn{\ell(\theta)} is `loglik`, \eqn{\hat\theta} is `mle`,
+#' \eqn{g} is the function supplied through `on`, and \eqn{c} is the
+#' `level` quantile of a chi-squared distribution with one degree of
+#' freedom.
+#'
+#' The function solves these equations twice, from Wald-type starting values
+#' in opposite directions, and returns the corresponding values of `on`. This
+#' is a low-level routine: endpoint convergence diagnostics are returned as
+#' attributes, and callers can decide how strictly to enforce them.
+#'
+#' @references
+#' Venzon D J, Moolgavkar S H (1988). A method for computing
+#' profile-likelihood-based confidence intervals. *Journal of the Royal
+#' Statistical Society: Series C (Applied Statistics)*, **37**, 87--94.
+#'
+#' @examples
+#' y <- c(-1, 0, 1, 2, 3)
+#' loglik <- function(theta, y) {
+#'     sum(dnorm(y, mean = theta[1], sd = 1, log = TRUE))
+#' }
+#' score <- function(theta, y) {
+#'     sum(y - theta[1])
+#' }
+#' information <- function(theta, y) {
+#'     matrix(length(y), 1, 1)
+#' }
+#' profile_ci(loglik = loglik,
+#'            score = score,
+#'            information = information,
+#'            mle = mean(y),
+#'            likelihood_args = list(y = y))
+#'
+#' @export
 profile_ci <- function(loglik,
                        score = NULL,
                        information = NULL,
