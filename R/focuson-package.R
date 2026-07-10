@@ -57,5 +57,6 @@
 #' @importFrom stats coef model.frame qnorm runif update vcov printCoefmat
 #' @importFrom utils capture.output
 #' @importFrom stats optimize
+#' @import nleqslv
 #'
 "_PACKAGE"
