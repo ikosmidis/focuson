@@ -12,6 +12,7 @@
   se_at = "supplied",
   V_function = NULL,
   se_control = list(),
+  nleqslv_args = list(),
   ...
 )
 }
@@ -23,7 +24,7 @@
 \item{level}{Confidence level.}
 
 \item{method}{Character string specifying the confidence interval
-method.  One of \code{"wald"} or \code{"hulc"}.}
+method.  One of \code{"wald"}, \code{"profile"}, or \code{"hulc"}.}
 
 \item{se_at}{Character string specifying where the delta-method
 standard error is evaluated for \code{method = "wald"}. \code{"supplied"}
@@ -37,6 +38,10 @@ at a supplied model parameter vector. Required for
 
 \item{se_control}{A list of control parameters passed to
 \code{\link[=focus_se]{focus_se()}} when \code{se_at = "compatible"}.}
+
+\item{nleqslv_args}{A list of control arguments passed to
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}} when
+\code{method = "profile"}.}
 
 \item{...}{Additional arguments for the confidence interval
 method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
@@ -57,10 +62,18 @@ By default, the stored standard error is used. If \code{se_at = "compatible"},
 \code{focus_se()} is used to compute a compatible standard error lazily. If that
 computation fails, a warning is issued and the stored standard error is used.
 
+For \code{method = "profile"}, \code{\link[=profile_ci]{profile_ci()}} is used to compute a likelihood
+profile interval for the scalar parameter defined by the stored \code{on}
+function. If the stored fitted object is not an ML fit, it is refitted by
+maximum likelihood before profiling. This interval is likelihood-based and
+does not use the bias-corrected focus estimate as the likelihood centre.
+Profile intervals are currently not available for \code{focus_engine()} results.
+
 For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to the model frame of the
 stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as the statistic evaluated
 on each partition. This requires that \code{\link[stats:model.frame]{stats::model.frame()}} and
-\code{\link[stats:update]{stats::update()}} work for the stored fitted object.
+\code{\link[stats:update]{stats::update()}} work for the stored fitted object. HulC intervals are
+currently not available for \code{focus_engine()} results.
 
 The nominal coverage level is determined by \code{level}; users should
 not supply \code{level} in \code{...}.

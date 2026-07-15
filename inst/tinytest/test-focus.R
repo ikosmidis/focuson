@@ -173,3 +173,38 @@ ci_hulc <- confint(
 
 expect_true(is.numeric(out_ana$estimate))
 expect_identical(attr(ci_hulc, "type"), "hulc")
+
+
+budworm_fit <- glm(cbind(numalive, numdead) ~ sex * ldose,
+                   family = binomial,
+                   data = transform(
+                       data.frame(ldose = rep(0:5, 2),
+                                  numdead = c(1, 4, 9, 13, 18, 20,
+                                              0, 2, 6, 10, 12, 16),
+                                  sex = factor(rep(c("M", "F"), c(6, 6)))),
+                       numalive = 20 - numdead
+                   ))
+budworm_glm_ci <- confint(profile(budworm_fit), parm = 2, level = 0.95)
+budworm_focus <- focus(budworm_fit,
+                       on = on_index,
+                       on_gradient = grad_index,
+                       on_hessian = hess_index,
+                       correction = "no",
+                       i = 2)
+budworm_profile_ci <- confint(budworm_focus, method = "profile", level = 0.95)
+expect_equal(budworm_profile_ci, budworm_glm_ci,
+             tolerance = 1e-04, check.attributes = FALSE)
+expect_identical(attr(budworm_profile_ci, "type"), "profile")
+
+budworm_focus_median <- focus(budworm_fit,
+                              on = on_index,
+                              on_gradient = grad_index,
+                              on_hessian = hess_index,
+                              correction = "median",
+                              i = 2)
+budworm_profile_ci_median <- confint(budworm_focus_median,
+                                     method = "profile",
+                                     level = 0.95)
+expect_equal(budworm_profile_ci_median, budworm_glm_ci,
+             tolerance = 1e-04, check.attributes = FALSE)
+expect_identical(attr(budworm_profile_ci_median, "type"), "profile")

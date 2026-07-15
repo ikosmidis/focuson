@@ -6,7 +6,7 @@
 #' @param parm Currently unused.
 #' @param level Confidence level.
 #' @param method Character string specifying the confidence interval
-#'     method.  One of `"wald"` or `"hulc"`.
+#'     method.  One of `"wald"`, `"profile"`, or `"hulc"`.
 #' @param se_at Character string specifying where the delta-method
 #'     standard error is evaluated for `method = "wald"`. `"supplied"`
 #'     uses the standard error stored in `object`; `"compatible"`
@@ -17,6 +17,9 @@
 #'     `focus_engine_list` objects when `se_at = "compatible"`.
 #' @param se_control A list of control parameters passed to
 #'     [focus_se()] when `se_at = "compatible"`.
+#' @param nleqslv_args A list of control arguments passed to
+#'     [nleqslv::nleqslv()] through [profile_ci()] when
+#'     `method = "profile"`.
 #' @param ... Additional arguments for the confidence interval
 #'     method. For `method = "hulc"`, these are passed to [hulc_ci()],
 #'     except that the nominal level is determined by `level`. For
@@ -33,10 +36,18 @@
 #' `focus_se()` is used to compute a compatible standard error lazily. If that
 #' computation fails, a warning is issued and the stored standard error is used.
 #'
+#' For `method = "profile"`, [profile_ci()] is used to compute a likelihood
+#' profile interval for the scalar parameter defined by the stored `on`
+#' function. If the stored fitted object is not an ML fit, it is refitted by
+#' maximum likelihood before profiling. This interval is likelihood-based and
+#' does not use the bias-corrected focus estimate as the likelihood centre.
+#' Profile intervals are currently not available for `focus_engine()` results.
+#'
 #' For `method = "hulc"`, [hulc_ci()] is applied to the model frame of the
 #' stored fitted object using [focus_statistic()] as the statistic evaluated
 #' on each partition. This requires that [stats::model.frame()] and
-#' [stats::update()] work for the stored fitted object.
+#' [stats::update()] work for the stored fitted object. HulC intervals are
+#' currently not available for `focus_engine()` results.
 #'
 #' The nominal coverage level is determined by `level`; users should
 #' not supply `level` in `...`.
@@ -51,11 +62,15 @@ confint.focus_list <- function(object,
                                se_at = "supplied",
                                V_function = NULL,
                                se_control = list(),
+                               nleqslv_args = list(),
                                ...) {
-    method <- match.arg(method, c("wald", "hulc"))
+    method <- match.arg(method, c("wald", "profile", "hulc"))
     se_at <- match.arg(se_at, c("supplied", "compatible"))
     if (!is.list(se_control)) {
         stop("`se_control` must be a list.")
+    }
+    if (!is.list(nleqslv_args)) {
+        stop("`nleqslv_args` must be a list.")
     }
     alpha <- 1 - level
 
@@ -92,8 +107,17 @@ confint.focus_list <- function(object,
         return(ci)
     }
 
-    if (is.null(object$object)) {
-        stop("`method = \"hulc\"` requires a `focus()` result with a stored fitted object.")
+    if (identical(method, "profile")) {
+        if (inherits(object, "focus_engine_list")) {
+            stop("`method = \"profile\"` is not available for `focus_engine()` results.")
+        }
+        return(.confint_profile_focus_list_glm(object = object,
+                                               level = level,
+                                               nleqslv_args = nleqslv_args))
+    }
+
+    if (inherits(object, "focus_engine_list")) {
+        stop("`method = \"hulc\"` is not available for `focus_engine()` results.")
     }
 
     correction <- object$correction
@@ -103,21 +127,60 @@ confint.focus_list <- function(object,
     on_hessian <- on_funs$on_hessian
     odots <- object$dots
     statistic <- function(data) {
-        do.call(
-            focus_statistic,
-            c(list(data = data,
-                   object = object$object,
-                   on = on,
-                   correction = correction,
-                   on_gradient = on_gradient,
-                   on_hessian = on_hessian),
-              odots
-              )
-        )
+        do.call(focus_statistic,
+                c(list(data = data,
+                       object = object$object,
+                       on = on,
+                       correction = correction,
+                       on_gradient = on_gradient,
+                       on_hessian = on_hessian),
+                  odots))
     }
     do.call(hulc_ci,
             c(list(data = model.frame(object$object),
                    statistic = statistic,
                    level = level),
               list(...)))
+}
+
+.confint_profile_focus_list_glm <- function(object, level, nleqslv_args) {
+    fit <- object$object
+    if (!identical(fit$type, "ML")) {
+        fit <- update(fit, type = "ML", start = coef(fit, model = "mean"))
+    }
+    p_mean <- length(coef(fit, model = "mean"))
+    theta <- coef(fit, model = "full")
+    if (fit$family$family %in% c("poisson", "binomial")) {
+        theta <- theta[names(coef(fit, model = "mean"))]
+    }
+    aux <- enrichwith::get_auxiliary_functions(fit)
+    split_theta <- function(theta) {
+        if (length(theta) == p_mean) {
+            list(coefficients = theta)
+        } else {
+            list(coefficients = theta[seq_len(p_mean)],
+                 dispersion = theta[-seq_len(p_mean)])
+        }
+    }
+    loglik <- function(theta) {
+        args <- split_theta(theta)
+        sum(do.call(aux$dmodel, c(args, list(log = TRUE))))
+    }
+    score <- function(theta) {
+        do.call(aux$score, split_theta(theta))
+    }
+    information <- function(theta) {
+        do.call(aux$information, split_theta(theta))
+    }
+    do.call(profile_ci,
+            c(list(loglik = loglik,
+                   score = score,
+                   information = information,
+                   mle = theta,
+                   on = object$on$on,
+                   on_gradient = object$on$on_gradient,
+                   on_hessian = object$on$on_hessian,
+                   level = level,
+                   nleqslv_args = nleqslv_args),
+              object$dots))
 }

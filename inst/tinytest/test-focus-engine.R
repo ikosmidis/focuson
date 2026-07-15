@@ -58,6 +58,7 @@ expect_equal(
     check.attributes = FALSE
 )
 expect_error(confint(engine_out, method = "hulc"))
+expect_error(confint(engine_out, method = "profile"))
 
 coalition_mean <- update(coalition_fit, type = "AS_mean")
 afuns_mean <- enrichwith::get_auxiliary_functions(coalition_mean)
