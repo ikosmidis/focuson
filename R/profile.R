@@ -65,21 +65,47 @@
 #' Statistical Society: Series C (Applied Statistics)*, **37**, 87--94.
 #'
 #' @examples
-#' y <- c(-1, 0, 1, 2, 3)
-#' loglik <- function(theta, y) {
-#'     sum(dnorm(y, mean = theta[1], sd = 1, log = TRUE))
+#'
+#' ## Example from ?profile.glm
+#' library("enrichwith")
+#'
+#' budworm <- data.frame(ldose = rep(0:5, 2),
+#'                       numdead = c(1, 4, 9, 13, 18, 20, 0, 2, 6, 10, 12, 16),
+#'                       sex = factor(rep(c("M", "F"), c(6, 6)))) |>
+#'            transform(numalive = 20 - numdead)
+#' bw_fit <- glm(cbind(numalive, numdead) ~ sex * ldose, family = binomial,
+#'               data = budworm)
+#' aux <- get_auxiliary_functions(bw_fit)
+#' ll <- function(theta) {
+#'     sum(aux$dmodel(coefficients = theta, log = TRUE))
 #' }
-#' score <- function(theta, y) {
-#'     sum(y - theta[1])
+#' sc <- function(theta) {
+#'     aux$score(coefficients = theta)
 #' }
-#' information <- function(theta, y) {
-#'     matrix(length(y), 1, 1)
+#'
+#' parameter <- function(theta, j) theta[j]
+#'
+#' sapply(1:4, function(j) profile_ci(ll, sc, mle = coef(bw_fit),
+#'                                    level = 0.99,
+#'                                    on = parameter, j = j))
+#'
+#' ## compare with ?profile
+#' pr <- profile(bw_fit)
+#' pr_ci <- confint(pr, level = 0.99)
+#' t(pr_ci)
+#'
+#' ## Profile likelihood interval for the difference in probabilities
+#' ## between the levels of `sex`, for a given `ldose`
+#' me <- function(theta, ldose) {
+#'    tt <- terms(bw_fit) |> delete.response()
+#'    df <- data.frame(ldose = ldose, sex = c("M", "F"))
+#'    mm <- model.matrix(tt, data = df)
+#'    probs <- drop(plogis(mm %*% theta))
+#'    diff(probs)
 #' }
-#' profile_ci(loglik = loglik,
-#'            score = score,
-#'            information = information,
-#'            mle = mean(y),
-#'            likelihood_args = list(y = y))
+#'
+#' profile_ci(ll, sc, mle = coef(bw_fit), level = 0.95, on = me, ldose = 0)
+#' profile_ci(ll, sc, mle = coef(bw_fit), level = 0.95, on = me, ldose = 2)
 #'
 #' @export
 profile_ci <- function(loglik,
@@ -112,18 +138,20 @@ profile_ci <- function(loglik,
     ll <- function(theta) do.call(loglik, c(list(theta), likelihood_args))
     if (is.null(on_gradient))
         on_gradient  <- function(theta, ...) numDeriv::grad(on, theta, ...)
-    if (is.null(score))
+    if (is.null(score)) {
         sc <- function(theta) numDeriv::grad(ll, theta)
-    else
-        sc <- function(theta) do.call(score, c(list(theta), likelihood_args))
-    info <- if (is.null(information)) {
-        function(theta) -numDeriv::hessian(ll, theta)
     } else {
-        function(theta) do.call(information, c(list(theta), likelihood_args))
+        sc <- function(theta) do.call(score, c(list(theta), likelihood_args))
+    }
+    if (is.null(information)) {
+        info <- function(theta) -numDeriv::hessian(ll, theta)
+    } else {
+        info <- function(theta) do.call(information, c(list(theta), likelihood_args))
     }
     maxloglik <- ll(mle)
-    if (!is.numeric(maxloglik) || length(maxloglik) != 1 || !is.finite(maxloglik))
+    if (!is.numeric(maxloglik) || length(maxloglik) != 1 || !is.finite(maxloglik)) {
         stop("`loglik` must return a finite numeric scalar at `mle`.")
+    }
     score_mle <- sc(mle)
     if (!is.numeric(score_mle) || length(score_mle) != length(mle) || any(!is.finite(score_mle)))
         stop("`score` must return a finite numeric vector of length `length(mle)` at `mle`.")
@@ -141,6 +169,7 @@ profile_ci <- function(loglik,
         s <- sc(theta)
         c(2 * (maxloglik - l) - quant, s - pars[npars] * on_gradient(theta, ...))
     }
+    ## Staring values
     info_mle <- info(mle)
     if (!is.numeric(info_mle) || !identical(dim(info_mle), c(length(mle), length(mle))) ||
         any(!is.finite(info_mle)))
@@ -164,6 +193,10 @@ profile_ci <- function(loglik,
                                upper = max(abs(endpoints[[2]]$fvec)))
     attr(ci, "messages") <- c(lower = endpoints[[1]]$message,
                               upper = endpoints[[2]]$message)
+    attr(ci, "loglik") <- c(lower = ll(endpoints[[1]]$x[1:(npars - 1)]),
+                            upper = ll(endpoints[[2]]$x[1:(npars - 1)]))
     attr(ci, "type") <- "profile"
     ci
 }
+
+
