@@ -11,6 +11,7 @@ profile_ci(
   mle,
   on = function(theta) theta[1],
   on_gradient = NULL,
+  on_hessian = NULL,
   likelihood_args = list(),
   nleqslv_args = list(),
   level = 0.95,
@@ -45,6 +46,12 @@ with respect to the parameter vector. It must take the
 parameter vector as its first argument. If \code{NULL}, the gradient
 is computed numerically.}
 
+\item{on_hessian}{Optional function returning the Hessian matrix of
+\code{on} with respect to the parameter vector. It must take the
+parameter vector as its first argument. If supplied together
+with \code{information}, an analytic Jacobian is passed to
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}.}
+
 \item{likelihood_args}{List of additional arguments passed to
 \code{loglik}, \code{score}, and \code{information}.}
 
@@ -64,12 +71,14 @@ has attributes:
 each endpoint.}
 \item{\code{"messages"}}{The convergence messages returned by
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for the lower and upper endpoint solves.}
+\item{\code{"loglik"}}{The log-likelihood evaluated at the lower and upper
+endpoint parameter vectors.}
 }
 }
 \description{
-Compute a profile likelihood confidence interval for a scalar function of a
-model parameter vector using the endpoint equations of Venzon and
-Moolgavkar (1988).
+Compute a profile likelihood confidence interval for a scalar
+function of a model parameter vector using the endpoint equations
+of Venzon and Moolgavkar (1988).
 }
 \details{
 The endpoint equations are
@@ -81,10 +90,18 @@ where \eqn{\ell(\theta)} is \code{loglik}, \eqn{\hat\theta} is \code{mle},
 \code{level} quantile of a chi-squared distribution with one degree of
 freedom.
 
-The function solves these equations twice, from Wald-type starting values
-in opposite directions, and returns the corresponding values of \code{on}. This
-is a low-level routine: endpoint convergence diagnostics are returned as
-attributes, and callers can decide how strictly to enforce them.
+The function solves these equations twice, from Wald-type starting
+values in opposite directions, and returns the corresponding values
+of \code{on}. This is a low-level routine: endpoint convergence
+diagnostics are returned as attributes, and callers can decide how
+strictly to enforce them.
+
+If \code{information} and \code{on_hessian} are both supplied, \code{profile_ci()}
+passes the analytic Jacobian of the endpoint equations to
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. If either is omitted, \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}
+computes its own numerical Jacobian.  Supplying analytic \code{score},
+\code{information}, \code{on_gradient}, and \code{on_hessian} can substantially
+reduce computation.
 }
 \examples{
 
@@ -104,12 +121,28 @@ ll <- function(theta) {
 sc <- function(theta) {
     aux$score(coefficients = theta)
 }
+info <- function(theta) {
+    aux$information(coefficients = theta)
+}
 
 parameter <- function(theta, j) theta[j]
+parameter_gradient <- function(theta, j) {
+    out <- numeric(length(theta))
+    out[j] <- 1
+    out
+}
+parameter_hessian <- function(theta, j) {
+    matrix(0, length(theta), length(theta))
+}
 
-sapply(1:4, function(j) profile_ci(ll, sc, mle = coef(bw_fit),
-                                   level = 0.99,
-                                   on = parameter, j = j))
+sapply(seq_along(coef(bw_fit)), function(j) {
+    profile_ci(ll, score = sc, information = info,
+               mle = coef(bw_fit), level = 0.99,
+               on = parameter,
+               on_gradient = parameter_gradient,
+               on_hessian = parameter_hessian,
+               j = j)
+})
 
 ## compare with ?profile
 pr <- profile(bw_fit)
@@ -126,8 +159,10 @@ me <- function(theta, ldose) {
    diff(probs)
 }
 
-profile_ci(ll, sc, mle = coef(bw_fit), level = 0.95, on = me, ldose = 0)
-profile_ci(ll, sc, mle = coef(bw_fit), level = 0.95, on = me, ldose = 2)
+profile_ci(ll, score = sc, mle = coef(bw_fit),
+           level = 0.95, on = me, ldose = 0)
+profile_ci(ll, score = sc, mle = coef(bw_fit),
+           level = 0.95, on = me, ldose = 2)
 
 }
 \references{

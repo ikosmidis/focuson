@@ -26,6 +26,7 @@ ci_mean <- profile_ci(loglik = loglik_mean,
                       mle = theta_hat,
                       on = on_mean,
                       on_gradient = on_mean_gradient,
+                      on_hessian = on_mean_hessian,
                       level = level)
 expected_mean <- theta_hat + c(lower = -1, upper = 1) * sqrt(cutoff / n)
 
@@ -33,6 +34,35 @@ expect_equal(ci_mean, expected_mean, tolerance = 1e-08, check.attributes = FALSE
 expect_identical(attr(ci_mean, "type"), "profile")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
+
+hessian_calls <- 0L
+on_mean_hessian_counted <- function(theta) {
+    hessian_calls <<- hessian_calls + 1L
+    matrix(0, 1, 1)
+}
+ci_mean_jacobian <- profile_ci(loglik = loglik_mean,
+                               score = score_mean,
+                               information = information_mean,
+                               mle = theta_hat,
+                               on = on_mean,
+                               on_gradient = on_mean_gradient,
+                               on_hessian = on_mean_hessian_counted,
+                               level = level)
+expect_equal(ci_mean_jacobian, expected_mean, tolerance = 1e-08,
+             check.attributes = FALSE)
+expect_true(hessian_calls > 0L)
+
+hessian_calls <- 0L
+ci_mean_no_jacobian <- profile_ci(loglik = loglik_mean,
+                                  score = score_mean,
+                                  information = information_mean,
+                                  mle = theta_hat,
+                                  on = on_mean,
+                                  on_gradient = on_mean_gradient,
+                                  level = level)
+expect_equal(ci_mean_no_jacobian, expected_mean, tolerance = 1e-08,
+             check.attributes = FALSE)
+expect_equal(hessian_calls, 0L)
 
 expect_error(profile_ci(loglik = loglik_mean,
                         score = function(theta) c(1, 2),
@@ -52,6 +82,14 @@ expect_error(profile_ci(loglik = loglik_mean,
                         mle = theta_hat,
                         on = on_mean,
                         on_gradient = function(theta) c(1, 2),
+                        level = level))
+expect_error(profile_ci(loglik = loglik_mean,
+                        score = score_mean,
+                        information = information_mean,
+                        mle = theta_hat,
+                        on = on_mean,
+                        on_gradient = on_mean_gradient,
+                        on_hessian = function(theta) matrix(1, 2, 2),
                         level = level))
 
 
@@ -87,6 +125,7 @@ ci_mu <- profile_ci(loglik = loglik_normal,
                     mle = theta2_hat,
                     on = on_mu,
                     on_gradient = on_mu_gradient,
+                    on_hessian = on_mu_hessian,
                     level = level)
 rss_hat <- sum((y - theta2_hat[1])^2)
 expected_mu <- theta2_hat[1] +
