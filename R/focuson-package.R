@@ -18,9 +18,10 @@
 #'
 #' Methods for estimation and inference on user-specified scalar
 #' parameters of interest from fitted model objects through [focus()].
-#' Estimation can be performed using mean or median bias correction, and
-#' inference is based on Wald-type confidence intervals using
-#' delta-method standard errors or HulC confidence intervals.
+#' Estimation can be performed using mean or median bias correction,
+#' and inference is based on Wald-type confidence intervals using
+#' delta-method standard errors, profile likelihood methods, or HulC
+#' confidence intervals.
 #'
 #' @author Ioannis Kosmidis `[aut, cre]` \email{ioannis.kosmidis@warwick.ac.uk}
 #'
@@ -54,7 +55,7 @@
 #' @import brglm2
 #' @import enrichwith
 #' @importFrom numDeriv grad hessian
-#' @importFrom stats coef model.frame qnorm runif update vcov printCoefmat
+#' @importFrom stats coef model.frame qchisq qnorm runif update vcov printCoefmat
 #' @importFrom utils capture.output
 #' @importFrom stats optimize
 #' @import nleqslv

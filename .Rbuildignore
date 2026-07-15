@@ -4,6 +4,7 @@ inst/simulations
 README.qmd
 
 ^\.github$
+^\.git$
 ^\.gitignore
 ^\._*
 ^.*~$

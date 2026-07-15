@@ -8,9 +8,10 @@
 \description{
 Methods for estimation and inference on user-specified scalar
 parameters of interest from fitted model objects through \code{\link[=focus]{focus()}}.
-Estimation can be performed using mean or median bias correction, and
-inference is based on Wald-type confidence intervals using
-delta-method standard errors or HulC confidence intervals.
+Estimation can be performed using mean or median bias correction,
+and inference is based on Wald-type confidence intervals using
+delta-method standard errors, profile likelihood methods, or HulC
+confidence intervals.
 }
 \references{
 Kenne Pagui E C, Salvan A, Sartori N (2017). Median bias
