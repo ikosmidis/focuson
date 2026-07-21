@@ -35,6 +35,19 @@
 #' @param nleqslv_args List of additional arguments passed to
 #'     [nleqslv::nleqslv()].
 #' @param level Confidence level. Default is `0.95`.
+#' @param start Optional named list with elements `"lower"` and
+#'     `"upper"`, containing starting values for the corresponding
+#'     endpoint equations.  Each element must be a numeric vector of
+#'     length `length(mle) + 1`, consisting of the parameter vector
+#'     followed by the Lagrange multiplier.  Users will generally want
+#'     to leave this argument unspecified so that branch-specific
+#'     Wald-type starting values are constructed.  Inappropriate or
+#'     identical starting values for the two branches may cause both
+#'     endpoints of the interval to be identical.
+#' @param do_checks Logical. If `TRUE` (default), validate the inputs
+#'     and their values at `mle`. Set to `FALSE` only when repeatedly
+#'     calling `profile_ci()` with inputs that have already been
+#'     checked.
 #' @param ... Additional arguments passed to `on` and `on_gradient`.
 #'
 #' @return
@@ -48,6 +61,9 @@
 #'     [nleqslv::nleqslv()] for the lower and upper endpoint solves.}
 #'   \item{`"loglik"`}{The log-likelihood evaluated at the lower and upper
 #'     endpoint parameter vectors.}
+#'   \item{`"solution"`}{A list containing the solutions of the lower and upper
+#'     endpoint equations. These can be supplied as `start` in a subsequent
+#'     call.}
 #' }
 #'
 #' @details
@@ -61,9 +77,9 @@
 #' `level` quantile of a chi-squared distribution with one degree of
 #' freedom.
 #'
-#' The function solves these equations twice, from Wald-type starting
-#' values in opposite directions, and returns the corresponding values
-#' of `on`. This is a low-level routine: endpoint convergence
+#' The function solves these equations twice and returns the corresponding
+#' values of `on`. Unless `start` is supplied, Wald-type starting values in
+#' opposite directions are used. This is a low-level routine: endpoint convergence
 #' diagnostics are returned as attributes, and callers can decide how
 #' strictly to enforce them.
 #'
@@ -152,77 +168,80 @@ profile_ci <- function(loglik,
                        likelihood_args = list(),
                        nleqslv_args = list(),
                        level = 0.95,
-                       ...) {
-    required <- list(loglik = loglik, on = on)
-    optional <- list(score = score,
-                     information = information,
-                     on_gradient = on_gradient,
-                     on_hessian = on_hessian)
-    check_required <- !vapply(required, is.function, logical(1))
-    if (any(check_required)) {
-        stop("The following arguments must be functions: ",
-             paste(sprintf("`%s`", names(check_required)[check_required]), collapse = ", "), ".")
+                       ...,
+                       start,
+                       do_checks = TRUE) {
+    do_checks <- isTRUE(do_checks)
+    if (do_checks) {
+        required <- list(loglik = loglik, on = on)
+        optional <- list(score = score,
+                         information = information,
+                         on_gradient = on_gradient,
+                         on_hessian = on_hessian)
+        check_required <- !vapply(required, is.function, logical(1))
+        if (any(check_required)) {
+            stop("The following arguments must be functions: ",
+                 paste(sprintf("`%s`", names(check_required)[check_required]), collapse = ", "), ".")
+        }
+        check_optional <- !vapply(optional, function(x) is.null(x) || is.function(x), logical(1))
+        if (any(check_optional)) {
+            stop("The following arguments must be functions or `NULL`: ",
+                 paste(sprintf("`%s`", names(optional)[check_optional]), collapse = ", "), ".")
+        }
+        if (!is.numeric(mle) || length(mle) == 0 || any(!is.finite(mle)))
+            stop("`mle` must be a finite numeric vector.")
+        if (!is.list(likelihood_args))
+            stop("`likelihood_args` must be a list.")
+        if (!is.list(nleqslv_args))
+            stop("`nleqslv_args` must be a list.")
     }
-    check_optional <- !vapply(optional, function(x) is.null(x) || is.function(x), logical(1))
-    if (any(check_optional)) {
-        stop("The following arguments must be functions or `NULL`: ",
-             paste(sprintf("`%s`", names(optional)[check_optional]), collapse = ", "), ".")
-    }
-    if (!is.numeric(mle) || length(mle) == 0 || any(!is.finite(mle)))
-        stop("`mle` must be a finite numeric vector.")
-    if (!is.list(likelihood_args))
-        stop("`likelihood_args` must be a list.")
-    if (!is.list(nleqslv_args))
-        stop("`nleqslv_args` must be a list.")
     ll <- function(theta) do.call(loglik, c(list(theta), likelihood_args))
     if (is.null(on_gradient))
         on_gradient  <- function(theta, ...) numDeriv::grad(on, theta, ...)
-    if (is.null(score)) {
+    if (is.null(score))
         sc <- function(theta) numDeriv::grad(ll, theta)
-    } else {
+    else
         sc <- function(theta) do.call(score, c(list(theta), likelihood_args))
-    }
-    if (is.null(information)) {
+    if (is.null(information))
         info <- function(theta) -numDeriv::hessian(ll, theta)
-    } else {
+    else
         info <- function(theta) do.call(information, c(list(theta), likelihood_args))
-    }
     use_jacobian <- !is.null(information) && !is.null(on_hessian)
     maxloglik <- ll(mle)
-    if (!is.numeric(maxloglik) || length(maxloglik) != 1 || !is.finite(maxloglik)) {
-        stop("`loglik` must return a finite numeric scalar at `mle`.")
-    }
-    score_mle <- sc(mle)
-    if (!is.numeric(score_mle) || length(score_mle) != length(mle) || any(!is.finite(score_mle)))
-        stop("`score` must return a finite numeric vector of length `length(mle)` at `mle`.")
-    if (max(abs(score_mle)) > 1e-02)
-        warning("`mle` is not the maximizer of the log-likelihood;",
-                "the maximum absolute value of the gradient of the log-likelihood at `mle` is ",
-                round(max(abs(score_mle)), 2), ".")
-    on_grad <- on_gradient(mle, ...)
-    if (!is.numeric(on_grad) || length(on_grad) != length(mle) || any(!is.finite(on_grad)))
-        stop("`on_gradient` must return a finite numeric vector of length `length(mle)` at `mle`.")
-    if (use_jacobian) {
-        on_hess_mle <- on_hessian(mle, ...)
-        if (!is.numeric(on_hess_mle) ||
-            !identical(dim(on_hess_mle), c(length(mle), length(mle))) ||
-            any(!is.finite(on_hess_mle))) {
-            stop("`on_hessian` must return a finite numeric matrix with one row and one column per parameter.")
+    if (do_checks) {
+        if (!is.numeric(maxloglik) || length(maxloglik) != 1 || !is.finite(maxloglik)) {
+            stop("`loglik` must return a finite numeric scalar at `mle`.")
+        }
+        score_mle <- sc(mle)
+        if (!is.numeric(score_mle) || length(score_mle) != length(mle) || any(!is.finite(score_mle)))
+            stop("`score` must return a finite numeric vector of length `length(mle)` at `mle`.")
+        if (max(abs(score_mle)) > 1e-02)
+            warning("`mle` is not the maximizer of the log-likelihood;",
+                    "the maximum absolute value of the gradient of the log-likelihood at `mle` is ",
+                    round(max(abs(score_mle)), 2), ".")
+        on_grad <- on_gradient(mle, ...)
+        if (!is.numeric(on_grad) || length(on_grad) != length(mle) || any(!is.finite(on_grad)))
+            stop("`on_gradient` must return a finite numeric vector of length `length(mle)` at `mle`.")
+        if (use_jacobian) {
+            on_hess_mle <- on_hessian(mle, ...)
+            if (!is.numeric(on_hess_mle) ||
+                !identical(dim(on_hess_mle), c(length(mle), length(mle))) ||
+                any(!is.finite(on_hess_mle))) {
+                stop("`on_hessian` must return a finite numeric matrix with one row and one column per parameter.")
+            }
         }
     }
     quant <- qchisq(level, 1)
     npars <- length(mle) + 1
     eq <- function(pars) {
         theta <- pars[1:(npars - 1)]
-        l <- ll(theta)
-        s <- sc(theta)
-        c(2 * (maxloglik - l) - quant, s - pars[npars] * on_gradient(theta, ...))
+        c(2 * (maxloglik - ll(theta)) - quant,
+          sc(theta) - pars[npars] * on_gradient(theta, ...))
     }
     if (use_jacobian) {
         jacobian <- function(pars) {
             theta <- pars[1:(npars - 1)]
             lambda <- pars[npars]
-            s <- sc(theta)
             on_grad <- on_gradient(theta, ...)
             on_hess <- on_hessian(theta, ...)
             info_theta <- info(theta)
@@ -237,7 +256,7 @@ profile_ci <- function(loglik,
                 stop("`information` must return a finite numeric matrix with one row and one column per parameter.")
             }
             out <- matrix(0, npars, npars)
-            out[1, 1:(npars - 1)] <- -2 * s
+            out[1, 1:(npars - 1)] <- -2 * sc(theta)
             out[2:npars, 1:(npars - 1)] <- -info_theta - lambda * on_hess
             out[2:npars, npars] <- -on_grad
             out
@@ -245,26 +264,29 @@ profile_ci <- function(loglik,
     } else {
         jacobian <- NULL
     }
-    ## Starting values
-    info_mle <- info(mle)
-    if (!is.numeric(info_mle) || !identical(dim(info_mle), c(length(mle), length(mle))) ||
-        any(!is.finite(info_mle)))
-        stop("`information` must return a finite numeric matrix with one row and one column per parameter.")
-    iinfo <- try(solve(info_mle), silent = TRUE)
-    if (inherits(iinfo, "try-error"))
-        stop("Could not invert the information matrix at `mle`.")
-    step <- drop(iinfo %*% on_grad)
-    var_on <- sum(on_grad * step)
-    if (!is.finite(var_on) || var_on <= 0)
-        stop("Could not construct profile endpoint starting values; ",
-             "the delta-method variance of `on` at `mle` is non-positive or non-finite.")
-    lam <- sqrt(quant / var_on)
-    trans <- lam * step
-    endpoints <- lapply(c(-1, 1), function(s) {
-        args <- c(list(x = c(mle + s * trans, - s * lam), fn = eq), nleqslv_args)
-        if (!is.null(jacobian)) {
-            args$jac <- jacobian
-        }
+    if (missing(start)) {
+        if (!do_checks)
+            on_grad <- on_gradient(mle, ...)
+        info_mle <- info(mle)
+        if (!is.numeric(info_mle) || !identical(dim(info_mle), c(length(mle), length(mle))) ||
+            any(!is.finite(info_mle)))
+            stop("`information` must return a finite numeric matrix with one row and one column per parameter.")
+        iinfo <- try(solve(info_mle), silent = TRUE)
+        if (inherits(iinfo, "try-error"))
+            stop("Could not invert the information matrix at `mle`.")
+        step <- drop(iinfo %*% on_grad)
+        var_on <- sum(on_grad * step)
+        if (!is.finite(var_on) || var_on <= 0)
+            stop("Could not construct profile endpoint starting values; ",
+                 "the delta-method variance of `on` at `mle` is non-positive or non-finite.")
+        lam <- sqrt(quant / var_on)
+        trans <- lam * step
+        start <- list(lower = c(mle - trans,  lam),
+                      upper = c(mle + trans, -lam))
+    }
+    endpoints <- lapply(c("lower", "upper"), function(side) {
+        args <- c(list(x = start[[side]], fn = eq), nleqslv_args)
+        args$jac <- jacobian
         do.call(nleqslv, args)
     })
     ci <- sapply(endpoints, function(end) on(end$x[1:(npars - 1)], ...))
@@ -275,6 +297,8 @@ profile_ci <- function(loglik,
                               upper = endpoints[[2]]$message)
     attr(ci, "loglik") <- c(lower = ll(endpoints[[1]]$x[1:(npars - 1)]),
                             upper = ll(endpoints[[2]]$x[1:(npars - 1)]))
+    attr(ci, "solution") <- list(lower = endpoints[[1]]$x,
+                                upper = endpoints[[2]]$x)
     attr(ci, "type") <- "profile"
     ci
 }

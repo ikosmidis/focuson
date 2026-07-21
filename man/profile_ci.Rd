@@ -15,7 +15,9 @@ profile_ci(
   likelihood_args = list(),
   nleqslv_args = list(),
   level = 0.95,
-  ...
+  ...,
+  start,
+  do_checks = TRUE
 )
 }
 \arguments{
@@ -61,6 +63,21 @@ with \code{information}, an analytic Jacobian is passed to
 \item{level}{Confidence level. Default is \code{0.95}.}
 
 \item{...}{Additional arguments passed to \code{on} and \code{on_gradient}.}
+
+\item{start}{Optional named list with elements \code{"lower"} and
+\code{"upper"}, containing starting values for the corresponding
+endpoint equations.  Each element must be a numeric vector of
+length \code{length(mle) + 1}, consisting of the parameter vector
+followed by the Lagrange multiplier.  Users will generally want
+to leave this argument unspecified so that branch-specific
+Wald-type starting values are constructed.  Inappropriate or
+identical starting values for the two branches may cause both
+endpoints of the interval to be identical.}
+
+\item{do_checks}{Logical. If \code{TRUE} (default), validate the inputs
+and their values at \code{mle}. Set to \code{FALSE} only when repeatedly
+calling \code{profile_ci()} with inputs that have already been
+checked.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}. The result
@@ -73,6 +90,9 @@ each endpoint.}
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for the lower and upper endpoint solves.}
 \item{\code{"loglik"}}{The log-likelihood evaluated at the lower and upper
 endpoint parameter vectors.}
+\item{\code{"solution"}}{A list containing the solutions of the lower and upper
+endpoint equations. These can be supplied as \code{start} in a subsequent
+call.}
 }
 }
 \description{
@@ -90,9 +110,9 @@ where \eqn{\ell(\theta)} is \code{loglik}, \eqn{\hat\theta} is \code{mle},
 \code{level} quantile of a chi-squared distribution with one degree of
 freedom.
 
-The function solves these equations twice, from Wald-type starting
-values in opposite directions, and returns the corresponding values
-of \code{on}. This is a low-level routine: endpoint convergence
+The function solves these equations twice and returns the corresponding
+values of \code{on}. Unless \code{start} is supplied, Wald-type starting values in
+opposite directions are used. This is a low-level routine: endpoint convergence
 diagnostics are returned as attributes, and callers can decide how
 strictly to enforce them.
 

@@ -35,6 +35,35 @@ expect_identical(attr(ci_mean, "type"), "profile")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
 
+warm_level <- 0.99
+ci_mean_warm <- profile_ci(loglik = loglik_mean,
+                           score = score_mean,
+                           information = information_mean,
+                           mle = theta_hat,
+                           on = on_mean,
+                           on_gradient = on_mean_gradient,
+                           on_hessian = on_mean_hessian,
+                           level = warm_level,
+                           start = attr(ci_mean, "solution"),
+                           do_checks = FALSE)
+expected_mean_warm <- theta_hat + c(lower = -1, upper = 1) *
+    sqrt(qchisq(warm_level, 1) / n)
+expect_equal(ci_mean_warm, expected_mean_warm, tolerance = 1e-08,
+             check.attributes = FALSE)
+
+reversed_start <- rev(attr(ci_mean, "solution"))
+ci_mean_reordered <- profile_ci(loglik = loglik_mean,
+                                score = score_mean,
+                                information = information_mean,
+                                mle = theta_hat,
+                                on = on_mean,
+                                on_gradient = on_mean_gradient,
+                                on_hessian = on_mean_hessian,
+                                level = level,
+                                start = reversed_start)
+expect_equal(ci_mean_reordered, ci_mean, tolerance = 1e-08,
+             check.attributes = FALSE)
+
 hessian_calls <- 0L
 on_mean_hessian_counted <- function(theta) {
     hessian_calls <<- hessian_calls + 1L
