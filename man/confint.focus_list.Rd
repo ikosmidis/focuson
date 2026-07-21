@@ -69,11 +69,11 @@ maximum likelihood before profiling. This interval is likelihood-based and
 does not use the bias-corrected focus estimate as the likelihood centre.
 Profile intervals are currently not available for \code{focus_engine()} results.
 
-For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to the model frame of the
+For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to data recovered from the
 stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as the statistic evaluated
-on each partition. This requires that \code{\link[stats:model.frame]{stats::model.frame()}} and
-\code{\link[stats:update]{stats::update()}} work for the stored fitted object. HulC intervals are
-currently not available for \code{focus_engine()} results.
+on each partition. The recovered data must be suitable for refitting the
+stored fitted object with \code{\link[stats:update]{stats::update()}}. HulC intervals are currently
+not available for \code{focus_engine()} results.
 
 The nominal coverage level is determined by \code{level}; users should
 not supply \code{level} in \code{...}.

@@ -78,7 +78,7 @@ ci_hulc_method <- confint(
 )
 set.seed(678)
 ci_hulc_direct <- hulc_ci(
-    data = model.frame(out_wald_i2$object),
+    data = focuson:::.refit_data(out_wald_i2$object),
     statistic = function(data) {
         focus_statistic(
             data = data,
@@ -208,3 +208,15 @@ budworm_profile_ci_median <- confint(budworm_focus_median,
 expect_equal(budworm_profile_ci_median, budworm_glm_ci,
              tolerance = 1e-04, check.attributes = FALSE)
 expect_identical(attr(budworm_profile_ci_median, "type"), "profile")
+
+budworm_refit_data <- focuson:::.refit_data(budworm_focus$object)
+expect_true(all(c("numalive", "numdead", "sex", "ldose") %in% names(budworm_refit_data)))
+budworm_refit_stat <- focus_statistic(budworm_refit_data,
+                                      budworm_focus$object,
+                                      on = on_index,
+                                      on_gradient = grad_index,
+                                      on_hessian = hess_index,
+                                      correction = "no",
+                                      i = 2)
+expect_equal(budworm_refit_stat, budworm_focus$estimate,
+             tolerance = 1e-08, check.attributes = FALSE)

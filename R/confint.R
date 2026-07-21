@@ -43,11 +43,11 @@
 #' does not use the bias-corrected focus estimate as the likelihood centre.
 #' Profile intervals are currently not available for `focus_engine()` results.
 #'
-#' For `method = "hulc"`, [hulc_ci()] is applied to the model frame of the
+#' For `method = "hulc"`, [hulc_ci()] is applied to data recovered from the
 #' stored fitted object using [focus_statistic()] as the statistic evaluated
-#' on each partition. This requires that [stats::model.frame()] and
-#' [stats::update()] work for the stored fitted object. HulC intervals are
-#' currently not available for `focus_engine()` results.
+#' on each partition. The recovered data must be suitable for refitting the
+#' stored fitted object with [stats::update()]. HulC intervals are currently
+#' not available for `focus_engine()` results.
 #'
 #' The nominal coverage level is determined by `level`; users should
 #' not supply `level` in `...`.
@@ -137,10 +137,27 @@ confint.focus_list <- function(object,
                   odots))
     }
     do.call(hulc_ci,
-            c(list(data = model.frame(object$object),
+            c(list(data = .refit_data(object$object),
                    statistic = statistic,
                    level = level),
               list(...)))
+}
+
+.refit_data <- function(object) {
+    data_call <- object$call$data
+    if (!is.null(data_call)) {
+        data <- try(eval(data_call, envir = environment(stats::formula(object))),
+                    silent = TRUE)
+        if (!inherits(data, "try-error")) {
+            return(as.data.frame(data))
+        }
+    }
+    data <- try(model.frame(object), silent = TRUE)
+    if (!inherits(data, "try-error")) {
+        return(as.data.frame(data))
+    }
+    stop("Could not recover data suitable for refitting `object`; ",
+         "`method = \"hulc\"` requires the original model data.")
 }
 
 .confint_profile_focus_list_glm <- function(object, level, nleqslv_args) {
