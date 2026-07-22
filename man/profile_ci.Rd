@@ -51,28 +51,32 @@ is computed numerically.}
 \item{on_hessian}{Optional function returning the Hessian matrix of
 \code{on} with respect to the parameter vector. It must take the
 parameter vector as its first argument. If supplied together
-with \code{information}, an analytic Jacobian is passed to
+with \code{information}, a Jacobian is passed to
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}.}
 
 \item{likelihood_args}{List of additional arguments passed to
 \code{loglik}, \code{score}, and \code{information}.}
 
 \item{nleqslv_args}{List of additional arguments passed to
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}.}
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. The \code{x}, \code{fn}, and \code{jac} arguments are
+determined internally.}
 
 \item{level}{Confidence level. Default is \code{0.95}.}
 
-\item{...}{Additional arguments passed to \code{on} and \code{on_gradient}.}
+\item{...}{Additional arguments passed to \code{on}, \code{on_gradient}, and
+\code{on_hessian}.}
 
 \item{start}{Optional named list with elements \code{"lower"} and
 \code{"upper"}, containing starting values for the corresponding
 endpoint equations.  Each element must be a numeric vector of
 length \code{length(mle) + 1}, consisting of the parameter vector
-followed by the Lagrange multiplier.  Users will generally want
-to leave this argument \code{NULL} (default) so that branch-specific
-Wald-type starting values are constructed.  Inappropriate or
-identical starting values for the two branches may cause both
-endpoints of the interval to be identical.}
+followed by the Lagrange multiplier. This argument is intended
+primarily for warm-starting repeated calls using the \code{"solution"}
+attribute returned by a previous call. Users will generally want to
+leave it \code{NULL} (default) so that branch-specific Wald-type starting
+values are constructed. Inappropriate or identical starting values for
+the two branches may cause both endpoints of the interval to be
+identical.}
 
 \item{do_checks}{Logical. If \code{TRUE} (default), validate the inputs
 and their values at \code{mle}. Set to \code{FALSE} only when repeatedly
@@ -93,6 +97,8 @@ endpoint parameter vectors.}
 \item{\code{"solution"}}{A list containing the solutions of the lower and upper
 endpoint equations. These can be supplied as \code{start} in a subsequent
 call.}
+\item{\code{"iter"}}{The number of outer iterations used by
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for each endpoint.}
 }
 }
 \description{
@@ -117,11 +123,12 @@ diagnostics are returned as attributes, and callers can decide how
 strictly to enforce them.
 
 If \code{information} and \code{on_hessian} are both supplied, \code{profile_ci()}
-passes the analytic Jacobian of the endpoint equations to
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. If either is omitted, \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}
-computes its own numerical Jacobian.  Supplying analytic \code{score},
-\code{information}, \code{on_gradient}, and \code{on_hessian} can substantially
-reduce computation.
+uses them to construct a Jacobian for the endpoint equations and
+passes it to \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. This Jacobian is exact when
+\code{information} is minus the derivative of \code{score}. If either function
+is omitted, \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} computes its own numerical Jacobian.
+Supplying \code{score}, \code{information}, \code{on_gradient}, and \code{on_hessian} can
+substantially reduce computation.
 }
 \examples{
 

@@ -35,6 +35,20 @@ expect_identical(attr(ci_mean, "type"), "profile")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
 
+profile_mean <- focuson:::.profile_focus(mle = theta_hat,
+                                         loglik = loglik_mean,
+                                         score = score_mean,
+                                         information = information_mean,
+                                         on = on_mean,
+                                         on_gradient = on_mean_gradient,
+                                         on_hessian = on_mean_hessian,
+                                         grid_size = 5,
+                                         max_level = level)
+expect_true(inherits(profile_mean, "profile_focus_list"))
+expect_equal(profile_mean$psi,
+             theta_hat + profile_mean$signed / sqrt(n),
+             tolerance = 1e-08)
+
 warm_level <- 0.99
 ci_mean_warm <- profile_ci(loglik = loglik_mean,
                            score = score_mean,
@@ -211,3 +225,31 @@ for (level_budworm in c(0.80, 0.90, 0.95)) {
     expect_equal(ci_budworm, ci_profile,
                  tolerance = 1e-04, check.attributes = FALSE)
 }
+
+second_parameter_hessian <- function(theta) {
+    matrix(0, length(theta), length(theta))
+}
+budworm_focus_fit <- glm(cbind(numalive, numdead) ~ sex * ldose,
+                         family = binomial, data = budworm,
+                         method = brglm2::brglmFit, type = "ML")
+budworm_focus <- focus(budworm_focus_fit,
+                       on = second_parameter,
+                       on_gradient = second_parameter_gradient,
+                       on_hessian = second_parameter_hessian,
+                       correction = "no")
+grid_size <- 10
+max_level <- 0.95
+focus_profile <- profile(budworm_focus,
+                         grid_size = grid_size,
+                         max_level = max_level)
+r_target <- qnorm(0.5 + max_level / 2)
+r_step <- r_target / (grid_size - 1)
+r_grid <- seq(r_step, r_target + r_step, by = r_step)
+
+expect_true(inherits(focus_profile, "profile_focus_list"))
+expect_equal(nrow(focus_profile), 2 * grid_size + 1)
+expect_equal(focus_profile$signed, c(-rev(r_grid), 0, r_grid))
+expect_equal(focus_profile$psi[grid_size + 1],
+             second_parameter(coef(budworm_focus_fit)), tolerance = 1e-08,
+             check.attributes = FALSE)
+expect_equal(attr(focus_profile, "max_level"), max_level)

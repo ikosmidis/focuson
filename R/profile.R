@@ -28,27 +28,31 @@
 #' @param on_hessian Optional function returning the Hessian matrix of
 #'     `on` with respect to the parameter vector. It must take the
 #'     parameter vector as its first argument. If supplied together
-#'     with `information`, an analytic Jacobian is passed to
+#'     with `information`, a Jacobian is passed to
 #'     [nleqslv::nleqslv()].
 #' @param likelihood_args List of additional arguments passed to
 #'     `loglik`, `score`, and `information`.
 #' @param nleqslv_args List of additional arguments passed to
-#'     [nleqslv::nleqslv()].
+#'     [nleqslv::nleqslv()]. The `x`, `fn`, and `jac` arguments are
+#'     determined internally.
 #' @param level Confidence level. Default is `0.95`.
 #' @param start Optional named list with elements `"lower"` and
 #'     `"upper"`, containing starting values for the corresponding
 #'     endpoint equations.  Each element must be a numeric vector of
 #'     length `length(mle) + 1`, consisting of the parameter vector
-#'     followed by the Lagrange multiplier.  Users will generally want
-#'     to leave this argument `NULL` (default) so that branch-specific
-#'     Wald-type starting values are constructed.  Inappropriate or
-#'     identical starting values for the two branches may cause both
-#'     endpoints of the interval to be identical.
+#'     followed by the Lagrange multiplier. This argument is intended
+#'     primarily for warm-starting repeated calls using the `"solution"`
+#'     attribute returned by a previous call. Users will generally want to
+#'     leave it `NULL` (default) so that branch-specific Wald-type starting
+#'     values are constructed. Inappropriate or identical starting values for
+#'     the two branches may cause both endpoints of the interval to be
+#'     identical.
 #' @param do_checks Logical. If `TRUE` (default), validate the inputs
 #'     and their values at `mle`. Set to `FALSE` only when repeatedly
 #'     calling `profile_ci()` with inputs that have already been
 #'     checked.
-#' @param ... Additional arguments passed to `on` and `on_gradient`.
+#' @param ... Additional arguments passed to `on`, `on_gradient`, and
+#'     `on_hessian`.
 #'
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`. The result
@@ -64,6 +68,8 @@
 #'   \item{`"solution"`}{A list containing the solutions of the lower and upper
 #'     endpoint equations. These can be supplied as `start` in a subsequent
 #'     call.}
+#'   \item{`"iter"`}{The number of outer iterations used by
+#'     [nleqslv::nleqslv()] for each endpoint.}
 #' }
 #'
 #' @details
@@ -84,11 +90,12 @@
 #' strictly to enforce them.
 #'
 #' If `information` and `on_hessian` are both supplied, `profile_ci()`
-#' passes the analytic Jacobian of the endpoint equations to
-#' [nleqslv::nleqslv()]. If either is omitted, [nleqslv::nleqslv()]
-#' computes its own numerical Jacobian.  Supplying analytic `score`,
-#' `information`, `on_gradient`, and `on_hessian` can substantially
-#' reduce computation.
+#' uses them to construct a Jacobian for the endpoint equations and
+#' passes it to [nleqslv::nleqslv()]. This Jacobian is exact when
+#' `information` is minus the derivative of `score`. If either function
+#' is omitted, [nleqslv::nleqslv()] computes its own numerical Jacobian.
+#' Supplying `score`, `information`, `on_gradient`, and `on_hessian` can
+#' substantially reduce computation.
 #'
 #' @references
 #'
@@ -306,6 +313,51 @@ profile_ci <- function(loglik,
 }
 
 
+#' Profile log-likelihood for a focus object
+#'
+#' Compute a profile log-likelihood for the scalar parameter defined by a focus
+#' object.
+#'
+#' @param fitted An object of class `"focus_list_glm"`, as returned by
+#'     [focus()].
+#' @param grid_size Number of profile points computed on each side of the
+#'     maximum likelihood estimate. Must be at least 2. The outermost point
+#'     provides one grid step of plotting space beyond `max_level`.
+#' @param max_level Confidence level in `(0, 1)` whose likelihood roots are
+#'     placed one grid step inside the outer boundary of the computed profile.
+#' @param nleqslv_args List of additional arguments passed to
+#'     [nleqslv::nleqslv()] through [profile_ci()].
+#' @param ... Currently unused.
+#'
+#' @details
+#' If the fitted model stored in `fitted` is not an ML fit, it is refitted by
+#' maximum likelihood. Profile points are computed outwards from the ML
+#' estimate on an equally spaced signed likelihood-root grid. Successive
+#' points use secant extrapolation for starting values. If a solve does not
+#' attain sufficiently small endpoint-equation residuals, it is retried from
+#' the preceding solution and then from Wald-type starting values.
+#'
+#' The result is likelihood-based and does not use a bias-corrected focus
+#' estimate as the centre of the profile.
+#'
+#' @return
+#' `profile.focus_list_glm()` returns a data frame with columns `psi`,
+#' `loglik`, and `signed`, and class `"profile_focus_list"`. The columns contain
+#' the focus parameter, profile log-likelihood, and signed likelihood root,
+#' respectively. The `"max_loglik"` attribute is the unrestricted maximum
+#' log-likelihood, `"mle"` is the focus evaluated at the unrestricted MLE, and
+#' `"max_level"` is the supplied maximum confidence level.
+#'
+#' @examples
+#' warp_fit <- glm(breaks ~ wool + tension, family = poisson,
+#'                 data = warpbreaks)
+#' warp_focus <- focus(warp_fit, correction = "no")
+#' warp_profile <- profile(warp_focus, grid_size = 10, max_level = 0.99)
+#' plot(warp_profile)
+#' plot(warp_profile, signed = TRUE)
+#'
+#' @seealso [profile_ci()], [confint.focus_list()]
+#'
 #' @export
 profile.focus_list_glm <- function(fitted,
                                    grid_size = 20,
@@ -338,6 +390,31 @@ profile.focus_list_glm <- function(fitted,
         do.call(aux$score, split_theta(theta))
     information <- function(theta)
         do.call(aux$information, split_theta(theta))
+    .profile_focus(mle = theta,
+                   loglik = loglik,
+                   score = score,
+                   information = information,
+                   on = fitted$on$on,
+                   on_gradient = fitted$on$on_gradient,
+                   on_hessian = fitted$on$on_hessian,
+                   on_args = fitted$dots,
+                   grid_size = grid_size,
+                   max_level = max_level,
+                   nleqslv_args = nleqslv_args)
+}
+
+
+.profile_focus <- function(mle,
+                            loglik,
+                            score,
+                            information,
+                            on,
+                            on_gradient = NULL,
+                            on_hessian = NULL,
+                            on_args = list(),
+                            grid_size = 20,
+                            max_level = 0.9999,
+                            nleqslv_args = list()) {
     r_target <- qnorm(0.5 + max_level / 2)
     r_step <- r_target / (grid_size - 1)
     r_grid <- seq(r_step, r_target + r_step, by = r_step)
@@ -349,14 +426,14 @@ profile.focus_list_glm <- function(fitted,
                 c(list(loglik = loglik,
                        score = score,
                        information = information,
-                       mle = theta,
-                       on = fitted$on$on,
-                       on_gradient = fitted$on$on_gradient,
-                       on_hessian = fitted$on$on_hessian,
+                       mle = mle,
+                       on = on,
+                       on_gradient = on_gradient,
+                       on_hessian = on_hessian,
                        level = q_grid[j],
                        nleqslv_args = nleqslv_args,
                        start = start,
-                       do_checks = (j == 1)), fitted$dots))
+                       do_checks = (j == 1)), on_args))
     }
     is_converged <- function(object, tolerance = 1e-6) {
         residuals <- attr(object, "max|fvec|")
@@ -389,27 +466,48 @@ profile.focus_list_glm <- function(fitted,
         on_right[j] <- obj["upper"]
         ll[j] <- attr(obj, "loglik")[1]
     }
-    max_loglik <- loglik(theta)
-    on_mle <- do.call(fitted$on$on, c(list(theta), fitted$dots))
+    max_loglik <- loglik(mle)
+    on_mle <- do.call(on, c(list(mle), on_args))
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
                       loglik = c(rev(ll), max_loglik, ll),
                       signed = c(-rev(r_grid), 0, r_grid))
-    class(out) <- c("profile_focus_list_glm", class(out))
+    class(out) <- c("profile_focus_list", class(out))
     attr(out, "max_loglik") <- max_loglik
     attr(out, "mle") <- on_mle
     attr(out, "max_level") <- max_level
     out
 }
 
+
+#' Plot a focus profile log-likelihood
+#'
+#' Plot a focus profile log-likelihood either on the log-likelihood scale or the
+#' signed likelihood-root scale.
+#'
+#' @param x An object of class `"profile_focus_list"`, as returned by
+#'     [profile.focus_list_glm()].
+#' @param level Confidence level used to draw the horizontal cutoff and
+#'     vertical confidence limits.
+#' @param signed Logical. If `TRUE`, plot the signed likelihood root; otherwise
+#'     plot the profile log-likelihood.
+#' @param ... Additional graphical arguments passed to [graphics::plot.default()].
+#'
+#' @details `level` must lie within the range covered by the computed profile.
+#'     If it does not, recompute the profile with a larger `max_level`.
+#'
+#' @return Called for its side effect of drawing a plot.
+#'
+#' @seealso [profile.focus_list_glm()], [profile_ci()]
+#'
 #' @export
-plot.profile_focus_list_glm <- function(x, level = 0.95, signed = FALSE, ...) {
+plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE, ...) {
     max_loglik <- attr(x, "max_loglik")
     qua <- qnorm(0.5 + level/2)
     if (qua > max(abs(x$signed))) {
         stop("`level` exceeds the range of the supplied profile; ",
              "recompute the profile with a larger `max_level`.")
     }
-    fn <- approxfun(x = sign(x$psi - attr(x, "mle")) * sqrt(2 * (max_loglik -  x$loglik)), y = x$psi)
+    fn <- approxfun(x = x$signed, y = x$psi)
     ci <- c(fn(-qua), fn(qua))
     if (signed) {
         plot.default(x$psi, x$signed, type = "l", xlab = expression(psi), ylab = "Signed likelihood root", ...)

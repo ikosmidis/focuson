@@ -190,7 +190,7 @@ focus.glm <- function(object,
         stop("`focus.glm()` supports only objects of primary class `glm` or `brglmFit`.")
     }
     if (is_glm) {
-        object <- update(object, method = "brglmFit", type = "ML", start = coef(object))
+        object <- update(object, method = brglm2::brglmFit, type = "ML", start = coef(object))
     }
     if (is_brglmFit) {
         if (!(object$type %in% c("ML", "AS_mean", "correction"))) {
