@@ -205,45 +205,32 @@ focus.glm <- function(object,
         V <- V[cnams, cnams]
         theta <- theta[cnams]
     }
-    d1_psi <- if (is.null(on_gradient)) numDeriv::grad(on, theta, ...) else on_gradient(theta, ...)
-    stopifnot(is.numeric(d1_psi), length(d1_psi) == length(theta), !anyNA(d1_psi))
-    d1_psi <- as.numeric(d1_psi)
-    hat_psi <- on(theta, ...)
-    muffin <-  drop(V %*% d1_psi)
-    var_psi <- sum(d1_psi * muffin)
-    if (identical(correction, "no")) {
-        out <- hat_psi
-    } else {
-        d2_psi <- if (is.null(on_hessian)) {
-            numDeriv::hessian(on, theta, ...)
-        } else {
-            on_hessian(theta, ...)
-        }
-        stopifnot(is.numeric(d2_psi), identical(dim(d2_psi), c(length(theta), length(theta))), !anyNA(d2_psi))
-        constant_on <-
-            all(d1_psi == 0) &&
-            all(d2_psi == 0)
-        if (constant_on) {
-            out <- hat_psi
-        } else {
+    get_correction_components <- function() {
+        if (identical(object$type, "ML") || identical(correction, "median")) {
             afuns <- enrichwith::get_auxiliary_functions(object)
-            P <- afuns$Pmat()
-            Q <- afuns$Qmat()
-            bias <- if (object$type %in% c("ML")) afuns$bias() else 0
-            mean_b <- sum(d1_psi * bias) + 0.5 * sum(d2_psi * V) # 1st term of the mean bias expansion
-            if (identical(correction, "mean")) {
-                out <- hat_psi - mean_b
-            }
-            if (identical(correction, "median")) {
-                cheese <- lapply(seq_along(P), function(k) muffin[k] * (P[[k]] / 3 + Q[[k]] / 2))
-                cheese <- - Reduce("+", cheese) + 0.5 * d2_psi
-                skew <- sum((cheese %*% muffin) * muffin) / var_psi
-                out <- hat_psi - mean_b + skew
-            }
         }
+        list(bias = if (identical(object$type, "ML")) {
+                        afuns$bias()
+                    } else {
+                        numeric(length(theta))
+                    },
+             P = if (identical(correction, "median")) {
+                     afuns$Pmat()
+                 },
+             Q = if (identical(correction, "median")) {
+                     afuns$Qmat()
+                 })
     }
-    se <- sqrt(var_psi)
-    out <- unname(out)
+    core <- .focus_core(
+        theta = theta,
+        V = V,
+        components = get_correction_components,
+        on = on,
+        correction = correction,
+        on_gradient = on_gradient,
+        on_hessian = on_hessian,
+        ...
+    )
     out <- list(
         call = cl,
         object = object,
@@ -252,8 +239,8 @@ focus.glm <- function(object,
                   on_hessian = on_hessian),
         dots = dots,
         correction = correction,
-        estimate = out,
-        se = se)
+        estimate = core$estimate,
+        se = core$se)
     class(out) <- c("focus_list_glm", "focus_list", class(out))
     out
 }

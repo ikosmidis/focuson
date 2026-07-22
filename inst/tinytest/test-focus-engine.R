@@ -60,6 +60,18 @@ expect_equal(
 expect_error(confint(engine_out, method = "hulc"))
 expect_error(confint(engine_out, method = "profile"))
 
+engine_constant <- focus_engine(
+    theta = theta,
+    components = list(V = V),
+    on = function(theta) 2,
+    correction = "median",
+    estimator = "ML",
+    on_gradient = function(theta) numeric(length(theta)),
+    on_hessian = function(theta) matrix(0, length(theta), length(theta))
+)
+expect_identical(engine_constant$estimate, 2)
+expect_identical(engine_constant$se, 0)
+
 coalition_mean <- update(coalition_fit, type = "AS_mean")
 afuns_mean <- enrichwith::get_auxiliary_functions(coalition_mean)
 theta_mean <- coef(coalition_mean, model = "full")

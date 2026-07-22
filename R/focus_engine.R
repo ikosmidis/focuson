@@ -108,39 +108,27 @@ focus_engine <- function(theta,
     V <- components$V
     P <- components$P
     Q <- components$Q
-    d1_psi <- if (is.null(on_gradient)) numDeriv::grad(on, theta, ...) else on_gradient(theta, ...)
-    d1_psi <- as.numeric(d1_psi)
-    hat_psi <- on(theta, ...)
-    muffin <- drop(V %*% d1_psi)
-    var_psi <- sum(d1_psi * muffin)
-    if (identical(correction, "no")) {
-        out <- hat_psi
-    } else {
-        d2_psi <- if (is.null(on_hessian)) numDeriv::hessian(on, theta, ...) else on_hessian(theta, ...)
-        constant_on <- all(d1_psi == 0) && all(d2_psi == 0)
-        if (constant_on) {
-            out <- hat_psi
-        } else {
-            bias <- if (identical(estimator, "ML")) {
-                A <- vapply(seq_along(P), function(t) 0.5 * sum(diag(V %*% (P[[t]] + Q[[t]]))), numeric(1))
-                -drop(V %*% A)
-            } else {
-                0
-            }
-            mean_b <- sum(d1_psi * bias) + 0.5 * sum(d2_psi * V)
-            if (identical(correction, "mean")) {
-                out <- hat_psi - mean_b
-            }
-            if (identical(correction, "median")) {
-                cheese <- lapply(seq_along(P), function(k) muffin[k] * (P[[k]] / 3 + Q[[k]] / 2))
-                cheese <- - Reduce("+", cheese) + 0.5 * d2_psi
-                skew <- sum((cheese %*% muffin) * muffin) / var_psi
-                out <- hat_psi - mean_b + skew
-            }
-        }
+    get_correction_components <- function() {
+        bias <- if (identical(estimator, "ML")) {
+                    A <- vapply(seq_along(P), function(t) {
+                        0.5 * sum(diag(V %*% (P[[t]] + Q[[t]])))
+                    }, numeric(1))
+                    -drop(V %*% A)
+                } else {
+                    numeric(length(theta))
+                    }
+        list(bias = bias, P = P, Q = Q)
     }
-    se <- sqrt(var_psi)
-    out <- unname(out)
+    core <- .focus_core(
+        theta = theta,
+        V = V,
+        components_fun = get_correction_components,
+        on = on,
+        correction = correction,
+        on_gradient = on_gradient,
+        on_hessian = on_hessian,
+        ...
+    )
     out <- list(
         call = cl,
         theta = theta,
@@ -151,8 +139,8 @@ focus_engine <- function(theta,
                   on_hessian = on_hessian),
         dots = dots,
         correction = correction,
-        estimate = out,
-        se = se
+        estimate = core$estimate,
+        se = core$se
     )
     class(out) <- c("focus_engine_list", "focus_list", class(out))
     out
