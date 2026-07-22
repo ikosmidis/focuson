@@ -507,14 +507,16 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE, ...) {
         stop("`level` exceeds the range of the supplied profile; ",
              "recompute the profile with a larger `max_level`.")
     }
-    fn <- approxfun(x = x$signed, y = x$psi)
+    fn <- splinefun(x = x$signed, y = x$psi, method = "monoH.FC")
+    r <- seq(min(x$signed), max(x$signed), length.out = 201)
+    psi <- fn(r)
     ci <- c(fn(-qua), fn(qua))
     if (signed) {
-        plot.default(x$psi, x$signed, type = "l", xlab = expression(psi), ylab = "Signed likelihood root", ...)
+        plot.default(psi, r, type = "l", xlab = expression(psi), ylab = "Signed likelihood root", ...)
         abline(h = c(-qua, qua), lty = 3, col = "lightgray")
         points(attr(x, "mle"), 0, pch = 21, bg = "lightgray")
     } else {
-        plot.default(x, type = "l", xlab = expression(psi), ylab = "Log-likelihood", ...)
+        plot(psi, max_loglik - r^2/2, type = "l", xlab = expression(psi), ylab = "Log-likelihood", ...)
         cutoff <- max_loglik - qchisq(level, 1) / 2
         abline(h = cutoff, lty = 3, col = "lightgray")
         points(attr(x, "mle"), max_loglik, pch = 21, bg = "lightgray")
