@@ -40,7 +40,7 @@
 #'     endpoint equations.  Each element must be a numeric vector of
 #'     length `length(mle) + 1`, consisting of the parameter vector
 #'     followed by the Lagrange multiplier.  Users will generally want
-#'     to leave this argument unspecified so that branch-specific
+#'     to leave this argument `NULL` (default) so that branch-specific
 #'     Wald-type starting values are constructed.  Inappropriate or
 #'     identical starting values for the two branches may cause both
 #'     endpoints of the interval to be identical.
@@ -169,7 +169,7 @@ profile_ci <- function(loglik,
                        nleqslv_args = list(),
                        level = 0.95,
                        ...,
-                       start,
+                       start = NULL,
                        do_checks = TRUE) {
     do_checks <- isTRUE(do_checks)
     if (do_checks) {
@@ -264,7 +264,7 @@ profile_ci <- function(loglik,
     } else {
         jacobian <- NULL
     }
-    if (missing(start)) {
+    if (is.null(start)) {
         if (!do_checks)
             on_grad <- on_gradient(mle, ...)
         info_mle <- info(mle)
@@ -298,7 +298,128 @@ profile_ci <- function(loglik,
     attr(ci, "loglik") <- c(lower = ll(endpoints[[1]]$x[1:(npars - 1)]),
                             upper = ll(endpoints[[2]]$x[1:(npars - 1)]))
     attr(ci, "solution") <- list(lower = endpoints[[1]]$x,
-                                upper = endpoints[[2]]$x)
+                                 upper = endpoints[[2]]$x)
+    attr(ci, "iter") <- c(lower = endpoints[[1]]$iter,
+                          upper = endpoints[[2]]$iter)
     attr(ci, "type") <- "profile"
     ci
+}
+
+
+#' @export
+profile.focus_list_glm <- function(fitted,
+                                   grid_size = 20,
+                                   max_level = 0.9999,
+                                   nleqslv_args = list(),
+                                   ...) {
+    fit <- fitted$object
+    if (!identical(fit$type, "ML")) {
+        fit <- update(fit, type = "ML", start = coef(fit, model = "mean"))
+    }
+    p_mean <- length(coef(fit, model = "mean"))
+    theta <- coef(fit, model = "full")
+    if (fit$family$family %in% c("poisson", "binomial")) {
+        theta <- theta[names(coef(fit, model = "mean"))]
+    }
+    aux <- enrichwith::get_auxiliary_functions(fit)
+    m_inds <- seq_len(p_mean)
+    d_ind <- p_mean + 1
+    split_theta <- function(theta) {
+        if (length(theta) == p_mean) {
+            list(coefficients = theta)
+        } else {
+            list(coefficients = theta[m_inds],
+                 dispersion = theta[d_ind])
+        }
+    }
+    loglik <- function(theta)
+        sum(do.call(aux$dmodel, c(split_theta(theta), list(log = TRUE))))
+    score <- function(theta)
+        do.call(aux$score, split_theta(theta))
+    information <- function(theta)
+        do.call(aux$information, split_theta(theta))
+    r_target <- qnorm(0.5 + max_level / 2)
+    r_step <- r_target / (grid_size - 1)
+    r_grid <- seq(r_step, r_target + r_step, by = r_step)
+    q_grid <- pchisq(r_grid^2, df = 1)
+    on_left <- on_right <- ll <- numeric(length = grid_size)
+    previous <- current <- NULL
+    pro <- function(start) {
+        do.call(profile_ci,
+                c(list(loglik = loglik,
+                       score = score,
+                       information = information,
+                       mle = theta,
+                       on = fitted$on$on,
+                       on_gradient = fitted$on$on_gradient,
+                       on_hessian = fitted$on$on_hessian,
+                       level = q_grid[j],
+                       nleqslv_args = nleqslv_args,
+                       start = start,
+                       do_checks = (j == 1)), fitted$dots))
+    }
+    is_converged <- function(object, tolerance = 1e-6) {
+        residuals <- attr(object, "max|fvec|")
+        all(is.finite(object)) && all(is.finite(residuals)) && max(residuals) <= tolerance
+    }
+    for (j in seq_len(grid_size)) {
+        if (j == 1) {
+            start <- NULL
+        } else if (j == 2) {
+            start <- current
+        } else {
+            start <- list(lower = 2 * current[["lower"]] - previous[["lower"]],
+                          upper = 2 * current[["upper"]] - previous[["upper"]])
+        }
+        obj <- pro(start)
+        ## The secant start is used only from the third point onward.
+        if (!is_converged(obj) && j > 2)
+            obj <- pro(current)
+        ## Retry independently from the Wald starts.
+        if (!is_converged(obj) && !is.null(start))
+            obj <- pro(NULL)
+        ## Fail
+        if (!is_converged(obj))
+            stop("Could not compute the profile at grid point ", j,
+                 " (signed likelihood root = ", format(r_grid[j]), "). ",
+                 paste(attr(obj, "messages"), collapse = "; "))
+        previous <- current
+        current <- attr(obj, "solution")
+        on_left[j] <- obj["lower"]
+        on_right[j] <- obj["upper"]
+        ll[j] <- attr(obj, "loglik")[1]
+    }
+    max_loglik <- loglik(theta)
+    on_mle <- do.call(fitted$on$on, c(list(theta), fitted$dots))
+    out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
+                      loglik = c(rev(ll), max_loglik, ll),
+                      signed = c(-rev(r_grid), 0, r_grid))
+    class(out) <- c("profile_focus_list_glm", class(out))
+    attr(out, "max_loglik") <- max_loglik
+    attr(out, "mle") <- on_mle
+    attr(out, "max_level") <- max_level
+    out
+}
+
+#' @export
+plot.profile_focus_list_glm <- function(x, level = 0.95, signed = FALSE, ...) {
+    max_loglik <- attr(x, "max_loglik")
+    qua <- qnorm(0.5 + level/2)
+    if (qua > max(abs(x$signed))) {
+        stop("`level` exceeds the range of the supplied profile; ",
+             "recompute the profile with a larger `max_level`.")
+    }
+    fn <- approxfun(x = sign(x$psi - attr(x, "mle")) * sqrt(2 * (max_loglik -  x$loglik)), y = x$psi)
+    ci <- c(fn(-qua), fn(qua))
+    if (signed) {
+        plot.default(x$psi, x$signed, type = "l", xlab = expression(psi), ylab = "Signed likelihood root", ...)
+        abline(h = c(-qua, qua), lty = 3, col = "lightgray")
+        points(attr(x, "mle"), 0, pch = 21, bg = "lightgray")
+    } else {
+        plot.default(x, type = "l", xlab = expression(psi), ylab = "Log-likelihood", ...)
+        cutoff <- max_loglik - qchisq(level, 1) / 2
+        abline(h = cutoff, lty = 3, col = "lightgray")
+        points(attr(x, "mle"), max_loglik, pch = 21, bg = "lightgray")
+    }
+    abline(v = ci, lty = 1, col = "lightgray")
 }

@@ -171,24 +171,22 @@ confint.focus_list <- function(object,
         theta <- theta[names(coef(fit, model = "mean"))]
     }
     aux <- enrichwith::get_auxiliary_functions(fit)
+    m_inds <- seq_len(p_mean)
+    d_ind <- p_mean + 1
     split_theta <- function(theta) {
         if (length(theta) == p_mean) {
             list(coefficients = theta)
         } else {
-            list(coefficients = theta[seq_len(p_mean)],
-                 dispersion = theta[-seq_len(p_mean)])
+            list(coefficients = theta[m_inds],
+                 dispersion = theta[d_ind])
         }
     }
-    loglik <- function(theta) {
-        args <- split_theta(theta)
-        sum(do.call(aux$dmodel, c(args, list(log = TRUE))))
-    }
-    score <- function(theta) {
+    loglik <- function(theta)
+        sum(do.call(aux$dmodel, c(split_theta(theta), list(log = TRUE))))
+    score <- function(theta)
         do.call(aux$score, split_theta(theta))
-    }
-    information <- function(theta) {
+    information <- function(theta)
         do.call(aux$information, split_theta(theta))
-    }
     do.call(profile_ci,
             c(list(loglik = loglik,
                    score = score,

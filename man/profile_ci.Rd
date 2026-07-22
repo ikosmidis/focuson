@@ -16,7 +16,7 @@ profile_ci(
   nleqslv_args = list(),
   level = 0.95,
   ...,
-  start,
+  start = NULL,
   do_checks = TRUE
 )
 }
@@ -69,7 +69,7 @@ with \code{information}, an analytic Jacobian is passed to
 endpoint equations.  Each element must be a numeric vector of
 length \code{length(mle) + 1}, consisting of the parameter vector
 followed by the Lagrange multiplier.  Users will generally want
-to leave this argument unspecified so that branch-specific
+to leave this argument \code{NULL} (default) so that branch-specific
 Wald-type starting values are constructed.  Inappropriate or
 identical starting values for the two branches may cause both
 endpoints of the interval to be identical.}
