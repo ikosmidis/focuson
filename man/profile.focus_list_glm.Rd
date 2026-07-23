@@ -43,7 +43,8 @@ attain sufficiently small endpoint-equation residuals, it is retried from
 the preceding solution and then from Wald-type starting values.
 
 The result is likelihood-based and does not use a bias-corrected focus
-estimate as the centre of the profile.
+estimate as the centre of the profile. The model-specific likelihood
+quantities are passed to \code{\link[=profile_focus]{profile_focus()}} to construct the profile.
 }
 \examples{
 warp_fit <- glm(breaks ~ wool + tension, family = poisson,
@@ -55,5 +56,5 @@ plot(warp_profile, signed = TRUE)
 
 }
 \seealso{
-\code{\link[=profile_ci]{profile_ci()}}, \code{\link[=confint.focus_list]{confint.focus_list()}}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile_ci]{profile_ci()}}, \code{\link[=confint.focus_list]{confint.focus_list()}}
 }

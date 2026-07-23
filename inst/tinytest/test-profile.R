@@ -35,18 +35,46 @@ expect_identical(attr(ci_mean, "type"), "profile")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
 
-profile_mean <- focuson:::.profile_focus(mle = theta_hat,
-                                         loglik = loglik_mean,
-                                         score = score_mean,
-                                         information = information_mean,
-                                         on = on_mean,
-                                         on_gradient = on_mean_gradient,
-                                         on_hessian = on_mean_hessian,
-                                         grid_size = 5,
-                                         max_level = level)
+profile_mean <- profile_focus(mle = theta_hat,
+                              loglik = loglik_mean,
+                              score = score_mean,
+                              information = information_mean,
+                              on = on_mean,
+                              on_gradient = on_mean_gradient,
+                              on_hessian = on_mean_hessian,
+                              grid_size = 5,
+                              max_level = level)
 expect_true(inherits(profile_mean, "profile_focus_list"))
 expect_equal(profile_mean$psi,
              theta_hat + profile_mean$signed / sqrt(n),
+             tolerance = 1e-08)
+
+loglik_mean_with_args <- function(theta, observations) {
+    -0.5 * sum((observations - theta[1])^2)
+}
+profile_mean_defaults <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean_with_args,
+    likelihood_args = list(observations = y),
+    grid_size = 5,
+    max_level = level
+)
+expect_equal(profile_mean_defaults$psi,
+             theta_hat + profile_mean_defaults$signed / sqrt(n),
+             tolerance = 1e-05)
+
+scaled_mean <- function(theta, scale) scale * theta[1]
+profile_mean_scaled <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    information = information_mean,
+    on = scaled_mean,
+    grid_size = 5,
+    max_level = level,
+    scale = 2
+)
+expect_equal(profile_mean_scaled$psi, 2 * profile_mean$psi,
              tolerance = 1e-08)
 
 warm_level <- 0.99
@@ -184,6 +212,77 @@ ci_numeric <- profile_ci(loglik = loglik_normal,
                          level = level)
 
 expect_equal(ci_numeric, expected_mu, tolerance = 1e-05, check.attributes = FALSE)
+
+
+on_standardized_mean <- function(theta) theta[1] / exp(theta[2])
+on_standardized_mean_gradient <- function(theta) {
+    c(exp(-theta[2]), -theta[1] * exp(-theta[2]))
+}
+on_standardized_mean_hessian <- function(theta) {
+    out <- matrix(0, 2, 2)
+    out[1, 2] <- out[2, 1] <- -exp(-theta[2])
+    out[2, 2] <- theta[1] * exp(-theta[2])
+    out
+}
+
+ci_standardized_mean <- profile_ci(
+    loglik = loglik_normal,
+    score = score_normal,
+    information = information_normal,
+    mle = theta2_hat,
+    on = on_standardized_mean,
+    on_gradient = on_standardized_mean_gradient,
+    on_hessian = on_standardized_mean_hessian,
+    level = level
+)
+
+## Under the constraint mu / sigma = psi, maximization over sigma has a
+## closed-form solution after reparameterizing by t = 1 / sigma.
+profile_loglik_standardized_mean <- function(psi) {
+    sy <- sum(y)
+    sy2 <- sum(y^2)
+    t_hat <- (psi * sy + sqrt(psi^2 * sy^2 + 4 * n * sy2)) / (2 * sy2)
+    n * log(t_hat) - 0.5 * sum((y * t_hat - psi)^2)
+}
+psi_hat <- on_standardized_mean(theta2_hat)
+lr_equation <- function(psi) {
+    2 * (loglik_normal(theta2_hat) - profile_loglik_standardized_mean(psi)) - cutoff
+}
+find_lr_endpoint <- function(direction) {
+    step <- 1
+    outer <- psi_hat + direction * step
+    while (lr_equation(outer) < 0) {
+        step <- 2 * step
+        outer <- psi_hat + direction * step
+    }
+    uniroot(lr_equation, sort(c(psi_hat, outer)), tol = 1e-10)$root
+}
+expected_standardized_mean <- c(lower = find_lr_endpoint(-1),
+                                upper = find_lr_endpoint(1))
+
+expect_equal(ci_standardized_mean, expected_standardized_mean,
+             tolerance = 1e-07, check.attributes = FALSE)
+
+profile_standardized_mean <- profile_focus(
+    loglik = loglik_normal,
+    score = score_normal,
+    information = information_normal,
+    mle = theta2_hat,
+    on = on_standardized_mean,
+    on_gradient = on_standardized_mean_gradient,
+    on_hessian = on_standardized_mean_hessian,
+    grid_size = 5,
+    max_level = level
+)
+expected_profile_loglik <- vapply(
+    profile_standardized_mean$psi,
+    profile_loglik_standardized_mean,
+    numeric(1)
+)
+expect_equal(profile_standardized_mean$loglik, expected_profile_loglik,
+             tolerance = 1e-07)
+expect_equal(profile_standardized_mean$psi[6], psi_hat,
+             tolerance = 1e-08, check.attributes = FALSE)
 
 
 budworm <- data.frame(ldose = rep(0:5, 2),

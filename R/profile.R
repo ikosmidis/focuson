@@ -162,7 +162,7 @@
 #' profile_ci(ll, score = sc, mle = coef(bw_fit),
 #'            level = 0.95, on = me, ldose = 0)
 #' profile_ci(ll, score = sc, mle = coef(bw_fit),
-#'            level = 0.95, on = me, ldose = 2)
+#'            level = 0.95, on = me, ldose = 5)
 #'
 #' @export
 profile_ci <- function(loglik,
@@ -338,7 +338,8 @@ profile_ci <- function(loglik,
 #' the preceding solution and then from Wald-type starting values.
 #'
 #' The result is likelihood-based and does not use a bias-corrected focus
-#' estimate as the centre of the profile.
+#' estimate as the centre of the profile. The model-specific likelihood
+#' quantities are passed to [profile_focus()] to construct the profile.
 #'
 #' @return
 #' `profile.focus_list_glm()` returns a data frame with columns `psi`,
@@ -356,7 +357,7 @@ profile_ci <- function(loglik,
 #' plot(warp_profile)
 #' plot(warp_profile, signed = TRUE)
 #'
-#' @seealso [profile_ci()], [confint.focus_list()]
+#' @seealso [profile_focus()], [profile_ci()], [confint.focus_list()]
 #'
 #' @export
 profile.focus_list_glm <- function(fitted,
@@ -390,31 +391,88 @@ profile.focus_list_glm <- function(fitted,
         do.call(aux$score, split_theta(theta))
     information <- function(theta)
         do.call(aux$information, split_theta(theta))
-    .profile_focus(mle = theta,
-                   loglik = loglik,
+    do.call(profile_focus,
+            c(list(loglik = loglik,
                    score = score,
                    information = information,
+                   mle = theta,
                    on = fitted$on$on,
                    on_gradient = fitted$on$on_gradient,
                    on_hessian = fitted$on$on_hessian,
-                   on_args = fitted$dots,
                    grid_size = grid_size,
                    max_level = max_level,
-                   nleqslv_args = nleqslv_args)
+                   nleqslv_args = nleqslv_args),
+              fitted$dots))
 }
 
-
-.profile_focus <- function(mle,
-                            loglik,
-                            score,
-                            information,
-                            on,
-                            on_gradient = NULL,
-                            on_hessian = NULL,
-                            on_args = list(),
-                            grid_size = 20,
-                            max_level = 0.9999,
-                            nleqslv_args = list()) {
+#' Profile log-likelihood for a scalar focus parameter
+#'
+#' Compute the profile log-likelihood for a scalar function of a model
+#' parameter vector from supplied likelihood quantities.
+#'
+#' @inheritParams profile_ci
+#' @param grid_size Number of profile points computed on each side of the
+#'     maximum likelihood estimate. Must be at least 2. The outermost point
+#'     provides one grid step of plotting space beyond `max_level`.
+#' @param max_level Confidence level in `(0, 1)` whose likelihood roots are
+#'     placed one grid step inside the outer boundary of the computed profile.
+#'
+#' @details
+#' Profile points are computed outwards from the maximum likelihood estimate on
+#' an equally spaced signed likelihood-root grid. Each pair of points is
+#' obtained with [profile_ci()]. Successive pairs use secant extrapolation from
+#' preceding solutions as starting values. If a solve does not attain
+#' sufficiently small endpoint-equation residuals, it is retried from the
+#' preceding solution and then from the Wald-type starting values constructed
+#' by [profile_ci()].
+#'
+#' The grid extends one step beyond `max_level`, allowing confidence limits at
+#' `max_level` to be displayed within the plotting range.
+#'
+#' @return
+#' A data frame with columns `psi`, `loglik`, and `signed`, and class
+#' `"profile_focus_list"`. The columns contain the focus parameter, profile
+#' log-likelihood, and signed likelihood root, respectively. The
+#' `"max_loglik"` attribute is the unrestricted maximum log-likelihood,
+#' `"mle"` is the focus evaluated at the unrestricted maximum likelihood
+#' estimate, and `"max_level"` is the supplied maximum confidence level.
+#'
+#' @examples
+#' ## Normal model parameterized by theta = (mu, log(sigma)).
+#' ## The logarithm ensures that sigma = exp(theta[2]) is positive.
+#' set.seed(1)
+#' y <- rnorm(20, mean = 2)
+#' mle <- c(mu = mean(y), log_sigma = 0.5 * log(mean((y - mean(y))^2)))
+#' loglik <- function(theta)
+#'     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
+#'
+#' ## Profile the standardized mean mu / sigma.
+#' coef_var <- function(theta)
+#'     exp(theta[2]) / theta[1]
+#'
+#' prof <- profile_focus(mle = mle,
+#'                       loglik = loglik,
+#'                       on = coef_var)
+#' plot(prof)
+#' plot(prof, signed = TRUE)
+#'
+#' @seealso [profile_ci()], [profile.focus_list_glm()],
+#'     [plot.profile_focus_list()]
+#'
+#' @export
+profile_focus <- function(loglik,
+                           score = NULL,
+                           information = NULL,
+                           mle,
+                           on = function(theta) theta[1],
+                           on_gradient = NULL,
+                           on_hessian = NULL,
+                           likelihood_args = list(),
+                           nleqslv_args = list(),
+                           grid_size = 20,
+                           max_level = 0.9999,
+                           ...) {
+    dots <- list(...)
     r_target <- qnorm(0.5 + max_level / 2)
     r_step <- r_target / (grid_size - 1)
     r_grid <- seq(r_step, r_target + r_step, by = r_step)
@@ -430,10 +488,11 @@ profile.focus_list_glm <- function(fitted,
                        on = on,
                        on_gradient = on_gradient,
                        on_hessian = on_hessian,
+                       likelihood_args = likelihood_args,
                        level = q_grid[j],
                        nleqslv_args = nleqslv_args,
                        start = start,
-                       do_checks = (j == 1)), on_args))
+                       do_checks = (j == 1)), dots))
     }
     is_converged <- function(object, tolerance = 1e-6) {
         residuals <- attr(object, "max|fvec|")
@@ -466,8 +525,8 @@ profile.focus_list_glm <- function(fitted,
         on_right[j] <- obj["upper"]
         ll[j] <- attr(obj, "loglik")[1]
     }
-    max_loglik <- loglik(mle)
-    on_mle <- do.call(on, c(list(mle), on_args))
+    max_loglik <- do.call(loglik, c(list(mle), likelihood_args))
+    on_mle <- do.call(on, c(list(mle), dots))
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
                       loglik = c(rev(ll), max_loglik, ll),
                       signed = c(-rev(r_grid), 0, r_grid))
@@ -485,7 +544,7 @@ profile.focus_list_glm <- function(fitted,
 #' signed likelihood-root scale.
 #'
 #' @param x An object of class `"profile_focus_list"`, as returned by
-#'     [profile.focus_list_glm()].
+#'     [profile_focus()] or [profile.focus_list_glm()].
 #' @param level Confidence level used to draw the horizontal cutoff and
 #'     vertical confidence limits.
 #' @param signed Logical. If `TRUE`, plot the signed likelihood root; otherwise
@@ -497,7 +556,7 @@ profile.focus_list_glm <- function(fitted,
 #'
 #' @return Called for its side effect of drawing a plot.
 #'
-#' @seealso [profile.focus_list_glm()], [profile_ci()]
+#' @seealso [profile_focus()], [profile.focus_list_glm()], [profile_ci()]
 #'
 #' @export
 plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE, ...) {

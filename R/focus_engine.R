@@ -122,9 +122,9 @@ focus_engine <- function(theta,
     core <- .focus_core(
         theta = theta,
         V = V,
-        components_fun = get_correction_components,
         on = on,
         correction = correction,
+        components_fun = get_correction_components,
         on_gradient = on_gradient,
         on_hessian = on_hessian,
         ...

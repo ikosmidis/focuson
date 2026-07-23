@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
-\code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
+\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
 
 \item{level}{Confidence level used to draw the horizontal cutoff and
 vertical confidence limits.}
@@ -30,5 +30,5 @@ signed likelihood-root scale.
 If it does not, recompute the profile with a larger \code{max_level}.
 }
 \seealso{
-\code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}, \code{\link[=profile_ci]{profile_ci()}}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}, \code{\link[=profile_ci]{profile_ci()}}
 }

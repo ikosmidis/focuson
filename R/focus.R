@@ -224,9 +224,9 @@ focus.glm <- function(object,
     core <- .focus_core(
         theta = theta,
         V = V,
-        components = get_correction_components,
         on = on,
         correction = correction,
+        components = get_correction_components,
         on_gradient = on_gradient,
         on_hessian = on_hessian,
         ...

@@ -189,7 +189,7 @@ me <- function(theta, ldose) {
 profile_ci(ll, score = sc, mle = coef(bw_fit),
            level = 0.95, on = me, ldose = 0)
 profile_ci(ll, score = sc, mle = coef(bw_fit),
-           level = 0.95, on = me, ldose = 2)
+           level = 0.95, on = me, ldose = 5)
 
 }
 \references{
