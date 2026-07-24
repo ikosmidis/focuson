@@ -83,7 +83,7 @@ printed_profile_mean <- capture.output(
 )
 expect_identical(returned_profile_mean, profile_mean)
 expect_true(any(grepl(
-    "^Profile log likelihood for a scalar focus$",
+    "^Profile log-likelihood for a scalar focus$",
     printed_profile_mean
 )))
 expect_true(any(grepl("^Parameter dimension: 1\\s*$",
@@ -96,6 +96,14 @@ expect_true(any(grepl("^Requested maximum level: 0.95\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Boundary confidence level:",
                       printed_profile_mean)))
+
+profile_plot_file <- tempfile(fileext = ".pdf")
+pdf(profile_plot_file)
+expect_silent(plot(profile_mean, interpolation = "linear"))
+expect_silent(plot(profile_mean, interpolation = "cubic"))
+dev.off()
+unlink(profile_plot_file)
+expect_error(plot(profile_mean, interpolation = "quadratic"))
 
 loglik_mean_with_args <- function(theta, observations) {
     -0.5 * sum((observations - theta[1])^2)

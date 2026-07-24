@@ -445,7 +445,7 @@ profile.focus_list_glm <- function(fitted,
 #' ## Normal model parameterized by theta = (mu, log(sigma)).
 #' ## The logarithm ensures that sigma = exp(theta[2]) is positive.
 #' set.seed(1)
-#' y <- rnorm(20, mean = 2)
+#' y <- rnorm(20, mean = 2.0)
 #' mle <- c(mu = mean(y), log_sigma = 0.5 * log(mean((y - mean(y))^2)))
 #' loglik <- function(theta)
 #'     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
@@ -614,6 +614,9 @@ print.profile_focus_list <- function(x,
 #'     vertical confidence limits.
 #' @param signed Logical. If `TRUE`, plot the signed likelihood root; otherwise
 #'     plot the profile log-likelihood.
+#' @param interpolation Character. Interpolation method used between computed
+#'     profile points. `"linear"` uses [stats::approxfun()] and `"cubic"` uses
+#'     [stats::splinefun()].
 #' @param ... Additional graphical arguments passed to [graphics::plot.default()].
 #'
 #' @details `level` must lie within the range covered by the computed profile.
@@ -624,23 +627,29 @@ print.profile_focus_list <- function(x,
 #' @seealso [profile_focus()], [profile.focus_list_glm()], [profile_ci()]
 #'
 #' @export
-plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE, ...) {
+plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
+                                    interpolation = c("linear", "cubic"),  ...) {
+    lin <- identical(match.arg(interpolation) , "linear")
     max_loglik <- attr(x, "max_loglik")
     qua <- qnorm(0.5 + level/2)
     if (qua > max(abs(x$signed))) {
         stop("`level` exceeds the range of the supplied profile; ",
              "recompute the profile with a larger `max_level`.")
     }
-    fn <- splinefun(x = x$signed, y = x$psi, method = "monoH.FC")
+    fn <- if (lin) approxfun(x = x$signed, y = x$psi) else splinefun(x$signed, y = x$psi)
     r <- seq(min(x$signed), max(x$signed), length.out = 201)
     psi <- fn(r)
     ci <- c(fn(-qua), fn(qua))
     if (signed) {
-        plot.default(psi, r, type = "l", xlab = expression(psi), ylab = "Signed likelihood root", ...)
+        plot.default(x$psi, x$signed, pch = 21, bg = "lightgray", col = "lightgray", cex = 0.8,
+                     xlab = expression(psi), ylab = "Signed likelihood root", ...)
+        points(psi, r, type = "l")
         abline(h = c(-qua, qua), lty = 3, col = "lightgray")
         points(attr(x, "mle"), 0, pch = 21, bg = "lightgray")
     } else {
-        plot(psi, max_loglik - r^2/2, type = "l", xlab = expression(psi), ylab = "Log-likelihood", ...)
+        plot.default(x$psi, x$loglik, pch = 21, bg = "lightgray", col = "lightgray", cex = 0.8,
+                     xlab = expression(psi), ylab = "Log-likelihood", ...)
+        points(psi, max_loglik - r^2/2, type = "l")
         cutoff <- max_loglik - qchisq(level, 1) / 2
         abline(h = cutoff, lty = 3, col = "lightgray")
         points(attr(x, "mle"), max_loglik, pch = 21, bg = "lightgray")

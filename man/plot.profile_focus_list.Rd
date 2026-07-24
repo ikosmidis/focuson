@@ -4,7 +4,13 @@
 \alias{plot.profile_focus_list}
 \title{Plot a focus profile log-likelihood}
 \usage{
-\method{plot}{profile_focus_list}(x, level = 0.95, signed = FALSE, ...)
+\method{plot}{profile_focus_list}(
+  x,
+  level = 0.95,
+  signed = FALSE,
+  interpolation = c("linear", "cubic"),
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
@@ -15,6 +21,10 @@ vertical confidence limits.}
 
 \item{signed}{Logical. If \code{TRUE}, plot the signed likelihood root; otherwise
 plot the profile log-likelihood.}
+
+\item{interpolation}{Character. Interpolation method used between computed
+profile points. \code{"linear"} uses \code{\link[stats:approxfun]{stats::approxfun()}} and \code{"cubic"} uses
+\code{\link[stats:splinefun]{stats::splinefun()}}.}
 
 \item{...}{Additional graphical arguments passed to \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
 }

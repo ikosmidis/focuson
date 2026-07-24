@@ -100,7 +100,7 @@ The grid extends one step beyond \code{max_level}, allowing confidence limits at
 ## Normal model parameterized by theta = (mu, log(sigma)).
 ## The logarithm ensures that sigma = exp(theta[2]) is positive.
 set.seed(1)
-y <- rnorm(20, mean = 2)
+y <- rnorm(20, mean = 2.0)
 mle <- c(mu = mean(y), log_sigma = 0.5 * log(mean((y - mean(y))^2)))
 loglik <- function(theta)
     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
