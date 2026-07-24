@@ -90,7 +90,7 @@ expect_true(any(grepl("^Parameter dimension: 1\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Profile points: 11\\s*$",
                       printed_profile_mean)))
-expect_true(any(grepl("^Points per branch: 5 left, 5 right\\s*$",
+expect_true(any(grepl("^Points by side: 5 lower, 5 upper\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Requested maximum level: 0.95\\s*$",
                       printed_profile_mean)))
@@ -269,6 +269,16 @@ ci_numeric <- profile_ci(loglik = loglik_normal,
 
 expect_equal(ci_numeric, expected_mu, tolerance = 1e-05, check.attributes = FALSE)
 
+on_coefficient_of_variation <- function(theta)
+    exp(theta[2]) / theta[1]
+expect_error(
+    profile_ci(loglik = loglik_normal,
+               mle = theta2_hat,
+               on = on_coefficient_of_variation,
+               level = 0.998,
+               do_checks = FALSE),
+    pattern = "Could not identify profile endpoints on opposite sides"
+)
 
 on_standardized_mean <- function(theta) theta[1] / exp(theta[2])
 on_standardized_mean_gradient <- function(theta) {

@@ -122,6 +122,12 @@ opposite directions are used. This is a low-level routine: endpoint convergence
 diagnostics are returned as attributes, and callers can decide how
 strictly to enforce them.
 
+Irrespective of \code{do_checks}, the returned lower and upper endpoints are
+required to lie below and above, respectively, the value of \code{on} at \code{mle}.
+If they do not, the profile may be unbounded, singular, or have multiple
+branches, and the function returns an error rather than two potentially
+misleading endpoints.
+
 If \code{information} and \code{on_hessian} are both supplied, \code{profile_ci()}
 uses them to construct a Jacobian for the endpoint equations and
 passes it to \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. This Jacobian is exact when

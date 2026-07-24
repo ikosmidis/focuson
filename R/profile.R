@@ -43,10 +43,10 @@
 #'     followed by the Lagrange multiplier. This argument is intended
 #'     primarily for warm-starting repeated calls using the `"solution"`
 #'     attribute returned by a previous call. Users will generally want to
-#'     leave it `NULL` (default) so that branch-specific Wald-type starting
-#'     values are constructed. Inappropriate or identical starting values for
-#'     the two branches may cause both endpoints of the interval to be
-#'     identical.
+#'     leave it `NULL` (default) so that separate Wald-type starting values are
+#'     constructed for the lower and upper endpoints. Inappropriate or
+#'     identical starting values may cause both endpoint calculations to
+#'     converge to the same solution.
 #' @param do_checks Logical. If `TRUE` (default), validate the inputs
 #'     and their values at `mle`. Set to `FALSE` only when repeatedly
 #'     calling `profile_ci()` with inputs that have already been
@@ -88,6 +88,14 @@
 #' opposite directions are used. This is a low-level routine: endpoint convergence
 #' diagnostics are returned as attributes, and callers can decide how
 #' strictly to enforce them.
+#'
+#' Irrespective of `do_checks`, the returned lower and upper endpoints are
+#' required to lie below and above, respectively, the value of `on` at `mle`.
+#' If they do not, the function cannot confirm that the solutions are the two
+#' endpoints surrounding the focus estimate. This can occur when the
+#' confidence set is unbounded or disconnected, or when both endpoint
+#' calculations converge to the same or otherwise unintended solutions. The
+#' function returns an error rather than two potentially misleading endpoints.
 #'
 #' If `information` and `on_hessian` are both supplied, `profile_ci()`
 #' uses them to construct a Jacobian for the endpoint equations and
@@ -298,6 +306,16 @@ profile_ci <- function(loglik,
     })
     ci <- sapply(endpoints, function(end) on(end$x[1:(npars - 1)], ...))
     names(ci) <- c("lower", "upper")
+    on_mle <- on(mle, ...)
+    opposite <- length(on_mle) == 1L && is.finite(on_mle) &&
+        isTRUE(ci["lower"] < on_mle) &&
+        isTRUE(ci["upper"] > on_mle)
+    if (!opposite) {
+        stop("Could not identify profile endpoints on opposite sides of ",
+             "the focus estimate. The confidence set may be unbounded or ",
+             "disconnected, or the endpoint equations may have converged ",
+             "to unintended solutions.")
+    }
     attr(ci, "max|fvec|") <- c(lower = max(abs(endpoints[[1]]$fvec)),
                                upper = max(abs(endpoints[[2]]$fvec)))
     attr(ci, "messages") <- c(lower = endpoints[[1]]$message,
@@ -589,8 +607,8 @@ print.profile_focus_list <- function(x,
         format_value(attr(x, "max_loglik")), "\n")
     cat("Parameter dimension:", ncol(x$theta), "\n")
     cat("Profile points:", nrow(x), "\n")
-    cat("Points per branch:",
-        sum(x$signed < 0), "left,", sum(x$signed > 0), "right\n")
+    cat("Points by side:",
+        sum(x$signed < 0), "lower,", sum(x$signed > 0), "upper\n")
     cat("Signed-root range:",
         format_value(signed_range[1]), "to",
         format_value(signed_range[2]), "\n")
