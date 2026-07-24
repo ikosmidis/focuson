@@ -28,7 +28,9 @@ placed one grid step inside the outer boundary of the computed profile.}
 the focus parameter, profile log-likelihood, and signed likelihood root,
 respectively. The \code{"max_loglik"} attribute is the unrestricted maximum
 log-likelihood, \code{"mle"} is the focus evaluated at the unrestricted MLE, and
-\code{"max_level"} is the supplied maximum confidence level.
+\code{"max_level"} is the supplied maximum confidence level. The matrix-valued
+column \code{theta} contains the parameter vectors and \code{lagrange} contains the
+corresponding Lagrange multipliers.
 }
 \description{
 Compute a profile log-likelihood for the scalar parameter defined by a focus

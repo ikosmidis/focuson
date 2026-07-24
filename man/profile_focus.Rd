@@ -76,7 +76,9 @@ A data frame with columns \code{psi}, \code{loglik}, and \code{signed}, and clas
 log-likelihood, and signed likelihood root, respectively. The
 \code{"max_loglik"} attribute is the unrestricted maximum log-likelihood,
 \code{"mle"} is the focus evaluated at the unrestricted maximum likelihood
-estimate, and \code{"max_level"} is the supplied maximum confidence level.
+estimate, and \code{"max_level"} is the supplied maximum confidence level. The
+matrix-valued column \code{theta} contains the parameter vectors and \code{lagrange}
+contains the corresponding Lagrange multipliers.
 }
 \description{
 Compute the profile log-likelihood for a scalar function of a model

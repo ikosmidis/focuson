@@ -347,7 +347,9 @@ profile_ci <- function(loglik,
 #' the focus parameter, profile log-likelihood, and signed likelihood root,
 #' respectively. The `"max_loglik"` attribute is the unrestricted maximum
 #' log-likelihood, `"mle"` is the focus evaluated at the unrestricted MLE, and
-#' `"max_level"` is the supplied maximum confidence level.
+#' `"max_level"` is the supplied maximum confidence level. The matrix-valued
+#' column `theta` contains the parameter vectors and `lagrange` contains the
+#' corresponding Lagrange multipliers.
 #'
 #' @examples
 #' warp_fit <- glm(breaks ~ wool + tension, family = poisson,
@@ -435,7 +437,9 @@ profile.focus_list_glm <- function(fitted,
 #' log-likelihood, and signed likelihood root, respectively. The
 #' `"max_loglik"` attribute is the unrestricted maximum log-likelihood,
 #' `"mle"` is the focus evaluated at the unrestricted maximum likelihood
-#' estimate, and `"max_level"` is the supplied maximum confidence level.
+#' estimate, and `"max_level"` is the supplied maximum confidence level. The
+#' matrix-valued column `theta` contains the parameter vectors and `lagrange`
+#' contains the corresponding Lagrange multipliers.
 #'
 #' @examples
 #' ## Normal model parameterized by theta = (mu, log(sigma)).
@@ -478,6 +482,11 @@ profile_focus <- function(loglik,
     r_grid <- seq(r_step, r_target + r_step, by = r_step)
     q_grid <- pchisq(r_grid^2, df = 1)
     on_left <- on_right <- ll <- numeric(length = grid_size)
+    p <- length(mle)
+    theta_left <- theta_right <-
+        matrix(NA_real_, grid_size, p,
+               dimnames = list(NULL, names(mle)))
+    lagrange_left <- lagrange_right <- numeric(grid_size)
     previous <- current <- NULL
     pro <- function(start) {
         do.call(profile_ci,
@@ -521,20 +530,76 @@ profile_focus <- function(loglik,
                  paste(attr(obj, "messages"), collapse = "; "))
         previous <- current
         current <- attr(obj, "solution")
+        theta_left[j, ] <- current$lower[seq_len(p)]
+        theta_right[j, ] <- current$upper[seq_len(p)]
+        lagrange_left[j] <- current$lower[p + 1L]
+        lagrange_right[j] <- current$upper[p + 1L]
         on_left[j] <- obj["lower"]
         on_right[j] <- obj["upper"]
         ll[j] <- attr(obj, "loglik")[1]
     }
     max_loglik <- do.call(loglik, c(list(mle), likelihood_args))
     on_mle <- do.call(on, c(list(mle), dots))
+    theta_profile <- rbind(theta_left[rev(seq_len(grid_size)), , drop = FALSE],
+                           as.numeric(mle),
+                           theta_right)
+    colnames(theta_profile) <- names(mle)
+    rownames(theta_profile) <- NULL
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
                       loglik = c(rev(ll), max_loglik, ll),
-                      signed = c(-rev(r_grid), 0, r_grid))
+                      signed = c(-rev(r_grid), 0, r_grid),
+                      theta = I(theta_profile),
+                      lagrange = c(rev(lagrange_left), 0, lagrange_right))
     class(out) <- c("profile_focus_list", class(out))
     attr(out, "max_loglik") <- max_loglik
     attr(out, "mle") <- on_mle
     attr(out, "max_level") <- max_level
     out
+}
+
+
+#' Print a focus profile log-likelihood
+#'
+#' Print the main characteristics of a focus profile log-likelihood.
+#'
+#' @param x An object of class `"profile_focus_list"`, as returned by
+#'     [profile_focus()] or [profile.focus_list_glm()].
+#' @param digits Number of significant digits used for printing.
+#' @param ... Currently unused.
+#'
+#' @return `x`, invisibly.
+#'
+#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#'     [plot.profile_focus_list()]
+#'
+#' @export
+print.profile_focus_list <- function(x,
+                                     digits = max(3L, getOption("digits") - 2L),
+                                     ...) {
+    signed_range <- range(x$signed)
+    positive <- sort(x$signed[x$signed > 0])
+    spacing <- median(diff(c(0, positive)))
+    boundary_level <- pchisq(max(abs(x$signed))^2, df = 1)
+    format_value <- function(value)
+        format(signif(value, digits), trim = TRUE)
+
+    cat("Profile log-likelihood for a scalar focus\n\n")
+    cat("Focus at MLE:", format_value(attr(x, "mle")), "\n")
+    cat("Maximum log-likelihood:",
+        format_value(attr(x, "max_loglik")), "\n")
+    cat("Parameter dimension:", ncol(x$theta), "\n")
+    cat("Profile points:", nrow(x), "\n")
+    cat("Points per branch:",
+        sum(x$signed < 0), "left,", sum(x$signed > 0), "right\n")
+    cat("Signed-root range:",
+        format_value(signed_range[1]), "to",
+        format_value(signed_range[2]), "\n")
+    cat("Signed-root spacing:", format_value(spacing), "\n")
+    cat("Requested maximum level:",
+        format_value(attr(x, "max_level")), "\n")
+    cat("Boundary confidence level:",
+        format_value(boundary_level), "\n")
+    invisible(x)
 }
 
 

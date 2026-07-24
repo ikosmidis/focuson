@@ -48,6 +48,54 @@ expect_true(inherits(profile_mean, "profile_focus_list"))
 expect_equal(profile_mean$psi,
              theta_hat + profile_mean$signed / sqrt(n),
              tolerance = 1e-08)
+expect_identical(names(profile_mean),
+                 c("psi", "loglik", "signed", "theta", "lagrange"))
+expect_identical(dim(profile_mean$theta),
+                 c(nrow(profile_mean), length(theta_hat)))
+expect_identical(colnames(profile_mean$theta), names(theta_hat))
+expect_equal(as.numeric(profile_mean$theta[, 1]),
+             profile_mean$psi,
+             tolerance = 1e-08)
+expect_equal(as.numeric(profile_mean$theta[6, ]),
+             theta_hat,
+             tolerance = 1e-08)
+expect_equal(profile_mean$lagrange[6], 0)
+expect_equal(apply(profile_mean$theta, 1, loglik_mean),
+             profile_mean$loglik,
+             tolerance = 1e-08)
+stationarity_mean <- vapply(
+    seq_len(nrow(profile_mean)),
+    function(j) {
+        score_mean(profile_mean$theta[j, ]) -
+            profile_mean$lagrange[j] *
+            on_mean_gradient(profile_mean$theta[j, ])
+    },
+    numeric(1)
+)
+expect_true(max(abs(stationarity_mean)) < 1e-08)
+profile_mean_subset <- profile_mean[c(2, 5, 9), ]
+expect_equal(profile_mean_subset$theta[, 1],
+             profile_mean$theta[c(2, 5, 9), 1])
+expect_equal(profile_mean_subset$lagrange,
+             profile_mean$lagrange[c(2, 5, 9)])
+printed_profile_mean <- capture.output(
+    returned_profile_mean <- print(profile_mean)
+)
+expect_identical(returned_profile_mean, profile_mean)
+expect_true(any(grepl(
+    "^Profile log likelihood for a scalar focus$",
+    printed_profile_mean
+)))
+expect_true(any(grepl("^Parameter dimension: 1\\s*$",
+                      printed_profile_mean)))
+expect_true(any(grepl("^Profile points: 11\\s*$",
+                      printed_profile_mean)))
+expect_true(any(grepl("^Points per branch: 5 left, 5 right\\s*$",
+                      printed_profile_mean)))
+expect_true(any(grepl("^Requested maximum level: 0.95\\s*$",
+                      printed_profile_mean)))
+expect_true(any(grepl("^Boundary confidence level:",
+                      printed_profile_mean)))
 
 loglik_mean_with_args <- function(theta, observations) {
     -0.5 * sum((observations - theta[1])^2)
