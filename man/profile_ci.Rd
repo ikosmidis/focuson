@@ -73,10 +73,10 @@ length \code{length(mle) + 1}, consisting of the parameter vector
 followed by the Lagrange multiplier. This argument is intended
 primarily for warm-starting repeated calls using the \code{"solution"}
 attribute returned by a previous call. Users will generally want to
-leave it \code{NULL} (default) so that branch-specific Wald-type starting
-values are constructed. Inappropriate or identical starting values for
-the two branches may cause both endpoints of the interval to be
-identical.}
+leave it \code{NULL} (default) so that separate Wald-type starting values are
+constructed for the lower and upper endpoints. Inappropriate or
+identical starting values may cause both endpoint calculations to
+converge to the same solution.}
 
 \item{do_checks}{Logical. If \code{TRUE} (default), validate the inputs
 and their values at \code{mle}. Set to \code{FALSE} only when repeatedly
@@ -124,9 +124,21 @@ strictly to enforce them.
 
 Irrespective of \code{do_checks}, the returned lower and upper endpoints are
 required to lie below and above, respectively, the value of \code{on} at \code{mle}.
-If they do not, the profile may be unbounded, singular, or have multiple
-branches, and the function returns an error rather than two potentially
-misleading endpoints.
+If they do not, the function cannot confirm that the solutions are the two
+endpoints surrounding the focus estimate. This can occur when the
+confidence set is unbounded or disconnected, or when both endpoint
+calculations converge to the same or otherwise unintended solutions. The
+function returns an error rather than two potentially misleading endpoints.
+
+\code{profile_ci()} targets the two finite endpoints of a connected confidence
+interval containing the value of \code{on} at \code{mle}. It does not search for
+additional disconnected components of a confidence set. If the relevant
+confidence set is unbounded, the function is not intended to return an
+infinite endpoint, and the endpoint calculation should be regarded as
+unsuccessful. Because the endpoint equations are stationarity conditions
+and can have more than one solution, the function also does not provide a
+global guarantee that the solutions found are the outermost likelihood
+crossings. Starting values can therefore matter in non-regular problems.
 
 If \code{information} and \code{on_hessian} are both supplied, \code{profile_ci()}
 uses them to construct a Jacobian for the endpoint equations and

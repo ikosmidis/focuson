@@ -97,6 +97,16 @@
 #' calculations converge to the same or otherwise unintended solutions. The
 #' function returns an error rather than two potentially misleading endpoints.
 #'
+#' `profile_ci()` targets the two finite endpoints of a connected confidence
+#' interval containing the value of `on` at `mle`. It does not search for
+#' additional disconnected components of a confidence set. If the relevant
+#' confidence set is unbounded, the function is not intended to return an
+#' infinite endpoint, and the endpoint calculation should be regarded as
+#' unsuccessful. Because the endpoint equations are stationarity conditions
+#' and can have more than one solution, the function also does not provide a
+#' global guarantee that the solutions found are the outermost likelihood
+#' crossings. Starting values can therefore matter in non-regular problems.
+#'
 #' If `information` and `on_hessian` are both supplied, `profile_ci()`
 #' uses them to construct a Jacobian for the endpoint equations and
 #' passes it to [nleqslv::nleqslv()]. This Jacobian is exact when
