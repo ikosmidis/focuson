@@ -368,6 +368,8 @@ profile_ci <- function(loglik,
 #' The result is likelihood-based and does not use a bias-corrected focus
 #' estimate as the centre of the profile. The model-specific likelihood
 #' quantities are passed to [profile_focus()] to construct the profile.
+#' The signed likelihood root uses the sign of the focus at the unrestricted
+#' MLE minus the focus value at the profile point.
 #'
 #' @return
 #' `profile.focus_list_glm()` returns a data frame with columns `psi`,
@@ -458,6 +460,9 @@ profile.focus_list_glm <- function(fitted,
 #'
 #' The grid extends one step beyond `max_level`, allowing confidence limits at
 #' `max_level` to be displayed within the plotting range.
+#' The signed likelihood root is defined as
+#' \deqn{\mathop{\rm sign}(\hat\psi-\psi)
+#' \left[2\{\ell(\hat\theta)-\ell_p(\psi)\}\right]^{1/2}.}
 #'
 #' @return
 #' A data frame with columns `psi`, `loglik`, and `signed`, and class
@@ -493,17 +498,17 @@ profile.focus_list_glm <- function(fitted,
 #'
 #' @export
 profile_focus <- function(loglik,
-                           score = NULL,
-                           information = NULL,
-                           mle,
-                           on = function(theta) theta[1],
-                           on_gradient = NULL,
-                           on_hessian = NULL,
-                           likelihood_args = list(),
-                           nleqslv_args = list(),
-                           grid_size = 20,
-                           max_level = 0.9999,
-                           ...) {
+                          score = NULL,
+                          information = NULL,
+                          mle,
+                          on = function(theta) theta[1],
+                          on_gradient = NULL,
+                          on_hessian = NULL,
+                          likelihood_args = list(),
+                          nleqslv_args = list(),
+                          grid_size = 20,
+                          max_level = 0.9999,
+                          ...) {
     dots <- list(...)
     r_target <- qnorm(0.5 + max_level / 2)
     r_step <- r_target / (grid_size - 1)
@@ -554,7 +559,7 @@ profile_focus <- function(loglik,
         ## Fail
         if (!is_converged(obj))
             stop("Could not compute the profile at grid point ", j,
-                 " (signed likelihood root = ", format(r_grid[j]), "). ",
+                 " (likelihood-root magnitude = ", format(r_grid[j]), "). ",
                  paste(attr(obj, "messages"), collapse = "; "))
         previous <- current
         current <- attr(obj, "solution")
@@ -575,7 +580,7 @@ profile_focus <- function(loglik,
     rownames(theta_profile) <- NULL
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
                       loglik = c(rev(ll), max_loglik, ll),
-                      signed = c(-rev(r_grid), 0, r_grid),
+                      signed = c(rev(r_grid), 0, -r_grid),
                       theta = I(theta_profile),
                       lagrange = c(rev(lagrange_left), 0, lagrange_right))
     class(out) <- c("profile_focus_list", class(out))
@@ -618,7 +623,7 @@ print.profile_focus_list <- function(x,
     cat("Parameter dimension:", ncol(x$theta), "\n")
     cat("Profile points:", nrow(x), "\n")
     cat("Points by side:",
-        sum(x$signed < 0), "lower,", sum(x$signed > 0), "upper\n")
+        sum(x$signed > 0), "lower,", sum(x$signed < 0), "upper\n")
     cat("Signed-root range:",
         format_value(signed_range[1]), "to",
         format_value(signed_range[2]), "\n")
@@ -667,7 +672,7 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
     fn <- if (lin) approxfun(x = x$signed, y = x$psi) else splinefun(x$signed, y = x$psi)
     r <- seq(min(x$signed), max(x$signed), length.out = 201)
     psi <- fn(r)
-    ci <- c(fn(-qua), fn(qua))
+    ci <- c(c(fn(-qua), fn(qua)))
     if (signed) {
         plot.default(x$psi, x$signed, pch = 21, bg = "lightgray", col = "lightgray", cex = 0.8,
                      xlab = expression(psi), ylab = "Signed likelihood root", ...)

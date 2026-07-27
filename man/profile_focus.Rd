@@ -95,6 +95,9 @@ by \code{\link[=profile_ci]{profile_ci()}}.
 
 The grid extends one step beyond \code{max_level}, allowing confidence limits at
 \code{max_level} to be displayed within the plotting range.
+The signed likelihood root is defined as
+\deqn{\mathop{\rm sign}(\hat\psi-\psi)
+\left[2\{\ell(\hat\theta)-\ell_p(\psi)\}\right]^{1/2}.}
 }
 \examples{
 ## Normal model parameterized by theta = (mu, log(sigma)).

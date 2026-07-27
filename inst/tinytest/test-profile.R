@@ -46,7 +46,7 @@ profile_mean <- profile_focus(mle = theta_hat,
                               max_level = level)
 expect_true(inherits(profile_mean, "profile_focus_list"))
 expect_equal(profile_mean$psi,
-             theta_hat + profile_mean$signed / sqrt(n),
+             theta_hat - profile_mean$signed / sqrt(n),
              tolerance = 1e-08)
 expect_identical(names(profile_mean),
                  c("psi", "loglik", "signed", "theta", "lagrange"))
@@ -116,7 +116,7 @@ profile_mean_defaults <- profile_focus(
     max_level = level
 )
 expect_equal(profile_mean_defaults$psi,
-             theta_hat + profile_mean_defaults$signed / sqrt(n),
+             theta_hat - profile_mean_defaults$signed / sqrt(n),
              tolerance = 1e-05)
 
 scaled_mean <- function(theta, scale) scale * theta[1]
@@ -413,7 +413,7 @@ r_grid <- seq(r_step, r_target + r_step, by = r_step)
 
 expect_true(inherits(focus_profile, "profile_focus_list"))
 expect_equal(nrow(focus_profile), 2 * grid_size + 1)
-expect_equal(focus_profile$signed, c(-rev(r_grid), 0, r_grid))
+expect_equal(focus_profile$signed, c(rev(r_grid), 0, -r_grid))
 expect_equal(focus_profile$psi[grid_size + 1],
              second_parameter(coef(budworm_focus_fit)), tolerance = 1e-08,
              check.attributes = FALSE)

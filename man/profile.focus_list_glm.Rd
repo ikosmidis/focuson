@@ -47,6 +47,8 @@ the preceding solution and then from Wald-type starting values.
 The result is likelihood-based and does not use a bias-corrected focus
 estimate as the centre of the profile. The model-specific likelihood
 quantities are passed to \code{\link[=profile_focus]{profile_focus()}} to construct the profile.
+The signed likelihood root uses the sign of the focus at the unrestricted
+MLE minus the focus value at the profile point.
 }
 \examples{
 warp_fit <- glm(breaks ~ wool + tension, family = poisson,
