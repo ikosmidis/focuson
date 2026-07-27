@@ -4,21 +4,43 @@
 \alias{profile.focus_list_glm}
 \title{Profile log-likelihood for a focus object}
 \usage{
-\method{profile}{focus_list_glm}(fitted, grid_size = 20, max_level = 0.9999, nleqslv_args = list(), ...)
+\method{profile}{focus_list_glm}(
+  fitted,
+  grid_size = 20,
+  max_level = 0.9999,
+  nleqslv_args = list(),
+  approach = c("VM", "focus_grid"),
+  focus_range = NULL,
+  auglag_args = list(),
+  ...
+)
 }
 \arguments{
 \item{fitted}{An object of class \code{"focus_list_glm"}, as returned by
 \code{\link[=focus]{focus()}}.}
 
 \item{grid_size}{Number of profile points computed on each side of the
-maximum likelihood estimate. Must be at least 2. The outermost point
-provides one grid step of plotting space beyond \code{max_level}.}
+maximum likelihood estimate. Must be at least 2. For the VM approach,
+the outermost point provides one grid step of plotting space beyond
+\code{max_level}.}
 
 \item{max_level}{Confidence level in \verb{(0, 1)} whose likelihood roots are
-placed one grid step inside the outer boundary of the computed profile.}
+placed one grid step inside the outer boundary of the computed profile.
+Used only when \code{approach = "VM"}.}
 
 \item{nleqslv_args}{List of additional arguments passed to
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}}.}
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}}. Ignored when
+\code{approach = "focus_grid"}.}
+
+\item{approach}{Profiling approach passed to \code{\link[=profile_focus]{profile_focus()}}.}
+
+\item{focus_range}{Optional numeric vector containing the lower and upper
+focus values. Required when \code{approach = "focus_grid"} and ignored
+otherwise.}
+
+\item{auglag_args}{List of additional arguments passed to
+\code{\link[alabama:auglag]{alabama::auglag()}} when \code{approach = "focus_grid"} and ignored
+otherwise.}
 
 \item{...}{Currently unused.}
 }
@@ -27,8 +49,8 @@ placed one grid step inside the outer boundary of the computed profile.}
 \code{loglik}, and \code{signed}, and class \code{"profile_focus_list"}. The columns contain
 the focus parameter, profile log-likelihood, and signed likelihood root,
 respectively. The \code{"max_loglik"} attribute is the unrestricted maximum
-log-likelihood, \code{"mle"} is the focus evaluated at the unrestricted MLE, and
-\code{"max_level"} is the supplied maximum confidence level. The matrix-valued
+log-likelihood and \code{"mle"} is the focus evaluated at the unrestricted MLE.
+The \code{"approach"} attribute records the profiling approach. The matrix-valued
 column \code{theta} contains the parameter vectors and \code{lagrange} contains the
 corresponding Lagrange multipliers.
 }
@@ -38,17 +60,13 @@ object.
 }
 \details{
 If the fitted model stored in \code{fitted} is not an ML fit, it is refitted by
-maximum likelihood. Profile points are computed outwards from the ML
-estimate on an equally spaced signed likelihood-root grid. Successive
-points use secant extrapolation for starting values. If a solve does not
-attain sufficiently small endpoint-equation residuals, it is retried from
-the preceding solution and then from Wald-type starting values.
+maximum likelihood. The model-specific likelihood quantities are passed to
+\code{\link[=profile_focus]{profile_focus()}} to construct the requested profile.
 
 The result is likelihood-based and does not use a bias-corrected focus
-estimate as the centre of the profile. The model-specific likelihood
-quantities are passed to \code{\link[=profile_focus]{profile_focus()}} to construct the profile.
-The signed likelihood root uses the sign of the focus at the unrestricted
-MLE minus the focus value at the profile point.
+estimate as the centre of the profile. The signed likelihood root uses the
+sign of the focus at the unrestricted MLE minus the focus value at the
+profile point.
 }
 \examples{
 warp_fit <- glm(breaks ~ wool + tension, family = poisson,

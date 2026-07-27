@@ -10,6 +10,7 @@ Depends:
     R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 Imports: 
+    alabama,
     brglm2,
     enrichwith (>= 0.4.1),
     nleqslv,

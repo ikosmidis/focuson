@@ -73,6 +73,97 @@ stationarity_mean <- vapply(
     numeric(1)
 )
 expect_true(max(abs(stationarity_mean)) < 1e-08)
+
+focus_range_mean <- theta_hat + c(-0.5, 0.5)
+profile_mean_focus_grid <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    approach = "focus_grid",
+    focus_range = focus_range_mean,
+    grid_size = 4,
+    auglag_args = list(control.outer = list(eps = 1e-08, e.scale = 2))
+)
+expected_focus_grid <- c(
+    seq(focus_range_mean[1], theta_hat, length.out = 5),
+    seq(theta_hat, focus_range_mean[2], length.out = 5)[-1]
+)
+expect_true(inherits(profile_mean_focus_grid, "profile_focus_list"))
+expect_identical(attr(profile_mean_focus_grid, "approach"), "focus_grid")
+expect_equal(attr(profile_mean_focus_grid, "focus_range"),
+             focus_range_mean)
+expect_equal(profile_mean_focus_grid$psi, expected_focus_grid,
+             tolerance = 1e-06)
+expect_equal(profile_mean_focus_grid$psi,
+             theta_hat - profile_mean_focus_grid$signed / sqrt(n),
+             tolerance = 1e-06)
+expect_equal(profile_mean_focus_grid$loglik,
+             vapply(profile_mean_focus_grid$psi, loglik_mean, numeric(1)),
+             tolerance = 1e-07)
+expect_equal(as.numeric(profile_mean_focus_grid$theta[, 1]),
+             profile_mean_focus_grid$psi,
+             tolerance = 1e-06)
+expected_focus_grid_lagrange <- vapply(
+    profile_mean_focus_grid$theta[, 1],
+    score_mean,
+    numeric(1)
+)
+expect_equal(profile_mean_focus_grid$lagrange,
+             expected_focus_grid_lagrange,
+             tolerance = 1e-03)
+
+expect_error(
+    profile_focus(mle = theta_hat,
+                  loglik = loglik_mean,
+                  approach = "focus_grid"),
+    pattern = "two finite numeric values"
+)
+expect_error(
+    profile_focus(mle = theta_hat,
+                  loglik = loglik_mean,
+                  approach = "focus_grid",
+                  focus_range = theta_hat + c(0.25, 0.5)),
+    pattern = "in its interior"
+)
+profile_mean_ignored_arguments <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    information = information_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    on_hessian = on_mean_hessian,
+    grid_size = 5,
+    max_level = level,
+    focus_range = focus_range_mean,
+    auglag_args = "ignored"
+)
+expect_equal(
+    profile_mean_ignored_arguments,
+    profile_mean,
+    tolerance = 1e-08
+)
+
+profile_mean_focus_grid_ignored_arguments <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    approach = "focus_grid",
+    focus_range = focus_range_mean,
+    grid_size = 4,
+    max_level = "ignored",
+    nleqslv_args = "ignored"
+)
+expect_equal(
+    profile_mean_focus_grid_ignored_arguments$psi,
+    profile_mean_focus_grid$psi,
+    tolerance = 1e-06
+)
+
 profile_mean_subset <- profile_mean[c(2, 5, 9), ]
 expect_equal(profile_mean_subset$theta[, 1],
              profile_mean$theta[c(2, 5, 9), 1])
@@ -86,6 +177,8 @@ expect_true(any(grepl(
     "^Profile log-likelihood for a scalar focus$",
     printed_profile_mean
 )))
+expect_true(any(grepl("^Profiling approach: VM\\s*$",
+                      printed_profile_mean)))
 expect_true(any(grepl("^Parameter dimension: 1\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Profile points: 11\\s*$",
@@ -101,6 +194,11 @@ profile_plot_file <- tempfile(fileext = ".pdf")
 pdf(profile_plot_file)
 expect_silent(plot(profile_mean, interpolation = "linear"))
 expect_silent(plot(profile_mean, interpolation = "cubic"))
+expect_silent(plot(profile_mean_focus_grid, interpolation = "linear"))
+expect_silent(plot(profile_mean_focus_grid, signed = TRUE))
+expect_silent(plot(profile_mean, ci = FALSE, level = 0.999999))
+expect_silent(plot(profile_mean, signed = TRUE, ci = FALSE,
+                   level = 0.999999))
 dev.off()
 unlink(profile_plot_file)
 expect_error(plot(profile_mean, interpolation = "quadratic"))
@@ -350,6 +448,28 @@ expect_equal(profile_standardized_mean$loglik, expected_profile_loglik,
 expect_equal(profile_standardized_mean$psi[6], psi_hat,
              tolerance = 1e-08, check.attributes = FALSE)
 
+profile_standardized_mean_focus_grid <- profile_focus(
+    loglik = loglik_normal,
+    score = score_normal,
+    mle = theta2_hat,
+    on = on_standardized_mean,
+    on_gradient = on_standardized_mean_gradient,
+    approach = "focus_grid",
+    focus_range = expected_standardized_mean + c(-0.25, 0.25),
+    grid_size = 5
+)
+expect_equal(
+    profile_standardized_mean_focus_grid$loglik,
+    vapply(profile_standardized_mean_focus_grid$psi,
+           profile_loglik_standardized_mean, numeric(1)),
+    tolerance = 1e-06
+)
+expect_true(max(abs(
+    apply(profile_standardized_mean_focus_grid$theta, 1,
+          on_standardized_mean) -
+        profile_standardized_mean_focus_grid$psi
+)) < 1e-06)
+
 
 budworm <- data.frame(ldose = rep(0:5, 2),
                       numdead = c(1, 4, 9, 13, 18, 20, 0, 2, 6, 10, 12, 16),
@@ -418,3 +538,20 @@ expect_equal(focus_profile$psi[grid_size + 1],
              second_parameter(coef(budworm_focus_fit)), tolerance = 1e-08,
              check.attributes = FALSE)
 expect_equal(attr(focus_profile, "max_level"), max_level)
+
+budworm_focus_mle <- second_parameter(coef(budworm_focus_fit))
+focus_profile_grid <- profile(
+    budworm_focus,
+    approach = "focus_grid",
+    focus_range = budworm_focus_mle + c(-0.5, 0.5),
+    grid_size = 3
+)
+expect_true(inherits(focus_profile_grid, "profile_focus_list"))
+expect_identical(attr(focus_profile_grid, "approach"), "focus_grid")
+expect_equal(
+    focus_profile_grid$psi,
+    c(seq(budworm_focus_mle - 0.5, budworm_focus_mle, length.out = 4),
+      seq(budworm_focus_mle, budworm_focus_mle + 0.5,
+          length.out = 4)[-1]),
+    tolerance = 1e-06
+)

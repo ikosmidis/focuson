@@ -9,6 +9,7 @@
   level = 0.95,
   signed = FALSE,
   interpolation = c("linear", "cubic"),
+  ci = TRUE,
   ...
 )
 }
@@ -26,6 +27,9 @@ plot the profile log-likelihood.}
 profile points. \code{"linear"} uses \code{\link[stats:approxfun]{stats::approxfun()}} and \code{"cubic"} uses
 \code{\link[stats:splinefun]{stats::splinefun()}}.}
 
+\item{ci}{Logical. If \code{TRUE} (default), display the confidence limits for
+\code{level}. The corresponding cutoff is displayed irrespective of \code{ci}.}
+
 \item{...}{Additional graphical arguments passed to \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
 }
 \value{
@@ -36,8 +40,11 @@ Plot a focus profile log-likelihood either on the log-likelihood scale or the
 signed likelihood-root scale.
 }
 \details{
-\code{level} must lie within the range covered by the computed profile.
-If it does not, recompute the profile with a larger \code{max_level}.
+When \code{ci = TRUE}, \code{level} must lie within the range covered on both
+sides of the computed profile. If it does not, recompute the profile
+with a larger \code{max_level} or a wider \code{focus_range}, as appropriate.
+When \code{ci = FALSE}, the corresponding cutoff is drawn but confidence
+limits are not computed, so \code{level} need not be covered by the profile.
 }
 \seealso{
 \code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}, \code{\link[=profile_ci]{profile_ci()}}

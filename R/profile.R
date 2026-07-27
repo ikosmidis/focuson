@@ -349,35 +349,41 @@ profile_ci <- function(loglik,
 #' @param fitted An object of class `"focus_list_glm"`, as returned by
 #'     [focus()].
 #' @param grid_size Number of profile points computed on each side of the
-#'     maximum likelihood estimate. Must be at least 2. The outermost point
-#'     provides one grid step of plotting space beyond `max_level`.
+#'     maximum likelihood estimate. Must be at least 2. For the VM approach,
+#'     the outermost point provides one grid step of plotting space beyond
+#'     `max_level`.
 #' @param max_level Confidence level in `(0, 1)` whose likelihood roots are
 #'     placed one grid step inside the outer boundary of the computed profile.
+#'     Used only when `approach = "VM"`.
+#' @param approach Profiling approach passed to [profile_focus()].
+#' @param focus_range Optional numeric vector containing the lower and upper
+#'     focus values. Required when `approach = "focus_grid"` and ignored
+#'     otherwise.
 #' @param nleqslv_args List of additional arguments passed to
-#'     [nleqslv::nleqslv()] through [profile_ci()].
+#'     [nleqslv::nleqslv()] through [profile_ci()]. Ignored when
+#'     `approach = "focus_grid"`.
+#' @param auglag_args List of additional arguments passed to
+#'     [alabama::auglag()] when `approach = "focus_grid"` and ignored
+#'     otherwise.
 #' @param ... Currently unused.
 #'
 #' @details
 #' If the fitted model stored in `fitted` is not an ML fit, it is refitted by
-#' maximum likelihood. Profile points are computed outwards from the ML
-#' estimate on an equally spaced signed likelihood-root grid. Successive
-#' points use secant extrapolation for starting values. If a solve does not
-#' attain sufficiently small endpoint-equation residuals, it is retried from
-#' the preceding solution and then from Wald-type starting values.
+#' maximum likelihood. The model-specific likelihood quantities are passed to
+#' [profile_focus()] to construct the requested profile.
 #'
 #' The result is likelihood-based and does not use a bias-corrected focus
-#' estimate as the centre of the profile. The model-specific likelihood
-#' quantities are passed to [profile_focus()] to construct the profile.
-#' The signed likelihood root uses the sign of the focus at the unrestricted
-#' MLE minus the focus value at the profile point.
+#' estimate as the centre of the profile. The signed likelihood root uses the
+#' sign of the focus at the unrestricted MLE minus the focus value at the
+#' profile point.
 #'
 #' @return
 #' `profile.focus_list_glm()` returns a data frame with columns `psi`,
 #' `loglik`, and `signed`, and class `"profile_focus_list"`. The columns contain
 #' the focus parameter, profile log-likelihood, and signed likelihood root,
 #' respectively. The `"max_loglik"` attribute is the unrestricted maximum
-#' log-likelihood, `"mle"` is the focus evaluated at the unrestricted MLE, and
-#' `"max_level"` is the supplied maximum confidence level. The matrix-valued
+#' log-likelihood and `"mle"` is the focus evaluated at the unrestricted MLE.
+#' The `"approach"` attribute records the profiling approach. The matrix-valued
 #' column `theta` contains the parameter vectors and `lagrange` contains the
 #' corresponding Lagrange multipliers.
 #'
@@ -396,6 +402,9 @@ profile.focus_list_glm <- function(fitted,
                                    grid_size = 20,
                                    max_level = 0.9999,
                                    nleqslv_args = list(),
+                                   approach = c("VM", "focus_grid"),
+                                   focus_range = NULL,
+                                   auglag_args = list(),
                                    ...) {
     fit <- fitted$object
     if (!identical(fit$type, "ML")) {
@@ -433,7 +442,10 @@ profile.focus_list_glm <- function(fitted,
                    on_hessian = fitted$on$on_hessian,
                    grid_size = grid_size,
                    max_level = max_level,
-                   nleqslv_args = nleqslv_args),
+                   approach = approach,
+                   focus_range = focus_range,
+                   nleqslv_args = nleqslv_args,
+                   auglag_args = auglag_args),
               fitted$dots))
 }
 
@@ -444,22 +456,42 @@ profile.focus_list_glm <- function(fitted,
 #'
 #' @inheritParams profile_ci
 #' @param grid_size Number of profile points computed on each side of the
-#'     maximum likelihood estimate. Must be at least 2. The outermost point
-#'     provides one grid step of plotting space beyond `max_level`.
+#'     maximum likelihood estimate. Must be at least 2. For the VM approach,
+#'     the outermost point provides one grid step of plotting space beyond
+#'     `max_level`.
 #' @param max_level Confidence level in `(0, 1)` whose likelihood roots are
 #'     placed one grid step inside the outer boundary of the computed profile.
+#'     Used only when `approach = "VM"`.
+#' @param approach Character. `"VM"` uses the endpoint equations of Venzon and
+#'     Moolgavkar (1988) on a likelihood-root grid. `"focus_grid"` maximizes the
+#'     likelihood at fixed focus values.
+#' @param focus_range Optional numeric vector containing the lower and upper
+#'     focus values. It is required when `approach = "focus_grid"` and must
+#'     contain the focus evaluated at `mle` in its interior. It is ignored
+#'     otherwise.
+#' @param nleqslv_args List of additional arguments passed to
+#'     [nleqslv::nleqslv()] through [profile_ci()]. Ignored when
+#'     `approach = "focus_grid"`.
+#' @param auglag_args Named list of additional arguments passed to
+#'     [alabama::auglag()] when `approach = "focus_grid"`. The arguments `par`,
+#'     `fn`, `gr`, `hin`, `hin.jac`, `heq`, and `heq.jac` are determined
+#'     internally. The argument is ignored when `approach = "VM"`.
 #'
 #' @details
-#' Profile points are computed outwards from the maximum likelihood estimate on
-#' an equally spaced signed likelihood-root grid. Each pair of points is
-#' obtained with [profile_ci()]. Successive pairs use secant extrapolation from
-#' preceding solutions as starting values. If a solve does not attain
-#' sufficiently small endpoint-equation residuals, it is retried from the
-#' preceding solution and then from the Wald-type starting values constructed
-#' by [profile_ci()].
+#' With `approach = "VM"`, profile points are computed outwards from the
+#' maximum likelihood estimate on an equally spaced signed likelihood-root
+#' grid. Each pair of points is obtained with [profile_ci()]. Successive pairs
+#' use secant extrapolation from preceding solutions as starting values.
 #'
-#' The grid extends one step beyond `max_level`, allowing confidence limits at
-#' `max_level` to be displayed within the plotting range.
+#' With `approach = "focus_grid"`, `focus_range` and `grid_size` define two
+#' equally spaced grids between the focus at the MLE and the supplied lower and
+#' upper focus values. Constrained fits are computed outwards from the MLE and
+#' warm-started from the preceding fit on the same side. Only `loglik`, `mle`,
+#' and `on` are required; missing derivatives are evaluated numerically by
+#' [alabama::auglag()].
+#'
+#' The VM grid extends one step beyond `max_level`, allowing confidence limits
+#' at `max_level` to be displayed within the plotting range.
 #' The signed likelihood root is defined as
 #' \deqn{\mathop{\rm sign}(\hat\psi-\psi)
 #' \left[2\{\ell(\hat\theta)-\ell_p(\psi)\}\right]^{1/2}.}
@@ -470,9 +502,11 @@ profile.focus_list_glm <- function(fitted,
 #' log-likelihood, and signed likelihood root, respectively. The
 #' `"max_loglik"` attribute is the unrestricted maximum log-likelihood,
 #' `"mle"` is the focus evaluated at the unrestricted maximum likelihood
-#' estimate, and `"max_level"` is the supplied maximum confidence level. The
-#' matrix-valued column `theta` contains the parameter vectors and `lagrange`
-#' contains the corresponding Lagrange multipliers.
+#' estimate, and `"approach"` records the profiling approach. For VM profiles,
+#' `"max_level"` is the supplied maximum confidence level; for focus-grid
+#' profiles, `"focus_range"` is the supplied focus range. The matrix-valued
+#' column `theta` contains the parameter vectors and `lagrange` contains the
+#' corresponding Lagrange multipliers.
 #'
 #' @examples
 #' ## Normal model parameterized by theta = (mu, log(sigma)).
@@ -508,85 +542,226 @@ profile_focus <- function(loglik,
                           nleqslv_args = list(),
                           grid_size = 20,
                           max_level = 0.9999,
+                          approach = c("VM", "focus_grid"),
+                          focus_range = NULL,
+                          auglag_args = list(),
                           ...) {
+    approach <- match.arg(approach)
     dots <- list(...)
-    r_target <- qnorm(0.5 + max_level / 2)
-    r_step <- r_target / (grid_size - 1)
-    r_grid <- seq(r_step, r_target + r_step, by = r_step)
-    q_grid <- pchisq(r_grid^2, df = 1)
-    on_left <- on_right <- ll <- numeric(length = grid_size)
+    required <- list(loglik = loglik, on = on)
+    optional <- list(score = score,
+                     information = information,
+                     on_gradient = on_gradient,
+                     on_hessian = on_hessian)
+    check_required <- !vapply(required, is.function, logical(1))
+    if (any(check_required))
+        stop("The following arguments must be functions: ",
+             paste(sprintf("`%s`", names(required)[check_required]),
+                   collapse = ", "), ".")
+    check_optional <- !vapply(optional,
+                             function(x) is.null(x) || is.function(x),
+                             logical(1))
+    if (any(check_optional))
+        stop("The following arguments must be functions or `NULL`: ",
+             paste(sprintf("`%s`", names(optional)[check_optional]),
+                   collapse = ", "), ".")
+    if (!is.numeric(mle) || length(mle) == 0L || any(!is.finite(mle)))
+        stop("`mle` must be a finite numeric vector.")
+    if (!is.list(likelihood_args))
+        stop("`likelihood_args` must be a list.")
+    if (!is.numeric(grid_size) || length(grid_size) != 1L ||
+        !is.finite(grid_size) || grid_size < 2L ||
+        grid_size != as.integer(grid_size))
+        stop("`grid_size` must be an integer of at least 2.")
+
+    ll <- function(theta)
+        do.call(loglik, c(list(theta), likelihood_args))
+    sc <- if (is.null(score)) NULL else
+        function(theta) do.call(score, c(list(theta), likelihood_args))
+    on_value <- function(theta)
+        do.call(on, c(list(theta), dots))
+    on_grad <- if (is.null(on_gradient)) NULL else
+        function(theta) do.call(on_gradient, c(list(theta), dots))
+    max_loglik <- ll(mle)
+    on_mle <- on_value(mle)
+    if (!is.numeric(max_loglik) || length(max_loglik) != 1L ||
+        !is.finite(max_loglik))
+        stop("`loglik` must return a finite numeric scalar at `mle`.")
+    if (!is.numeric(on_mle) || length(on_mle) != 1L || !is.finite(on_mle))
+        stop("`on` must return a finite numeric scalar at `mle`.")
+
     p <- length(mle)
-    theta_left <- theta_right <-
-        matrix(NA_real_, grid_size, p,
-               dimnames = list(NULL, names(mle)))
-    lagrange_left <- lagrange_right <- numeric(grid_size)
-    previous <- current <- NULL
-    pro <- function(start) {
-        do.call(profile_ci,
-                c(list(loglik = loglik,
-                       score = score,
-                       information = information,
-                       mle = mle,
-                       on = on,
-                       on_gradient = on_gradient,
-                       on_hessian = on_hessian,
-                       likelihood_args = likelihood_args,
-                       level = q_grid[j],
-                       nleqslv_args = nleqslv_args,
-                       start = start,
-                       do_checks = (j == 1)), dots))
-    }
-    is_converged <- function(object, tolerance = 1e-6) {
-        residuals <- attr(object, "max|fvec|")
-        all(is.finite(object)) && all(is.finite(residuals)) && max(residuals) <= tolerance
-    }
-    for (j in seq_len(grid_size)) {
-        if (j == 1) {
-            start <- NULL
-        } else if (j == 2) {
-            start <- current
-        } else {
-            start <- list(lower = 2 * current[["lower"]] - previous[["lower"]],
-                          upper = 2 * current[["upper"]] - previous[["upper"]])
+    if (approach == "VM") {
+        if (!is.list(nleqslv_args))
+            stop("`nleqslv_args` must be a list.")
+        if (!is.numeric(max_level) || length(max_level) != 1L ||
+            !is.finite(max_level) || max_level <= 0 || max_level >= 1)
+            stop("`max_level` must be a number in (0, 1).")
+
+        r_target <- qnorm(0.5 + max_level / 2)
+        r_step <- r_target / (grid_size - 1)
+        signed_left <- seq(r_step, r_target + r_step, by = r_step)
+        q_grid <- pchisq(signed_left^2, df = 1)
+        on_left <- on_right <- ll_left <- numeric(grid_size)
+        theta_left <- theta_right <-
+            matrix(NA_real_, grid_size, p,
+                   dimnames = list(NULL, names(mle)))
+        lagrange_left <- lagrange_right <- numeric(grid_size)
+        previous <- current <- NULL
+        pro <- function(start) {
+            do.call(profile_ci,
+                    c(list(loglik = loglik,
+                           score = score,
+                           information = information,
+                           mle = mle,
+                           on = on,
+                           on_gradient = on_gradient,
+                           on_hessian = on_hessian,
+                           likelihood_args = likelihood_args,
+                           level = q_grid[j],
+                           nleqslv_args = nleqslv_args,
+                           start = start,
+                           do_checks = (j == 1)), dots))
         }
-        obj <- pro(start)
-        ## The secant start is used only from the third point onward.
-        if (!is_converged(obj) && j > 2)
-            obj <- pro(current)
-        ## Retry independently from the Wald starts.
-        if (!is_converged(obj) && !is.null(start))
-            obj <- pro(NULL)
-        ## Fail
-        if (!is_converged(obj))
-            stop("Could not compute the profile at grid point ", j,
-                 " (likelihood-root magnitude = ", format(r_grid[j]), "). ",
-                 paste(attr(obj, "messages"), collapse = "; "))
-        previous <- current
-        current <- attr(obj, "solution")
-        theta_left[j, ] <- current$lower[seq_len(p)]
-        theta_right[j, ] <- current$upper[seq_len(p)]
-        lagrange_left[j] <- current$lower[p + 1L]
-        lagrange_right[j] <- current$upper[p + 1L]
-        on_left[j] <- obj["lower"]
-        on_right[j] <- obj["upper"]
-        ll[j] <- attr(obj, "loglik")[1]
+        is_converged <- function(object, tolerance = 1e-6) {
+            residuals <- attr(object, "max|fvec|")
+            all(is.finite(object)) && all(is.finite(residuals)) &&
+                max(residuals) <= tolerance
+        }
+        for (j in seq_len(grid_size)) {
+            if (j == 1) {
+                start <- NULL
+            } else if (j == 2) {
+                start <- current
+            } else {
+                start <- list(
+                    lower = 2 * current[["lower"]] - previous[["lower"]],
+                    upper = 2 * current[["upper"]] - previous[["upper"]]
+                )
+            }
+            obj <- pro(start)
+            if (!is_converged(obj) && j > 2)
+                obj <- pro(current)
+            if (!is_converged(obj) && !is.null(start))
+                obj <- pro(NULL)
+            if (!is_converged(obj))
+                stop("Could not compute the profile at grid point ", j,
+                     " (likelihood-root magnitude = ",
+                     format(signed_left[j]), "). ",
+                     paste(attr(obj, "messages"), collapse = "; "))
+            previous <- current
+            current <- attr(obj, "solution")
+            theta_left[j, ] <- current$lower[seq_len(p)]
+            theta_right[j, ] <- current$upper[seq_len(p)]
+            lagrange_left[j] <- current$lower[p + 1L]
+            lagrange_right[j] <- current$upper[p + 1L]
+            on_left[j] <- obj["lower"]
+            on_right[j] <- obj["upper"]
+            ll_left[j] <- attr(obj, "loglik")[1]
+        }
+        ll_right <- ll_left
+        signed_right <- - signed_left
+    } else {
+        if (!is.list(auglag_args))
+            stop("`auglag_args` must be a list.")
+        if (!is.numeric(focus_range) || length(focus_range) != 2L ||
+            any(!is.finite(focus_range)))
+            stop("`focus_range` must contain two finite numeric values.")
+        focus_range <- sort(focus_range)
+        if (!isTRUE(focus_range[1L] < on_mle && on_mle < focus_range[2L]))
+            stop("`focus_range` must contain the focus evaluated at `mle` ",
+                 "in its interior.")
+        control_outer <- list(lam0 = 0,
+                              trace = FALSE,
+                              kkt2.check = FALSE)
+        if ("control.outer" %in% names(auglag_args)) {
+            if (!is.null(auglag_args$control.outer))
+                control_outer <- modifyList(control_outer,
+                                            auglag_args$control.outer)
+            auglag_args$control.outer <- NULL
+        }
+        constraint_tolerance <- if (is.null(control_outer$eps))
+            1e-6
+        else
+            max(1e-6, control_outer$eps)
+        equality_scale <- if (is.null(control_outer$e.scale))
+            1
+        else
+            control_outer$e.scale
+        solve_at <- function(psi, start) {
+            args <- list(par = start,
+                         fn = function(theta) -ll(theta),
+                         heq = function(theta) on_value(theta) - psi,
+                         control.outer = control_outer)
+            args <- c(args, auglag_args)
+            if (!is.null(sc))
+                args$gr <- function(theta)
+                    -sc(theta)
+            if (!is.null(on_grad))
+                args$heq.jac <- function(theta)
+                    matrix(on_grad(theta), nrow = 1L)
+            fit <- do.call(alabama::auglag, args)
+            fit_loglik <- ll(fit$par)
+            constraint_error <- abs(on_value(fit$par) - psi)
+            if (!isTRUE(fit$convergence == 0L) ||
+                any(!is.finite(fit$par)) ||
+                !is.finite(fit_loglik) ||
+                !is.finite(constraint_error) ||
+                constraint_error > constraint_tolerance)
+                stop("Could not compute the constrained profile at focus value",
+                     format(psi), ".")
+            list(psi = psi,
+                 loglik = fit_loglik,
+                 theta = fit$par,
+                 lagrange = - fit$lambda[1L] / equality_scale[1L])
+        }
+        solve_side <- function(values) {
+            out <- vector("list", length(values))
+            start <- mle
+            for (j in seq_along(values)) {
+                out[[j]] <- solve_at(values[j], start)
+                start <- out[[j]]$theta
+            }
+            out
+        }
+
+        focus_left <- seq(on_mle, focus_range[1L],
+                          length.out = grid_size + 1L)[-1L]
+        focus_right <- seq(on_mle, focus_range[2L],
+                           length.out = grid_size + 1L)[-1L]
+        left <- solve_side(focus_left)
+        right <- solve_side(focus_right)
+        on_left <- vapply(left, `[[`, numeric(1), "psi")
+        on_right <- vapply(right, `[[`, numeric(1), "psi")
+        ll_left <- vapply(left, `[[`, numeric(1), "loglik")
+        ll_right <- vapply(right, `[[`, numeric(1), "loglik")
+        signed_left <- sign(on_mle - on_left) *
+            sqrt(2 * pmax(max_loglik - ll_left, 0))
+        signed_right <- sign(on_mle - on_right) *
+            sqrt(2 * pmax(max_loglik - ll_right, 0))
+        theta_left <- do.call(rbind, lapply(left, `[[`, "theta"))
+        theta_right <- do.call(rbind, lapply(right, `[[`, "theta"))
+        lagrange_left <- vapply(left, `[[`, numeric(1), "lagrange")
+        lagrange_right <- vapply(right, `[[`, numeric(1), "lagrange")
     }
-    max_loglik <- do.call(loglik, c(list(mle), likelihood_args))
-    on_mle <- do.call(on, c(list(mle), dots))
+
     theta_profile <- rbind(theta_left[rev(seq_len(grid_size)), , drop = FALSE],
                            as.numeric(mle),
                            theta_right)
-    colnames(theta_profile) <- names(mle)
-    rownames(theta_profile) <- NULL
+    dimnames(theta_profile) <- list(NULL, names(mle))
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
-                      loglik = c(rev(ll), max_loglik, ll),
-                      signed = c(rev(r_grid), 0, -r_grid),
+                      loglik = c(rev(ll_left), max_loglik, ll_right),
+                      signed = c(rev(signed_left), 0, signed_right),
                       theta = I(theta_profile),
                       lagrange = c(rev(lagrange_left), 0, lagrange_right))
     class(out) <- c("profile_focus_list", class(out))
     attr(out, "max_loglik") <- max_loglik
     attr(out, "mle") <- on_mle
-    attr(out, "max_level") <- max_level
+    attr(out, "approach") <- approach
+    if (approach == "VM")
+        attr(out, "max_level") <- max_level
+    else
+        attr(out, "focus_range") <- focus_range
     out
 }
 
@@ -612,11 +787,13 @@ print.profile_focus_list <- function(x,
     signed_range <- range(x$signed)
     positive <- sort(x$signed[x$signed > 0])
     spacing <- median(diff(c(0, positive)))
-    boundary_level <- pchisq(max(abs(x$signed))^2, df = 1)
+    root_coverage <- min(max(x$signed), -min(x$signed))
+    boundary_level <- pchisq(root_coverage^2, df = 1)
     format_value <- function(value)
         format(signif(value, digits), trim = TRUE)
 
     cat("Profile log-likelihood for a scalar focus\n\n")
+    cat("Profiling approach:", attr(x, "approach"), "\n")
     cat("Focus at MLE:", format_value(attr(x, "mle")), "\n")
     cat("Maximum log-likelihood:",
         format_value(attr(x, "max_loglik")), "\n")
@@ -627,9 +804,15 @@ print.profile_focus_list <- function(x,
     cat("Signed-root range:",
         format_value(signed_range[1]), "to",
         format_value(signed_range[2]), "\n")
-    cat("Signed-root spacing:", format_value(spacing), "\n")
-    cat("Requested maximum level:",
-        format_value(attr(x, "max_level")), "\n")
+    cat("Median signed-root spacing:", format_value(spacing), "\n")
+    if (identical(attr(x, "approach"), "VM")) {
+        cat("Requested maximum level:",
+            format_value(attr(x, "max_level")), "\n")
+    } else {
+        cat("Focus range:",
+            format_value(attr(x, "focus_range")[1L]), "to",
+            format_value(attr(x, "focus_range")[2L]), "\n")
+    }
     cat("Boundary confidence level:",
         format_value(boundary_level), "\n")
     invisible(x)
@@ -650,10 +833,15 @@ print.profile_focus_list <- function(x,
 #' @param interpolation Character. Interpolation method used between computed
 #'     profile points. `"linear"` uses [stats::approxfun()] and `"cubic"` uses
 #'     [stats::splinefun()].
+#' @param ci Logical. If `TRUE` (default), display the confidence limits for
+#'     `level`. The corresponding cutoff is displayed irrespective of `ci`.
 #' @param ... Additional graphical arguments passed to [graphics::plot.default()].
 #'
-#' @details `level` must lie within the range covered by the computed profile.
-#'     If it does not, recompute the profile with a larger `max_level`.
+#' @details When `ci = TRUE`, `level` must lie within the range covered on both
+#'     sides of the computed profile. If it does not, recompute the profile
+#'     with a larger `max_level` or a wider `focus_range`, as appropriate.
+#'     When `ci = FALSE`, the corresponding cutoff is drawn but confidence
+#'     limits are not computed, so `level` need not be covered by the profile.
 #'
 #' @return Called for its side effect of drawing a plot.
 #'
@@ -661,18 +849,23 @@ print.profile_focus_list <- function(x,
 #'
 #' @export
 plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
-                                    interpolation = c("linear", "cubic"),  ...) {
+                                    interpolation = c("linear", "cubic"),
+                                    ci = TRUE, ...) {
     lin <- identical(match.arg(interpolation) , "linear")
+    ci <- isTRUE(ci)
     max_loglik <- attr(x, "max_loglik")
     qua <- qnorm(0.5 + level/2)
-    if (qua > max(abs(x$signed))) {
-        stop("`level` exceeds the range of the supplied profile; ",
-             "recompute the profile with a larger `max_level`.")
-    }
     fn <- if (lin) approxfun(x = x$signed, y = x$psi) else splinefun(x$signed, y = x$psi)
     r <- seq(min(x$signed), max(x$signed), length.out = 201)
     psi <- fn(r)
-    ci <- c(c(fn(-qua), fn(qua)))
+    if (ci) {
+        if (qua > max(x$signed) || -qua < min(x$signed)) {
+            stop("`level` exceeds the range of the supplied profile; ",
+                 "recompute it with a larger `max_level` or a wider ",
+                 "`focus_range`.")
+        }
+        limits <- c(lower = fn(qua), upper = fn(-qua))
+    }
     if (signed) {
         plot.default(x$psi, x$signed, pch = 21, bg = "lightgray", col = "lightgray", cex = 0.8,
                      xlab = expression(psi), ylab = "Signed likelihood root", ...)
@@ -687,5 +880,6 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
         abline(h = cutoff, lty = 3, col = "lightgray")
         points(attr(x, "mle"), max_loglik, pch = 21, bg = "lightgray")
     }
-    abline(v = ci, lty = 1, col = "lightgray")
+    if (ci)
+        abline(v = limits, lty = 1, col = "lightgray")
 }
