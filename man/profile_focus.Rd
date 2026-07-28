@@ -147,8 +147,8 @@ prof <- profile_focus(mle = mle,
                       on = coef_var,
                       max_level = 0.99)
 plot(prof)
-plot(prof, interpolation = "cubic", level = 0.99, ci = TRUE)
-plot(prof, signed = TRUE, level = 0.99, ci = TRUE)
+plot(prof, interpolation = "cubic", level = 0.95, ci = TRUE)
+plot(prof, signed = TRUE, level = 0.95, ci = TRUE)
 
 }
 \seealso{

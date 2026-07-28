@@ -541,8 +541,8 @@ profile.focus_list_glm <- function(fitted,
 #'                       on = coef_var,
 #'                       max_level = 0.99)
 #' plot(prof)
-#' plot(prof, interpolation = "cubic", level = 0.99, ci = TRUE)
-#' plot(prof, signed = TRUE, level = 0.99, ci = TRUE)
+#' plot(prof, interpolation = "cubic", level = 0.9, ci = TRUE)
+#' plot(prof, signed = TRUE, level = 0.9, ci = TRUE)
 #'
 #' @seealso [profile_ci()], [profile.focus_list_glm()],
 #'     [plot.profile_focus_list()]
