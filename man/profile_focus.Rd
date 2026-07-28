@@ -138,7 +138,7 @@ mle <- c(mu = mean(y), log_sigma = 0.5 * log(mean((y - mean(y))^2)))
 loglik <- function(theta)
     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
 
-## Profile the standardized mean mu / sigma.
+## Profile the coefficient of variation sigma / mu.
 coef_var <- function(theta)
     exp(theta[2]) / theta[1]
 
@@ -147,8 +147,11 @@ prof <- profile_focus(mle = mle,
                       on = coef_var,
                       max_level = 0.99)
 plot(prof)
-plot(prof, interpolation = "cubic", level = 0.95, ci = TRUE)
-plot(prof, signed = TRUE, level = 0.95, ci = TRUE)
+plot(prof, interpolation = "cubic", level = 0.9, ci = TRUE)
+plot(prof, signed = TRUE, level = 0.9, ci = TRUE)
+
+## Compare the interpolated limits with directly computed endpoints.
+profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 
 }
 \seealso{

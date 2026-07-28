@@ -397,9 +397,9 @@ profile_ci <- function(loglik,
 #' ## `approach = "VM"`) is numerically unstable
 #' try(prof <- profile(endo2))
 #'
-#' ## A closer inspection of the profile log-likelihood reveals that
-#' ## the profile is essentially monotone and the maximum likelihood
-#' ## estimate diverges to infinity
+#' ## A closer inspection of the profile log-likelihood reveals that #
+#' ## the profile is essentially monotone; the log-likelihood approaches
+#' ## its supremum as the NV coefficient tends to infinity.
 #' prof <- profile(endo2, approach = "focus_grid", focus_range = c(0, 30))
 #' plot(prof)
 #'
@@ -532,7 +532,7 @@ profile.focus_list_glm <- function(fitted,
 #' loglik <- function(theta)
 #'     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
 #'
-#' ## Profile the standardized mean mu / sigma.
+#' ## Profile the coefficient of variation sigma / mu.
 #' coef_var <- function(theta)
 #'     exp(theta[2]) / theta[1]
 #'
@@ -543,6 +543,9 @@ profile.focus_list_glm <- function(fitted,
 #' plot(prof)
 #' plot(prof, interpolation = "cubic", level = 0.9, ci = TRUE)
 #' plot(prof, signed = TRUE, level = 0.9, ci = TRUE)
+#'
+#' ## Compare the interpolated limits with directly computed endpoints.
+#' profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 #'
 #' @seealso [profile_ci()], [profile.focus_list_glm()],
 #'     [plot.profile_focus_list()]
@@ -842,7 +845,7 @@ profile_focus <- function(loglik,
 #'   level.
 #' * **Focus range:** for a focus-grid profile, the supplied lower and upper
 #'   focus values.
-#' * **Likelihood-ratio level at boundary:** the chi-squared reference level
+#' * **Implied level at grid boundary:** the chi-squared reference level
 #'   corresponding to the likelihood drop at the outer endpoint of the
 #'   computed profile. When both branches are present, the smaller of their
 #'   endpoint levels is reported. For a VM profile this is generally larger
@@ -898,7 +901,7 @@ print.profile_focus_list <- function(x,
             format_value(attr(x, "focus_range")[1L]), "to",
             format_value(attr(x, "focus_range")[2L]), "\n")
     }
-    cat("Likelihood-ratio level at boundary:",
+    cat("Implied level at grid boundary:",
         if (is.na(boundary_lr_level)) "unavailable" else
             format_value(boundary_lr_level),
         "\n")

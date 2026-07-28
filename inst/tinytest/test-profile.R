@@ -253,7 +253,7 @@ expect_false(any(grepl("^Median signed-root spacing:",
                        printed_profile_mean)))
 expect_true(any(grepl("^Requested maximum nominal level: 0.95\\s*$",
                       printed_profile_mean)))
-expect_true(any(grepl("^Likelihood-ratio level at boundary:",
+expect_true(any(grepl("^Implied level at grid boundary:",
                       printed_profile_mean)))
 
 printed_profile_mean_right <- capture.output(print(profile_mean_right,
@@ -266,7 +266,7 @@ expected_boundary_right <- pchisq(
     df = 1
 )
 expect_true(any(grepl(
-    paste0("^Likelihood-ratio level at boundary: ",
+    paste0("^Implied level at grid boundary: ",
            format(signif(expected_boundary_right, 6), trim = TRUE),
            "\\s*$"),
     printed_profile_mean_right

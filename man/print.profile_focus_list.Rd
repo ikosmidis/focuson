@@ -42,7 +42,7 @@ construct the likelihood-root grid. The grid extends one step beyond this
 level.
 \item \strong{Focus range:} for a focus-grid profile, the supplied lower and upper
 focus values.
-\item \strong{Likelihood-ratio level at boundary:} the chi-squared reference level
+\item \strong{Implied level at grid boundary:} the chi-squared reference level
 corresponding to the likelihood drop at the outer endpoint of the
 computed profile. When both branches are present, the smaller of their
 endpoint levels is reported. For a VM profile this is generally larger

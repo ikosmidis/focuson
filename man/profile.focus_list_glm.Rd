@@ -98,9 +98,9 @@ endo <- glm(HG ~ NV + PI + EH,
 ## `approach = "VM"`) is numerically unstable
 try(prof <- profile(endo2))
 
-## A closer inspection of the profile log-likelihood reveals that
-## the profile is essentially monotone and the maximum likelihood
-## estimate diverges to infinity
+## A closer inspection of the profile log-likelihood reveals that #
+## the profile is essentially monotone; the log-likelihood approaches
+## its supremum as the NV coefficient tends to infinity.
 prof <- profile(endo2, approach = "focus_grid", focus_range = c(0, 30))
 plot(prof)
 
