@@ -28,7 +28,8 @@ computed profile points. \code{"linear"} (default) uses \code{\link[stats:approx
 and \code{"cubic"} uses \code{\link[stats:splinefun]{stats::splinefun()}}.}
 
 \item{ci}{Logical. If \code{TRUE}, display the confidence limits for
-\code{level}. Default is \verb{FALSE. The corresponding cutoff is displayed irrespective of }ci`.}
+\code{level}. Default is \code{FALSE}. The corresponding cutoff is
+displayed irrespective of \code{ci}.}
 
 \item{...}{Additional graphical arguments passed to
 \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
@@ -42,14 +43,17 @@ signed likelihood-root scale.
 }
 \details{
 When \code{ci = TRUE}, \code{level} must lie within the range covered on both
-sides of the computed profile. If it does not, recompute the
+sides of the computed profile. If it does not, try recomputing the
 profile with a larger \code{max_level} or a wider \code{focus_range}, as
-appropriate.  In particular, two-sided confidence limits cannot be
-displayed from a focus-grid profile lying entirely on one side of
-the MLE.  When \code{ci = FALSE}, the corresponding cutoff is drawn but
-confidence limits are not computed, so \code{level} need not be covered
-by the profile.
+appropriate, or inspecting the profile using \code{approach = "focus_grid"} in the profile methods.  In particular, two-sided
+confidence limits cannot be displayed from a focus-grid profile
+lying entirely on one side of the MLE.  When \code{ci = FALSE}, the
+corresponding cutoff is drawn but confidence limits are not
+computed, so \code{level} need not be covered by the profile.
+Confidence limits are extracted with \code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}}
+using the selected interpolation method.
 }
 \seealso{
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}, \code{\link[=profile_ci]{profile_ci()}}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}},
+\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}}, \code{\link[=profile_ci]{profile_ci()}}
 }

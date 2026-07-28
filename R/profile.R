@@ -545,6 +545,7 @@ profile.focus_list_glm <- function(fitted,
 #' plot(prof, signed = TRUE, level = 0.9, ci = TRUE)
 #'
 #' ## Compare the interpolated limits with directly computed endpoints.
+#' confint(prof, level = 0.9, interpolation = "cubic")
 #' profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 #'
 #' @seealso [profile_ci()], [profile.focus_list_glm()],
@@ -857,7 +858,7 @@ profile_focus <- function(loglik,
 #' @return `x`, invisibly.
 #'
 #' @seealso [profile_focus()], [profile.focus_list_glm()],
-#'     [plot.profile_focus_list()]
+#'     [plot.profile_focus_list()], [confint.profile_focus_list()]
 #'
 #' @export
 print.profile_focus_list <- function(x,
@@ -909,6 +910,67 @@ print.profile_focus_list <- function(x,
 }
 
 
+#' Confidence intervals from a focus profile
+#'
+#' Extract a confidence interval from a computed focus profile by
+#' interpolation on the signed likelihood-root scale.
+#'
+#' @param object An object of class `"profile_focus_list"`, as returned by
+#'     [profile_focus()] or [profile.focus_list_glm()].
+#' @param parm Currently unused.
+#' @param level Nominal confidence level.
+#' @param interpolation Character. Interpolation method used between computed
+#'     profile points. `"linear"` (default) uses [stats::approxfun()] and
+#'     `"cubic"` uses [stats::splinefun()].
+#' @param ... Currently unused.
+#'
+#' @details
+#' This method interpolates the supplied profile and does not perform further
+#' likelihood evaluations. The profile must extend beyond the likelihood-root
+#' cutoffs for `level` on both sides of the MLE. Consequently, a two-sided
+#' interval cannot be extracted from a single-branch profile.
+#'
+#' In contrast, `confint(focus_object, method = "profile")` uses [profile_ci()]
+#' to solve the endpoint equations directly.
+#'
+#' @return
+#' A numeric vector of length 2 with names `"lower"` and `"upper"`. The
+#' `"level"`, `"type"`, and `"interpolation"` attributes record the nominal
+#' level, interval type, and interpolation method, respectively.
+#'
+#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#'     [plot.profile_focus_list()], [profile_ci()]
+#'
+#' @export
+confint.profile_focus_list <- function(object,
+                                       parm,
+                                       level = 0.95,
+                                       interpolation = c("linear", "cubic"),
+                                       ...) {
+    if (!is.numeric(level) || length(level) != 1L ||
+        !is.finite(level) || level <= 0 || level >= 1)
+        stop("`level` must be a number in (0, 1).")
+    interpolation <- match.arg(interpolation)
+    signed_root <- .profile_signed(object)
+    qua <- qnorm(0.5 + level / 2)
+    if (qua > max(signed_root) || -qua < min(signed_root)) {
+        stop("`level` exceeds the range of the supplied profile; ",
+             "try recomputing it with a larger `max_level` or a wider ",
+             "`focus_range`, or inspect its behavior using ",
+             "`approach = \"focus_grid\"`.")
+    }
+    fn <- if (identical(interpolation, "linear"))
+        approxfun(x = signed_root, y = object$psi)
+    else
+        splinefun(signed_root, y = object$psi)
+    out <- c(lower = fn(qua), upper = fn(-qua))
+    attr(out, "level") <- level
+    attr(out, "type") <- "profile"
+    attr(out, "interpolation") <- interpolation
+    out
+}
+
+
 #' Plot a focus profile log-likelihood
 #'
 #' Plot a focus profile log-likelihood either on the log-likelihood scale or the
@@ -924,7 +986,7 @@ print.profile_focus_list <- function(x,
 #'     computed profile points. `"linear"` (default) uses [stats::approxfun()]
 #'     and `"cubic"` uses [stats::splinefun()].
 #' @param ci Logical. If `TRUE`, display the confidence limits for
-#'     `level`. Default is `FALSE. The corresponding cutoff is
+#'     `level`. Default is `FALSE`. The corresponding cutoff is
 #'     displayed irrespective of `ci`.
 #' @param ... Additional graphical arguments passed to
 #'     [graphics::plot.default()].
@@ -932,23 +994,28 @@ print.profile_focus_list <- function(x,
 #' @details
 #'
 #' When `ci = TRUE`, `level` must lie within the range covered on both
-#' sides of the computed profile. If it does not, recompute the
+#' sides of the computed profile. If it does not, try recomputing the
 #' profile with a larger `max_level` or a wider `focus_range`, as
-#' appropriate.  In particular, two-sided confidence limits cannot be
-#' displayed from a focus-grid profile lying entirely on one side of
-#' the MLE.  When `ci = FALSE`, the corresponding cutoff is drawn but
-#' confidence limits are not computed, so `level` need not be covered
-#' by the profile.
+#' appropriate, or inspecting the profile using `approach =
+#' "focus_grid"` in the profile methods.  In particular, two-sided
+#' confidence limits cannot be displayed from a focus-grid profile
+#' lying entirely on one side of the MLE.  When `ci = FALSE`, the
+#' corresponding cutoff is drawn but confidence limits are not
+#' computed, so `level` need not be covered by the profile.
+#' Confidence limits are extracted with [confint.profile_focus_list()]
+#' using the selected interpolation method.
 #'
 #' @return Called for its side effect of drawing a plot.
 #'
-#' @seealso [profile_focus()], [profile.focus_list_glm()], [profile_ci()]
+#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#'     [confint.profile_focus_list()], [profile_ci()]
 #'
 #' @export
 plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
                                     interpolation = c("linear", "cubic"),
                                     ci = FALSE, ...) {
-    lin <- identical(match.arg(interpolation) , "linear")
+    interpolation <- match.arg(interpolation)
+    lin <- identical(interpolation, "linear")
     ci <- isTRUE(ci)
     max_loglik <- attr(x, "max_loglik")
     signed_root <- .profile_signed(x)
@@ -957,14 +1024,8 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
         splinefun(signed_root, y = x$psi)
     r <- seq(min(signed_root), max(signed_root), length.out = 201)
     psi <- fn(r)
-    if (ci) {
-        if (qua > max(signed_root) || -qua < min(signed_root)) {
-            stop("`level` exceeds the range of the supplied profile; ",
-                 "recompute it with a larger `max_level` or a wider ",
-                 "`focus_range`.")
-        }
-        limits <- c(lower = fn(qua), upper = fn(-qua))
-    }
+    if (ci)
+        limits <- confint(x, level = level, interpolation = interpolation)
     if (signed) {
         plot.default(x$psi, signed_root, pch = 21, bg = "lightgray",
                      col = "lightgray", cex = 0.8,

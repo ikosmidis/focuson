@@ -272,6 +272,26 @@ expect_true(any(grepl(
     printed_profile_mean_right
 )))
 
+profile_ci_mean <- confint(profile_mean, level = 0.9)
+expected_profile_ci_mean <- theta_hat +
+    c(lower = -1, upper = 1) * qnorm(0.95) / sqrt(n)
+expect_equal(profile_ci_mean, expected_profile_ci_mean,
+             tolerance = 1e-08, check.attributes = FALSE)
+expect_equal(attr(profile_ci_mean, "level"), 0.9)
+expect_identical(attr(profile_ci_mean, "type"), "profile")
+expect_identical(attr(profile_ci_mean, "interpolation"), "linear")
+expect_equal(confint(profile_mean, level = 0.9,
+                     interpolation = "cubic"),
+             expected_profile_ci_mean,
+             tolerance = 1e-08, check.attributes = FALSE)
+expect_error(confint(profile_mean, level = 0),
+             pattern = "number in \\(0, 1\\)")
+expect_error(confint(profile_mean, interpolation = "quadratic"))
+expect_error(confint(profile_mean, level = 0.999999),
+             pattern = "exceeds the range")
+expect_error(confint(profile_mean_right),
+             pattern = "exceeds the range")
+
 profile_plot_file <- tempfile(fileext = ".pdf")
 pdf(profile_plot_file)
 expect_silent(plot(profile_mean, interpolation = "linear"))

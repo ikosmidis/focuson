@@ -151,6 +151,7 @@ plot(prof, interpolation = "cubic", level = 0.9, ci = TRUE)
 plot(prof, signed = TRUE, level = 0.9, ci = TRUE)
 
 ## Compare the interpolated limits with directly computed endpoints.
+confint(prof, level = 0.9, interpolation = "cubic")
 profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 
 }
