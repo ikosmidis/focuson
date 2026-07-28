@@ -15,7 +15,7 @@ profile_focus(
   likelihood_args = list(),
   nleqslv_args = list(),
   grid_size = 20,
-  max_level = 0.9999,
+  max_level = 0.995,
   approach = c("VM", "focus_grid"),
   focus_range = NULL,
   auglag_args = list(),
@@ -60,17 +60,18 @@ with \code{information}, a Jacobian is passed to
 \code{loglik}, \code{score}, and \code{information}.}
 
 \item{nleqslv_args}{List of additional arguments passed to
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}}. Ignored when
-\code{approach = "focus_grid"}.}
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. The \code{x}, \code{fn}, and \code{jac} arguments are
+determined internally.}
 
 \item{grid_size}{Number of profile points computed on each side of the
 maximum likelihood estimate. Must be at least 2. For the VM approach,
 the outermost point provides one grid step of plotting space beyond
-\code{max_level}.}
+\code{max_level}. For a focus-grid profile whose range does not contain the
+focus at the MLE, \code{grid_size + 1} points are computed across the range.}
 
-\item{max_level}{Confidence level in \verb{(0, 1)} whose likelihood roots are
-placed one grid step inside the outer boundary of the computed profile.
-Used only when \code{approach = "VM"}.}
+\item{max_level}{Nominal likelihood-ratio level in \verb{(0, 1)} whose
+likelihood roots are placed one grid step inside the outer boundary of
+the computed profile. Used only when \code{approach = "VM"}.}
 
 \item{approach}{Character. \code{"VM"} uses the endpoint equations of Venzon and
 Moolgavkar (1988) on a likelihood-root grid. \code{"focus_grid"} maximizes the
@@ -78,8 +79,7 @@ likelihood at fixed focus values.}
 
 \item{focus_range}{Optional numeric vector containing the lower and upper
 focus values. It is required when \code{approach = "focus_grid"} and must
-contain the focus evaluated at \code{mle} in its interior. It is ignored
-otherwise.}
+contain two distinct finite values. It is ignored otherwise.}
 
 \item{auglag_args}{Named list of additional arguments passed to
 \code{\link[alabama:auglag]{alabama::auglag()}} when \code{approach = "focus_grid"}. The arguments \code{par},
@@ -97,8 +97,8 @@ parameter vectors and \code{lagrange} contains the corresponding Lagrange
 multipliers. The \code{"max_loglik"} attribute is the unrestricted maximum
 log-likelihood, \code{"mle"} is the focus evaluated at the unrestricted maximum
 likelihood estimate, and \code{"approach"} records the profiling approach. For
-VM profiles, \code{"max_level"} is the supplied maximum confidence level; for
-focus-grid profiles, \code{"focus_range"} is the supplied focus range.
+VM profiles, \code{"max_level"} is the supplied nominal likelihood-ratio level;
+for focus-grid profiles, \code{"focus_range"} is the supplied focus range.
 }
 \description{
 Compute the profile log-likelihood for a scalar function of a model
@@ -110,12 +110,19 @@ maximum likelihood estimate on an equally spaced signed likelihood-root
 grid. Each pair of points is obtained with \code{\link[=profile_ci]{profile_ci()}}. Successive pairs
 use secant extrapolation from preceding solutions as starting values.
 
-With \code{approach = "focus_grid"}, \code{focus_range} and \code{grid_size} define two
-equally spaced grids between the focus at the MLE and the supplied lower and
-upper focus values. Constrained fits are computed outwards from the MLE and
-warm-started from the preceding fit on the same side. Only \code{loglik}, \code{mle},
-and \code{on} are required; missing derivatives are evaluated numerically by
+With \code{approach = "focus_grid"}, if the focus at the MLE lies within
+\code{focus_range}, \code{grid_size} equally spaced constrained fits are computed
+between it and each available endpoint. If it lies outside \code{focus_range},
+\code{grid_size + 1} fits are computed across the range, starting at the nearest
+endpoint and proceeding towards the other endpoint. Successive fits are
+warm-started from the preceding fit. The \code{"mle"} and \code{"max_loglik"}
+attributes always refer to the supplied unrestricted MLE, which need not be
+among the returned profile points. Only \code{loglik}, \code{mle}, and \code{on} are
+required; missing derivatives are evaluated numerically by
 \code{\link[alabama:auglag]{alabama::auglag()}}.
+
+\code{nleqslv_args} applies only to \code{approach = "VM"}, while \code{auglag_args}
+applies only to \code{approach = "focus_grid"}. The inactive argument is ignored.
 
 The VM grid extends one step beyond \code{max_level}, allowing confidence limits
 at \code{max_level} to be displayed within the plotting range.
@@ -125,9 +132,8 @@ The signed likelihood root is defined as
 }
 \examples{
 ## Normal model parameterized by theta = (mu, log(sigma)).
-## The logarithm ensures that sigma = exp(theta[2]) is positive.
 set.seed(1)
-y <- rnorm(20, mean = 2.0)
+y <- rnorm(20, mean = 0.5)
 mle <- c(mu = mean(y), log_sigma = 0.5 * log(mean((y - mean(y))^2)))
 loglik <- function(theta)
     sum(dnorm(y, mean = theta[1], sd = exp(theta[2]), log = TRUE))
@@ -138,9 +144,11 @@ coef_var <- function(theta)
 
 prof <- profile_focus(mle = mle,
                       loglik = loglik,
-                      on = coef_var)
+                      on = coef_var,
+                      max_level = 0.99)
 plot(prof)
-plot(prof, signed = TRUE)
+plot(prof, interpolation = "cubic", level = 0.99, ci = TRUE)
+plot(prof, signed = TRUE, level = 0.99, ci = TRUE)
 
 }
 \seealso{

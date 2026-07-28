@@ -7,7 +7,7 @@
 \method{profile}{focus_list_glm}(
   fitted,
   grid_size = 20,
-  max_level = 0.9999,
+  max_level = 0.995,
   nleqslv_args = list(),
   approach = c("VM", "focus_grid"),
   focus_range = NULL,
@@ -22,25 +22,29 @@
 \item{grid_size}{Number of profile points computed on each side of the
 maximum likelihood estimate. Must be at least 2. For the VM approach,
 the outermost point provides one grid step of plotting space beyond
-\code{max_level}.}
+\code{max_level}. For a focus-grid profile whose range does not contain the
+focus at the MLE, \code{grid_size + 1} points are computed across the range.}
 
-\item{max_level}{Confidence level in \verb{(0, 1)} whose likelihood roots are
-placed one grid step inside the outer boundary of the computed profile.
-Used only when \code{approach = "VM"}.}
+\item{max_level}{Nominal likelihood-ratio level in \verb{(0, 1)} whose
+likelihood roots are placed one grid step inside the outer boundary of
+the computed profile. Used only when \code{approach = "VM"}.}
 
 \item{nleqslv_args}{List of additional arguments passed to
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}}. Ignored when
-\code{approach = "focus_grid"}.}
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}}. The \code{x}, \code{fn}, and \code{jac} arguments are
+determined internally.}
 
-\item{approach}{Profiling approach passed to \code{\link[=profile_focus]{profile_focus()}}.}
+\item{approach}{Character. \code{"VM"} uses the endpoint equations of Venzon and
+Moolgavkar (1988) on a likelihood-root grid. \code{"focus_grid"} maximizes the
+likelihood at fixed focus values.}
 
 \item{focus_range}{Optional numeric vector containing the lower and upper
-focus values. Required when \code{approach = "focus_grid"} and ignored
-otherwise.}
+focus values. It is required when \code{approach = "focus_grid"} and must
+contain two distinct finite values. It is ignored otherwise.}
 
-\item{auglag_args}{List of additional arguments passed to
-\code{\link[alabama:auglag]{alabama::auglag()}} when \code{approach = "focus_grid"} and ignored
-otherwise.}
+\item{auglag_args}{Named list of additional arguments passed to
+\code{\link[alabama:auglag]{alabama::auglag()}} when \code{approach = "focus_grid"}. The arguments \code{par},
+\code{fn}, \code{gr}, \code{hin}, \code{hin.jac}, \code{heq}, and \code{heq.jac} are determined
+internally. The argument is ignored when \code{approach = "VM"}.}
 
 \item{...}{Currently unused.}
 }
@@ -67,6 +71,9 @@ The result is likelihood-based and does not use a bias-corrected focus
 estimate as the centre of the profile. The signed likelihood root uses the
 sign of the focus at the unrestricted MLE minus the focus value at the
 profile point.
+
+With \code{approach = "focus_grid"}, a range that does not contain the focus at
+the MLE produces a single profile branch. See \code{\link[=profile_focus]{profile_focus()}} for details.
 }
 \examples{
 warp_fit <- glm(breaks ~ wool + tension, family = poisson,
@@ -76,6 +83,32 @@ warp_profile <- profile(warp_focus, grid_size = 10, max_level = 0.99)
 plot(warp_profile)
 plot(warp_profile, signed = TRUE)
 
+\dontrun{
+## Exploring the profile log-likelihood
+data("endometrial", package = "brglm2")
+endo <- glm(HG ~ NV + PI + EH,
+            data = endometrial,
+            family = binomial("logit"))
+
+## Focus on the coefficient of NV, using maximum likelihood
+(endo2 <- focus(endo, on = function(theta) theta[2], correction = "no"))
+
+## The ML estimate for NV is large in absolute value, and the
+## default method for profiling the log-likelihood (with
+## `approach = "VM"`) is numerically unstable
+try(prof <- profile(endo2))
+
+## A closer inspection of the profile log-likelihood reveals that
+## the profile is essentially monotone and the maximum likelihood
+## estimate diverges to infinity
+prof <- profile(endo2, approach = "focus_grid", focus_range = c(0, 30))
+plot(prof)
+
+## which can be verified by
+library("detectseparation")
+update(endo, method = "detect_separation")
+
+}
 }
 \seealso{
 \code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile_ci]{profile_ci()}}, \code{\link[=confint.focus_list]{confint.focus_list()}}

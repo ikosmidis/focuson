@@ -59,6 +59,7 @@
 #' @importFrom utils capture.output
 #' @importFrom stats optimize splinefun pchisq
 #' @importFrom graphics abline plot.default points
+#' @importFrom alabama auglag
 #' @import nleqslv
 #'
 "_PACKAGE"

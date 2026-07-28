@@ -17,20 +17,21 @@
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
 \code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
 
-\item{level}{Confidence level used to draw the horizontal cutoff and
-vertical confidence limits.}
+\item{level}{Confidence level used to draw the horizontal cutoff
+and, if \code{ci = TRUE}, vertical confidence limits.}
 
-\item{signed}{Logical. If \code{TRUE}, plot the signed likelihood root; otherwise
-plot the profile log-likelihood.}
+\item{signed}{Logical. If \code{TRUE}, plot the signed likelihood root;
+otherwise plot the profile log-likelihood. Default is \code{FALSE}.}
 
-\item{interpolation}{Character. Interpolation method used between computed
-profile points. \code{"linear"} uses \code{\link[stats:approxfun]{stats::approxfun()}} and \code{"cubic"} uses
-\code{\link[stats:splinefun]{stats::splinefun()}}.}
+\item{interpolation}{Character. Interpolation method used between
+computed profile points. \code{"linear"} (default) uses \code{\link[stats:approxfun]{stats::approxfun()}}
+and \code{"cubic"} uses \code{\link[stats:splinefun]{stats::splinefun()}}.}
 
-\item{ci}{Logical. If \code{TRUE}, display the confidence limits for \code{level}.
-The corresponding cutoff is displayed irrespective of \code{ci}.}
+\item{ci}{Logical. If \code{TRUE}, display the confidence limits for
+\code{level}. Default is \verb{FALSE. The corresponding cutoff is displayed irrespective of }ci`.}
 
-\item{...}{Additional graphical arguments passed to \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
+\item{...}{Additional graphical arguments passed to
+\code{\link[graphics:plot.default]{graphics::plot.default()}}.}
 }
 \value{
 Called for its side effect of drawing a plot.
@@ -41,10 +42,13 @@ signed likelihood-root scale.
 }
 \details{
 When \code{ci = TRUE}, \code{level} must lie within the range covered on both
-sides of the computed profile. If it does not, recompute the profile
-with a larger \code{max_level} or a wider \code{focus_range}, as appropriate.
-When \code{ci = FALSE}, the corresponding cutoff is drawn but confidence
-limits are not computed, so \code{level} need not be covered by the profile.
+sides of the computed profile. If it does not, recompute the
+profile with a larger \code{max_level} or a wider \code{focus_range}, as
+appropriate.  In particular, two-sided confidence limits cannot be
+displayed from a focus-grid profile lying entirely on one side of
+the MLE.  When \code{ci = FALSE}, the corresponding cutoff is drawn but
+confidence limits are not computed, so \code{level} need not be covered
+by the profile.
 }
 \seealso{
 \code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}, \code{\link[=profile_ci]{profile_ci()}}

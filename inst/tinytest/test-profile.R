@@ -128,9 +128,62 @@ expect_error(
     profile_focus(mle = theta_hat,
                   loglik = loglik_mean,
                   approach = "focus_grid",
-                  focus_range = theta_hat + c(0.25, 0.5)),
-    pattern = "in its interior"
+                  focus_range = rep(theta_hat, 2)),
+    pattern = "two distinct values"
 )
+profile_mean_right <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    approach = "focus_grid",
+    focus_range = theta_hat + c(0.25, 0.5),
+    grid_size = 4
+)
+expect_equal(profile_mean_right$psi,
+             seq(theta_hat + 0.25, theta_hat + 0.5, length.out = 5),
+             tolerance = 1e-06)
+expect_true(all(profile_signed(profile_mean_right) < 0))
+expect_equal(attr(profile_mean_right, "mle"), theta_hat)
+expect_equal(attr(profile_mean_right, "max_loglik"),
+             loglik_mean(theta_hat))
+expect_equal(profile_mean_right$loglik,
+             vapply(profile_mean_right$psi, loglik_mean, numeric(1)),
+             tolerance = 1e-07)
+expect_equal(profile_mean_right$lagrange,
+             vapply(profile_mean_right$psi, score_mean, numeric(1)),
+             tolerance = 1e-03)
+
+profile_mean_left <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    approach = "focus_grid",
+    focus_range = theta_hat - c(0.5, 0.25),
+    grid_size = 4
+)
+expect_equal(profile_mean_left$psi,
+             seq(theta_hat - 0.5, theta_hat - 0.25, length.out = 5),
+             tolerance = 1e-06)
+expect_true(all(profile_signed(profile_mean_left) > 0))
+
+profile_mean_endpoint <- profile_focus(
+    mle = theta_hat,
+    loglik = loglik_mean,
+    score = score_mean,
+    on = on_mean,
+    on_gradient = on_mean_gradient,
+    approach = "focus_grid",
+    focus_range = theta_hat + c(0, 0.5),
+    grid_size = 4
+)
+expect_equal(profile_mean_endpoint$psi,
+             seq(theta_hat, theta_hat + 0.5, length.out = 5),
+             tolerance = 1e-06)
+expect_equal(profile_mean_endpoint$lagrange[1L], 0)
 profile_mean_ignored_arguments <- profile_focus(
     mle = theta_hat,
     loglik = loglik_mean,
@@ -198,10 +251,26 @@ expect_false(any(grepl("^Signed-root range:",
                        printed_profile_mean)))
 expect_false(any(grepl("^Median signed-root spacing:",
                        printed_profile_mean)))
-expect_true(any(grepl("^Requested maximum level: 0.95\\s*$",
+expect_true(any(grepl("^Requested maximum nominal level: 0.95\\s*$",
                       printed_profile_mean)))
-expect_true(any(grepl("^Boundary confidence level:",
+expect_true(any(grepl("^Likelihood-ratio level at boundary:",
                       printed_profile_mean)))
+
+printed_profile_mean_right <- capture.output(print(profile_mean_right,
+                                                   digits = 6))
+expect_true(any(grepl("^Points by side: 0 left, 5 right\\s*$",
+                      printed_profile_mean_right)))
+expected_boundary_right <- pchisq(
+    2 * (attr(profile_mean_right, "max_loglik") -
+         tail(profile_mean_right$loglik, 1)),
+    df = 1
+)
+expect_true(any(grepl(
+    paste0("^Likelihood-ratio level at boundary: ",
+           format(signif(expected_boundary_right, 6), trim = TRUE),
+           "\\s*$"),
+    printed_profile_mean_right
+)))
 
 profile_plot_file <- tempfile(fileext = ".pdf")
 pdf(profile_plot_file)
@@ -213,10 +282,14 @@ expect_silent(plot(profile_mean, ci = TRUE))
 expect_silent(plot(profile_mean, signed = TRUE, ci = TRUE))
 expect_silent(plot(profile_mean, level = 0.999999))
 expect_silent(plot(profile_mean, signed = TRUE, level = 0.999999))
+expect_silent(plot(profile_mean_right))
+expect_silent(plot(profile_mean_right, signed = TRUE))
 dev.off()
 unlink(profile_plot_file)
 expect_error(plot(profile_mean, interpolation = "quadratic"))
 expect_error(plot(profile_mean, ci = TRUE, level = 0.999999),
+             pattern = "exceeds the range")
+expect_error(plot(profile_mean_right, ci = TRUE),
              pattern = "exceeds the range")
 
 loglik_mean_with_args <- function(theta, observations) {

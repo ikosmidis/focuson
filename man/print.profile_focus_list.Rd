@@ -20,6 +20,38 @@
 \description{
 Print the main characteristics of a focus profile log-likelihood.
 }
+\details{
+The printed entries have the following meanings:
+\itemize{
+\item \strong{Profiling approach:} the method used to construct the profile, either
+the Venzon and Moolgavkar approach (\code{"VM"}) or constrained optimization
+over a grid of focus values (\code{"focus_grid"}).
+\item \strong{Focus at MLE:} the focus evaluated at the supplied unrestricted maximum
+likelihood estimate. For a single-branch focus-grid profile, this value
+lies outside the supplied focus range and is not a returned profile point.
+\item \strong{Maximum log-likelihood:} the log-likelihood at the supplied
+unrestricted maximum likelihood estimate.
+\item \strong{Parameter dimension:} the dimension of the model parameter vector
+stored in the matrix-valued \code{theta} column.
+\item \strong{Profile points:} the number of rows in the computed profile.
+\item \strong{Points by side:} the number of profile points to the left and right of
+the focus at the MLE. The MLE itself, when present, is not counted on
+either side.
+\item \strong{Requested nominal level:} for a VM profile, the \code{max_level} used to
+construct the likelihood-root grid. The grid extends one step beyond this
+level.
+\item \strong{Focus range:} for a focus-grid profile, the supplied lower and upper
+focus values.
+\item \strong{Likelihood-ratio level at boundary:} the chi-squared reference level
+corresponding to the likelihood drop at the outer endpoint of the
+computed profile. When both branches are present, the smaller of their
+endpoint levels is reported. For a VM profile this is generally larger
+than the requested nominal level because of the extra grid step. For a
+single-branch profile, it describes that branch only and does not imply
+that two-sided confidence limits are available. It is not an estimate of
+the finite-sample coverage of an interval.
+}
+}
 \seealso{
 \code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}},
 \code{\link[=plot.profile_focus_list]{plot.profile_focus_list()}}

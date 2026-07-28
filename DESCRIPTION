@@ -17,5 +17,6 @@ Imports:
     numDeriv
 Suggests: 
     future.apply,
-    tinytest
+    tinytest,
+    detectseparation
 Config/roxygen2/version: 8.0.0
