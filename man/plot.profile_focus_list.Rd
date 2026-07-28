@@ -9,7 +9,7 @@
   level = 0.95,
   signed = FALSE,
   interpolation = c("linear", "cubic"),
-  ci = TRUE,
+  ci = FALSE,
   ...
 )
 }
@@ -27,8 +27,8 @@ plot the profile log-likelihood.}
 profile points. \code{"linear"} uses \code{\link[stats:approxfun]{stats::approxfun()}} and \code{"cubic"} uses
 \code{\link[stats:splinefun]{stats::splinefun()}}.}
 
-\item{ci}{Logical. If \code{TRUE} (default), display the confidence limits for
-\code{level}. The corresponding cutoff is displayed irrespective of \code{ci}.}
+\item{ci}{Logical. If \code{TRUE}, display the confidence limits for \code{level}.
+The corresponding cutoff is displayed irrespective of \code{ci}.}
 
 \item{...}{Additional graphical arguments passed to \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
 }

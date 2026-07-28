@@ -379,13 +379,13 @@ profile_ci <- function(loglik,
 #'
 #' @return
 #' `profile.focus_list_glm()` returns a data frame with columns `psi`,
-#' `loglik`, and `signed`, and class `"profile_focus_list"`. The columns contain
-#' the focus parameter, profile log-likelihood, and signed likelihood root,
-#' respectively. The `"max_loglik"` attribute is the unrestricted maximum
-#' log-likelihood and `"mle"` is the focus evaluated at the unrestricted MLE.
-#' The `"approach"` attribute records the profiling approach. The matrix-valued
-#' column `theta` contains the parameter vectors and `lagrange` contains the
-#' corresponding Lagrange multipliers.
+#' `loglik`, `theta`, and `lagrange`, and class `"profile_focus_list"`.
+#' The first two columns contain the focus parameter and profile
+#' log-likelihood. The matrix-valued column `theta` contains the parameter
+#' vectors and `lagrange` contains the corresponding Lagrange multipliers.
+#' The `"max_loglik"` attribute is the unrestricted maximum log-likelihood,
+#' `"mle"` is the focus evaluated at the unrestricted MLE, and `"approach"`
+#' records the profiling approach.
 #'
 #' @examples
 #' warp_fit <- glm(breaks ~ wool + tension, family = poisson,
@@ -497,16 +497,15 @@ profile.focus_list_glm <- function(fitted,
 #' \left[2\{\ell(\hat\theta)-\ell_p(\psi)\}\right]^{1/2}.}
 #'
 #' @return
-#' A data frame with columns `psi`, `loglik`, and `signed`, and class
-#' `"profile_focus_list"`. The columns contain the focus parameter, profile
-#' log-likelihood, and signed likelihood root, respectively. The
-#' `"max_loglik"` attribute is the unrestricted maximum log-likelihood,
-#' `"mle"` is the focus evaluated at the unrestricted maximum likelihood
-#' estimate, and `"approach"` records the profiling approach. For VM profiles,
-#' `"max_level"` is the supplied maximum confidence level; for focus-grid
-#' profiles, `"focus_range"` is the supplied focus range. The matrix-valued
-#' column `theta` contains the parameter vectors and `lagrange` contains the
-#' corresponding Lagrange multipliers.
+#' A data frame with columns `psi`, `loglik`, `theta`, and `lagrange`, and class
+#' `"profile_focus_list"`. The first two columns contain the focus parameter and
+#' profile log-likelihood. The matrix-valued column `theta` contains the
+#' parameter vectors and `lagrange` contains the corresponding Lagrange
+#' multipliers. The `"max_loglik"` attribute is the unrestricted maximum
+#' log-likelihood, `"mle"` is the focus evaluated at the unrestricted maximum
+#' likelihood estimate, and `"approach"` records the profiling approach. For
+#' VM profiles, `"max_level"` is the supplied maximum confidence level; for
+#' focus-grid profiles, `"focus_range"` is the supplied focus range.
 #'
 #' @examples
 #' ## Normal model parameterized by theta = (mu, log(sigma)).
@@ -600,8 +599,8 @@ profile_focus <- function(loglik,
 
         r_target <- qnorm(0.5 + max_level / 2)
         r_step <- r_target / (grid_size - 1)
-        signed_left <- seq(r_step, r_target + r_step, by = r_step)
-        q_grid <- pchisq(signed_left^2, df = 1)
+        root_grid <- seq(r_step, r_target + r_step, by = r_step)
+        q_grid <- pchisq(root_grid^2, df = 1)
         on_left <- on_right <- ll_left <- numeric(grid_size)
         theta_left <- theta_right <-
             matrix(NA_real_, grid_size, p,
@@ -647,7 +646,7 @@ profile_focus <- function(loglik,
             if (!is_converged(obj))
                 stop("Could not compute the profile at grid point ", j,
                      " (likelihood-root magnitude = ",
-                     format(signed_left[j]), "). ",
+                     format(root_grid[j]), "). ",
                      paste(attr(obj, "messages"), collapse = "; "))
             previous <- current
             current <- attr(obj, "solution")
@@ -660,7 +659,6 @@ profile_focus <- function(loglik,
             ll_left[j] <- attr(obj, "loglik")[1]
         }
         ll_right <- ll_left
-        signed_right <- - signed_left
     } else {
         if (!is.list(auglag_args))
             stop("`auglag_args` must be a list.")
@@ -724,7 +722,6 @@ profile_focus <- function(loglik,
             }
             out
         }
-
         focus_left <- seq(on_mle, focus_range[1L],
                           length.out = grid_size + 1L)[-1L]
         focus_right <- seq(on_mle, focus_range[2L],
@@ -735,10 +732,6 @@ profile_focus <- function(loglik,
         on_right <- vapply(right, `[[`, numeric(1), "psi")
         ll_left <- vapply(left, `[[`, numeric(1), "loglik")
         ll_right <- vapply(right, `[[`, numeric(1), "loglik")
-        signed_left <- sign(on_mle - on_left) *
-            sqrt(2 * pmax(max_loglik - ll_left, 0))
-        signed_right <- sign(on_mle - on_right) *
-            sqrt(2 * pmax(max_loglik - ll_right, 0))
         theta_left <- do.call(rbind, lapply(left, `[[`, "theta"))
         theta_right <- do.call(rbind, lapply(right, `[[`, "theta"))
         lagrange_left <- vapply(left, `[[`, numeric(1), "lagrange")
@@ -751,18 +744,20 @@ profile_focus <- function(loglik,
     dimnames(theta_profile) <- list(NULL, names(mle))
     out <- data.frame(psi = c(rev(on_left), on_mle, on_right),
                       loglik = c(rev(ll_left), max_loglik, ll_right),
-                      signed = c(rev(signed_left), 0, signed_right),
                       theta = I(theta_profile),
                       lagrange = c(rev(lagrange_left), 0, lagrange_right))
     class(out) <- c("profile_focus_list", class(out))
     attr(out, "max_loglik") <- max_loglik
     attr(out, "mle") <- on_mle
     attr(out, "approach") <- approach
-    if (approach == "VM")
-        attr(out, "max_level") <- max_level
-    else
-        attr(out, "focus_range") <- focus_range
+    attr(out, "max_level") <- max_level
+    attr(out, "focus_range") <- focus_range
     out
+}
+
+.profile_signed <- function(object) {
+    sign(attr(object, "mle") - object$psi) *
+        sqrt(2 * pmax(attr(object, "max_loglik") - object$loglik, 0))
 }
 
 
@@ -784,11 +779,12 @@ profile_focus <- function(loglik,
 print.profile_focus_list <- function(x,
                                      digits = max(3L, getOption("digits") - 2L),
                                      ...) {
-    signed_range <- range(x$signed)
-    positive <- sort(x$signed[x$signed > 0])
-    spacing <- median(diff(c(0, positive)))
-    root_coverage <- min(max(x$signed), -min(x$signed))
-    boundary_level <- pchisq(root_coverage^2, df = 1)
+    focus_mle <- attr(x, "mle")
+    max_loglik <- attr(x, "max_loglik")
+    left_drop <- max_loglik - min(x$loglik[x$psi < focus_mle])
+    right_drop <- max_loglik - min(x$loglik[x$psi > focus_mle])
+    boundary_level <- pchisq(2 * max(min(left_drop, right_drop), 0),
+                             df = 1)
     format_value <- function(value)
         format(signif(value, digits), trim = TRUE)
 
@@ -800,11 +796,8 @@ print.profile_focus_list <- function(x,
     cat("Parameter dimension:", ncol(x$theta), "\n")
     cat("Profile points:", nrow(x), "\n")
     cat("Points by side:",
-        sum(x$signed > 0), "lower,", sum(x$signed < 0), "upper\n")
-    cat("Signed-root range:",
-        format_value(signed_range[1]), "to",
-        format_value(signed_range[2]), "\n")
-    cat("Median signed-root spacing:", format_value(spacing), "\n")
+        sum(x$psi < focus_mle), "left,",
+        sum(x$psi > focus_mle), "right\n")
     if (identical(attr(x, "approach"), "VM")) {
         cat("Requested maximum level:",
             format_value(attr(x, "max_level")), "\n")
@@ -833,8 +826,8 @@ print.profile_focus_list <- function(x,
 #' @param interpolation Character. Interpolation method used between computed
 #'     profile points. `"linear"` uses [stats::approxfun()] and `"cubic"` uses
 #'     [stats::splinefun()].
-#' @param ci Logical. If `TRUE` (default), display the confidence limits for
-#'     `level`. The corresponding cutoff is displayed irrespective of `ci`.
+#' @param ci Logical. If `TRUE`, display the confidence limits for `level`.
+#'     The corresponding cutoff is displayed irrespective of `ci`.
 #' @param ... Additional graphical arguments passed to [graphics::plot.default()].
 #'
 #' @details When `ci = TRUE`, `level` must lie within the range covered on both
@@ -850,16 +843,18 @@ print.profile_focus_list <- function(x,
 #' @export
 plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
                                     interpolation = c("linear", "cubic"),
-                                    ci = TRUE, ...) {
+                                    ci = FALSE, ...) {
     lin <- identical(match.arg(interpolation) , "linear")
     ci <- isTRUE(ci)
     max_loglik <- attr(x, "max_loglik")
+    signed_root <- .profile_signed(x)
     qua <- qnorm(0.5 + level/2)
-    fn <- if (lin) approxfun(x = x$signed, y = x$psi) else splinefun(x$signed, y = x$psi)
-    r <- seq(min(x$signed), max(x$signed), length.out = 201)
+    fn <- if (lin) approxfun(x = signed_root, y = x$psi) else
+        splinefun(signed_root, y = x$psi)
+    r <- seq(min(signed_root), max(signed_root), length.out = 201)
     psi <- fn(r)
     if (ci) {
-        if (qua > max(x$signed) || -qua < min(x$signed)) {
+        if (qua > max(signed_root) || -qua < min(signed_root)) {
             stop("`level` exceeds the range of the supplied profile; ",
                  "recompute it with a larger `max_level` or a wider ",
                  "`focus_range`.")
@@ -867,7 +862,8 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
         limits <- c(lower = fn(qua), upper = fn(-qua))
     }
     if (signed) {
-        plot.default(x$psi, x$signed, pch = 21, bg = "lightgray", col = "lightgray", cex = 0.8,
+        plot.default(x$psi, signed_root, pch = 21, bg = "lightgray",
+                     col = "lightgray", cex = 0.8,
                      xlab = expression(psi), ylab = "Signed likelihood root", ...)
         points(psi, r, type = "l")
         abline(h = c(-qua, qua), lty = 3, col = "lightgray")

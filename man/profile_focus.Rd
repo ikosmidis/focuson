@@ -90,16 +90,15 @@ internally. The argument is ignored when \code{approach = "VM"}.}
 \code{on_hessian}.}
 }
 \value{
-A data frame with columns \code{psi}, \code{loglik}, and \code{signed}, and class
-\code{"profile_focus_list"}. The columns contain the focus parameter, profile
-log-likelihood, and signed likelihood root, respectively. The
-\code{"max_loglik"} attribute is the unrestricted maximum log-likelihood,
-\code{"mle"} is the focus evaluated at the unrestricted maximum likelihood
-estimate, and \code{"approach"} records the profiling approach. For VM profiles,
-\code{"max_level"} is the supplied maximum confidence level; for focus-grid
-profiles, \code{"focus_range"} is the supplied focus range. The matrix-valued
-column \code{theta} contains the parameter vectors and \code{lagrange} contains the
-corresponding Lagrange multipliers.
+A data frame with columns \code{psi}, \code{loglik}, \code{theta}, and \code{lagrange}, and class
+\code{"profile_focus_list"}. The first two columns contain the focus parameter and
+profile log-likelihood. The matrix-valued column \code{theta} contains the
+parameter vectors and \code{lagrange} contains the corresponding Lagrange
+multipliers. The \code{"max_loglik"} attribute is the unrestricted maximum
+log-likelihood, \code{"mle"} is the focus evaluated at the unrestricted maximum
+likelihood estimate, and \code{"approach"} records the profiling approach. For
+VM profiles, \code{"max_level"} is the supplied maximum confidence level; for
+focus-grid profiles, \code{"focus_range"} is the supplied focus range.
 }
 \description{
 Compute the profile log-likelihood for a scalar function of a model

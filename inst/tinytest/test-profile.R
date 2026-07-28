@@ -19,6 +19,10 @@ information_mean <- function(theta) {
 on_mean <- function(theta) theta[1]
 on_mean_gradient <- function(theta) 1
 on_mean_hessian <- function(theta) matrix(0, 1, 1)
+profile_signed <- function(object) {
+    sign(attr(object, "mle") - object$psi) *
+        sqrt(2 * pmax(attr(object, "max_loglik") - object$loglik, 0))
+}
 
 ci_mean <- profile_ci(loglik = loglik_mean,
                       score = score_mean,
@@ -46,10 +50,10 @@ profile_mean <- profile_focus(mle = theta_hat,
                               max_level = level)
 expect_true(inherits(profile_mean, "profile_focus_list"))
 expect_equal(profile_mean$psi,
-             theta_hat - profile_mean$signed / sqrt(n),
+             theta_hat - profile_signed(profile_mean) / sqrt(n),
              tolerance = 1e-08)
 expect_identical(names(profile_mean),
-                 c("psi", "loglik", "signed", "theta", "lagrange"))
+                 c("psi", "loglik", "theta", "lagrange"))
 expect_identical(dim(profile_mean$theta),
                  c(nrow(profile_mean), length(theta_hat)))
 expect_identical(colnames(profile_mean$theta), names(theta_hat))
@@ -97,7 +101,7 @@ expect_equal(attr(profile_mean_focus_grid, "focus_range"),
 expect_equal(profile_mean_focus_grid$psi, expected_focus_grid,
              tolerance = 1e-06)
 expect_equal(profile_mean_focus_grid$psi,
-             theta_hat - profile_mean_focus_grid$signed / sqrt(n),
+             theta_hat - profile_signed(profile_mean_focus_grid) / sqrt(n),
              tolerance = 1e-06)
 expect_equal(profile_mean_focus_grid$loglik,
              vapply(profile_mean_focus_grid$psi, loglik_mean, numeric(1)),
@@ -143,8 +147,11 @@ profile_mean_ignored_arguments <- profile_focus(
 expect_equal(
     profile_mean_ignored_arguments,
     profile_mean,
-    tolerance = 1e-08
+    tolerance = 1e-08,
+    check.attributes = FALSE
 )
+expect_equal(attr(profile_mean_ignored_arguments, "focus_range"),
+             focus_range_mean)
 
 profile_mean_focus_grid_ignored_arguments <- profile_focus(
     mle = theta_hat,
@@ -163,6 +170,8 @@ expect_equal(
     profile_mean_focus_grid$psi,
     tolerance = 1e-06
 )
+expect_identical(attr(profile_mean_focus_grid_ignored_arguments, "max_level"),
+                 "ignored")
 
 profile_mean_subset <- profile_mean[c(2, 5, 9), ]
 expect_equal(profile_mean_subset$theta[, 1],
@@ -183,8 +192,12 @@ expect_true(any(grepl("^Parameter dimension: 1\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Profile points: 11\\s*$",
                       printed_profile_mean)))
-expect_true(any(grepl("^Points by side: 5 lower, 5 upper\\s*$",
+expect_true(any(grepl("^Points by side: 5 left, 5 right\\s*$",
                       printed_profile_mean)))
+expect_false(any(grepl("^Signed-root range:",
+                       printed_profile_mean)))
+expect_false(any(grepl("^Median signed-root spacing:",
+                       printed_profile_mean)))
 expect_true(any(grepl("^Requested maximum level: 0.95\\s*$",
                       printed_profile_mean)))
 expect_true(any(grepl("^Boundary confidence level:",
@@ -196,12 +209,15 @@ expect_silent(plot(profile_mean, interpolation = "linear"))
 expect_silent(plot(profile_mean, interpolation = "cubic"))
 expect_silent(plot(profile_mean_focus_grid, interpolation = "linear"))
 expect_silent(plot(profile_mean_focus_grid, signed = TRUE))
-expect_silent(plot(profile_mean, ci = FALSE, level = 0.999999))
-expect_silent(plot(profile_mean, signed = TRUE, ci = FALSE,
-                   level = 0.999999))
+expect_silent(plot(profile_mean, ci = TRUE))
+expect_silent(plot(profile_mean, signed = TRUE, ci = TRUE))
+expect_silent(plot(profile_mean, level = 0.999999))
+expect_silent(plot(profile_mean, signed = TRUE, level = 0.999999))
 dev.off()
 unlink(profile_plot_file)
 expect_error(plot(profile_mean, interpolation = "quadratic"))
+expect_error(plot(profile_mean, ci = TRUE, level = 0.999999),
+             pattern = "exceeds the range")
 
 loglik_mean_with_args <- function(theta, observations) {
     -0.5 * sum((observations - theta[1])^2)
@@ -214,7 +230,7 @@ profile_mean_defaults <- profile_focus(
     max_level = level
 )
 expect_equal(profile_mean_defaults$psi,
-             theta_hat - profile_mean_defaults$signed / sqrt(n),
+             theta_hat - profile_signed(profile_mean_defaults) / sqrt(n),
              tolerance = 1e-05)
 
 scaled_mean <- function(theta, scale) scale * theta[1]
@@ -533,7 +549,9 @@ r_grid <- seq(r_step, r_target + r_step, by = r_step)
 
 expect_true(inherits(focus_profile, "profile_focus_list"))
 expect_equal(nrow(focus_profile), 2 * grid_size + 1)
-expect_equal(focus_profile$signed, c(rev(r_grid), 0, -r_grid))
+expect_equal(profile_signed(focus_profile),
+             c(rev(r_grid), 0, -r_grid),
+             tolerance = 1e-06)
 expect_equal(focus_profile$psi[grid_size + 1],
              second_parameter(coef(budworm_focus_fit)), tolerance = 1e-08,
              check.attributes = FALSE)

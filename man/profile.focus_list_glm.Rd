@@ -46,13 +46,13 @@ otherwise.}
 }
 \value{
 \code{profile.focus_list_glm()} returns a data frame with columns \code{psi},
-\code{loglik}, and \code{signed}, and class \code{"profile_focus_list"}. The columns contain
-the focus parameter, profile log-likelihood, and signed likelihood root,
-respectively. The \code{"max_loglik"} attribute is the unrestricted maximum
-log-likelihood and \code{"mle"} is the focus evaluated at the unrestricted MLE.
-The \code{"approach"} attribute records the profiling approach. The matrix-valued
-column \code{theta} contains the parameter vectors and \code{lagrange} contains the
-corresponding Lagrange multipliers.
+\code{loglik}, \code{theta}, and \code{lagrange}, and class \code{"profile_focus_list"}.
+The first two columns contain the focus parameter and profile
+log-likelihood. The matrix-valued column \code{theta} contains the parameter
+vectors and \code{lagrange} contains the corresponding Lagrange multipliers.
+The \code{"max_loglik"} attribute is the unrestricted maximum log-likelihood,
+\code{"mle"} is the focus evaluated at the unrestricted MLE, and \code{"approach"}
+records the profiling approach.
 }
 \description{
 Compute a profile log-likelihood for the scalar parameter defined by a focus
