@@ -242,7 +242,7 @@ comp_diag <- estimate_focus_components(
     simulate = sim_norm,
     nsim = 6,
     diagnostics = TRUE,
-    n = 5
+    likelihood_args = list(n = 5)
 )
 
 expect_true(inherits(comp_diag, "focus_components"))
@@ -266,14 +266,13 @@ obs_norm <- c(-1, 0, 1, 2, 3)
 set.seed(3)
 comp_diag_fef <- estimate_focus_components_fef(
     theta = 0,
-    data = obs_norm,
     loglik = norm_loglik,
     score = norm_score,
     information = norm_info,
     simulate = sim_norm,
     nsim = 6,
     diagnostics = TRUE,
-    n = 5
+    likelihood_args = list(data = obs_norm, n = 5)
 )
 
 expect_true(inherits(comp_diag_fef, "focus_components"))
@@ -283,9 +282,22 @@ expect_equal(drop(comp_diag_fef$Q[[1]]), 0)
 printed_comp_diag_fef <- capture.output(print(comp_diag_fef))
 expect_true(any(grepl("^Structure: full exponential family shortcut\\s*$", printed_comp_diag_fef)))
 
+expect_error(
+    estimate_focus_components_fef(
+        theta = 0,
+        loglik = norm_loglik,
+        score = norm_score,
+        information = norm_info,
+        simulate = sim_norm,
+        nsim = 1,
+        likelihood_args = list(n = 5)
+    ),
+    pattern = "named `data` element"
+)
+
 ## estimate_focus_components_iid()
-sim_norm_one <- function(theta, ...) {
-    rnorm(1, mean = theta[1], sd = 1)
+sim_norm_one <- function(theta, sd, ...) {
+    rnorm(1, mean = theta[1], sd = sd)
 }
 
 set.seed(2)
@@ -297,7 +309,8 @@ comp_diag_iid <- estimate_focus_components_iid(
     information = norm_info,
     simulate = sim_norm_one,
     nsim = 400,
-    diagnostics = TRUE
+    diagnostics = TRUE,
+    likelihood_args = list(sd = 1)
 )
 
 expect_true(inherits(comp_diag_iid, "focus_components"))

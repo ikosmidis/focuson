@@ -802,6 +802,7 @@ profile_focus <- function(loglik,
                                    lagrange_right))
     class(out) <- c("profile_focus_list", class(out))
     attr(out, "max_loglik") <- max_loglik
+    attr(out, "theta_mle") <- mle
     attr(out, "mle") <- on_mle
     attr(out, "approach") <- approach
     attr(out, "max_level") <- max_level

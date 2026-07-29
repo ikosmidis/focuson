@@ -6,7 +6,6 @@
 \usage{
 estimate_focus_components_fef(
   theta,
-  data,
   loglik,
   score = NULL,
   information = NULL,
@@ -14,15 +13,12 @@ estimate_focus_components_fef(
   nsim = 1000,
   parallelize = FALSE,
   diagnostics = FALSE,
-  ...
+  likelihood_args = list()
 )
 }
 \arguments{
 \item{theta}{Numeric parameter vector at which the components are
 estimated.}
-
-\item{data}{Observed dataset at which the observed information is
-evaluated.}
 
 \item{loglik}{A function returning the log-likelihood evaluated at
 a supplied parameter vector and dataset. It is expected to have
@@ -58,8 +54,12 @@ calculations. This requires the suggested package
 \item{diagnostics}{Logical. If \code{TRUE}, return simple Monte Carlo
 diagnostics for the estimated components.}
 
-\item{...}{Additional arguments passed to \code{simulate}, \code{loglik},
-and, when supplied, to \code{score} and \code{information}.}
+\item{likelihood_args}{A list of additional arguments passed to
+\code{simulate}, \code{loglik}, and, when supplied, to \code{score} and
+\code{information}. It must contain a named \code{data} element holding
+the observed dataset. That element is not passed to \code{simulate};
+it is replaced by the simulated dataset when evaluating
+likelihood-side functions in the Monte Carlo calculation.}
 }
 \value{
 An object of class \code{"focus_components"}, suitable for the
@@ -78,8 +78,8 @@ from the observed information evaluated at the supplied estimate.
 This helper assumes that the supplied parameterization is that of a
 full exponential family. In that case, \code{Q} is taken to be zero and
 \code{V} is obtained by inverting the observed information evaluated at
-the supplied \code{theta} and \code{data}. Only \code{P} is estimated by Monte
-Carlo simulation.
+the supplied \code{theta} and \code{likelihood_args$data}. Only \code{P} is
+estimated by Monte Carlo simulation.
 }
 \seealso{
 \code{\link[=focus_engine]{focus_engine()}}, \code{\link[=estimate_focus_components]{estimate_focus_components()}}

@@ -13,7 +13,7 @@ estimate_focus_components(
   nsim = 1000,
   parallelize = FALSE,
   diagnostics = FALSE,
-  ...
+  likelihood_args = list()
 )
 }
 \arguments{
@@ -54,8 +54,11 @@ calculations. This requires the suggested package
 \item{diagnostics}{Logical. If \code{TRUE}, return simple Monte Carlo
 diagnostics for the estimated components.}
 
-\item{...}{Additional arguments passed to \code{simulate}, \code{loglik},
-and, when supplied, to \code{score} and \code{information}.}
+\item{likelihood_args}{A list of additional arguments passed to
+\code{simulate}, \code{loglik}, and, when supplied, to \code{score} and
+\code{information}. A named \code{data} element, if supplied, is not
+passed to \code{simulate}; it is replaced by the simulated dataset
+when evaluating the likelihood-side functions.}
 }
 \value{
 An object of class \code{"focus_components"}, suitable for the
@@ -68,11 +71,13 @@ Estimate the model-side components used by \code{\link[=focus_engine]{focus_engi
 repeated simulation at a supplied parameter vector.
 }
 \details{
-The supplied \code{simulate} function is called repeatedly as
-\code{simulate(theta, ...)}, once for each simulated dataset.
+The supplied \code{simulate} function is called repeatedly with \code{theta}
+and the entries of \code{likelihood_args} other than \code{data}, once for
+each simulated dataset.
 
 The supplied \code{loglik} function is then used on each simulated dataset
-through calls of the form \code{loglik(theta, data = data, ...)}.
+with the parameter vector as its first argument, the simulated
+dataset as \code{data}, and the remaining entries of \code{likelihood_args}.
 
 If both \code{score} and \code{information} are \code{NULL}, then both quantities
 are obtained numerically from \code{loglik}.
@@ -125,7 +130,7 @@ comp <- estimate_focus_components(
     information = information,
     simulate = simulate,
     nsim = 10000,
-    n = 4
+    likelihood_args = list(n = 4)
 )
 
 ## In this model, the closed-form values are V = 1 / n, P = 0 and Q = 0.

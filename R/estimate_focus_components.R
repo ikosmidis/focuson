@@ -15,6 +15,44 @@
     )
 }
 
+.focus_component_functions <- function(loglik,
+                                       score,
+                                       information,
+                                       simulate,
+                                       likelihood_args,
+                                       require_data = FALSE) {
+    if (!is.list(likelihood_args))
+        stop("`likelihood_args` must be a list.")
+    data_index <- which(names(likelihood_args) == "data")
+    if (length(data_index) > 1L)
+        stop("`likelihood_args` must contain at most one `data` element.")
+    if (require_data && length(data_index) == 0L)
+        stop("`likelihood_args` must contain a named `data` element.")
+    observed_data <- if (length(data_index)) {
+        likelihood_args[[data_index]]
+    }
+    shared_args <- if (length(data_index)) {
+        likelihood_args[-data_index]
+    } else {
+        likelihood_args
+    }
+    call_with_data <- function(fun, theta, data)
+        do.call(fun, c(list(theta, data = data), shared_args))
+    list(
+        loglik = function(theta, data)
+            call_with_data(loglik, theta, data),
+        score = if (is.null(score)) NULL else
+            function(theta, data)
+                call_with_data(score, theta, data),
+        information = if (is.null(information)) NULL else
+            function(theta, data)
+                call_with_data(information, theta, data),
+        simulate = function(theta)
+            do.call(simulate, c(list(theta), shared_args)),
+        data = observed_data
+    )
+}
+
 #' Estimate components for [focus_engine()]
 #'
 #' Estimate the model-side components used by [focus_engine()] through
@@ -50,8 +88,11 @@
 #'     \pkg{future.apply}.
 #' @param diagnostics Logical. If `TRUE`, return simple Monte Carlo
 #'     diagnostics for the estimated components.
-#' @param ... Additional arguments passed to `simulate`, `loglik`,
-#'     and, when supplied, to `score` and `information`.
+#' @param likelihood_args A list of additional arguments passed to
+#'     `simulate`, `loglik`, and, when supplied, to `score` and
+#'     `information`. A named `data` element, if supplied, is not
+#'     passed to `simulate`; it is replaced by the simulated dataset
+#'     when evaluating the likelihood-side functions.
 #'
 #' @return An object of class `"focus_components"`, suitable for the
 #'     `components` argument of [focus_engine()], with elements `V`,
@@ -59,11 +100,13 @@
 #'     `diagnostics` is included.
 #'
 #' @details
-#' The supplied `simulate` function is called repeatedly as
-#' `simulate(theta, ...)`, once for each simulated dataset.
+#' The supplied `simulate` function is called repeatedly with `theta`
+#' and the entries of `likelihood_args` other than `data`, once for
+#' each simulated dataset.
 #'
 #' The supplied `loglik` function is then used on each simulated dataset
-#' through calls of the form `loglik(theta, data = data, ...)`.
+#' with the parameter vector as its first argument, the simulated
+#' dataset as `data`, and the remaining entries of `likelihood_args`.
 #'
 #' If both `score` and `information` are `NULL`, then both quantities
 #' are obtained numerically from `loglik`.
@@ -118,7 +161,7 @@
 #'     information = information,
 #'     simulate = simulate,
 #'     nsim = 10000,
-#'     n = 4
+#'     likelihood_args = list(n = 4)
 #' )
 #'
 #' ## In this model, the closed-form values are V = 1 / n, P = 0 and Q = 0.
@@ -136,41 +179,49 @@ estimate_focus_components <- function(theta,
                                       nsim = 1000,
                                       parallelize = FALSE,
                                       diagnostics = FALSE,
-                                      ...) {
+                                      likelihood_args = list()) {
     cl <- match.call()
     theta <- as.numeric(theta)
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
     }
+    model <- .focus_component_functions(loglik,
+                                        score,
+                                        information,
+                                        simulate,
+                                        likelihood_args)
     no_score <- is.null(score)
     no_info <- is.null(information)
     if (no_score && no_info) {
         simu_one <- function(i) {
-            data <- simulate(theta, ...)
-            ders <- grad_hess(loglik, theta, data = data, ...)
+            data <- model$simulate(theta)
+            ders <- grad_hess(model$loglik, theta, data = data)
             list(S = ders$grad,
                  I = -ders$hess,
                  SS = tcrossprod(ders$grad))
         }
     } else {
         if (no_score) {
-            s_fun <- function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
+            s_fun <- function(x, data)
+                numDeriv::grad(model$loglik, x, data = data)
         } else {
-            s_fun <- score
+            s_fun <- model$score
         }
         if (no_info) {
             if (no_score) {
-                i_fun <- function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
+                i_fun <- function(x, data)
+                    -numDeriv::hessian(model$loglik, x, data = data)
             } else {
-                i_fun <- function(x, data, ...) -numDeriv::jacobian(score, x, data = data, ...)
+                i_fun <- function(x, data)
+                    -numDeriv::jacobian(model$score, x, data = data)
             }
         } else {
-            i_fun <- information
+            i_fun <- model$information
         }
         simu_one <- function(i) {
-            data <- simulate(theta, ...)
-            S <- s_fun(theta, data, ...)
-            I <- i_fun(theta, data, ...)
+            data <- model$simulate(theta)
+            S <- s_fun(theta, data)
+            I <- i_fun(theta, data)
             SS <- tcrossprod(S)
             list(S = S, I = I, SS = SS)
         }
@@ -245,8 +296,6 @@ estimate_focus_components <- function(theta,
 #'
 #' @param theta Numeric parameter vector at which the components are
 #'     estimated.
-#' @param data Observed dataset at which the observed information is
-#'     evaluated.
 #' @param loglik A function returning the log-likelihood evaluated at
 #'     a supplied parameter vector and dataset. It is expected to have
 #'     an interface of the form `loglik(theta, data, ...)` and to
@@ -275,8 +324,12 @@ estimate_focus_components <- function(theta,
 #'     \pkg{future.apply}.
 #' @param diagnostics Logical. If `TRUE`, return simple Monte Carlo
 #'     diagnostics for the estimated components.
-#' @param ... Additional arguments passed to `simulate`, `loglik`,
-#'     and, when supplied, to `score` and `information`.
+#' @param likelihood_args A list of additional arguments passed to
+#'     `simulate`, `loglik`, and, when supplied, to `score` and
+#'     `information`. It must contain a named `data` element holding
+#'     the observed dataset. That element is not passed to `simulate`;
+#'     it is replaced by the simulated dataset when evaluating
+#'     likelihood-side functions in the Monte Carlo calculation.
 #'
 #' @return An object of class `"focus_components"`, suitable for the
 #'     `components` argument of [focus_engine()], with elements `V`,
@@ -288,14 +341,13 @@ estimate_focus_components <- function(theta,
 #' This helper assumes that the supplied parameterization is that of a
 #' full exponential family. In that case, `Q` is taken to be zero and
 #' `V` is obtained by inverting the observed information evaluated at
-#' the supplied `theta` and `data`. Only `P` is estimated by Monte
-#' Carlo simulation.
+#' the supplied `theta` and `likelihood_args$data`. Only `P` is
+#' estimated by Monte Carlo simulation.
 #'
 #' @seealso [focus_engine()], [estimate_focus_components()]
 #'
 #' @export
 estimate_focus_components_fef <- function(theta,
-                                          data,
                                           loglik,
                                           score = NULL,
                                           information = NULL,
@@ -303,38 +355,47 @@ estimate_focus_components_fef <- function(theta,
                                           nsim = 1000,
                                           parallelize = FALSE,
                                           diagnostics = FALSE,
-                                          ...) {
+                                          likelihood_args = list()) {
     cl <- match.call()
     theta <- as.numeric(theta)
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
     }
+    model <- .focus_component_functions(loglik,
+                                        score,
+                                        information,
+                                        simulate,
+                                        likelihood_args,
+                                        require_data = TRUE)
     no_score <- is.null(score)
     no_info <- is.null(information)
 
     if (no_score) {
-        s_fun <- function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
+        s_fun <- function(x, data)
+            numDeriv::grad(model$loglik, x, data = data)
     } else {
-        s_fun <- score
+        s_fun <- model$score
     }
     if (no_info) {
         if (no_score) {
-            i_fun <- function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
+            i_fun <- function(x, data)
+                -numDeriv::hessian(model$loglik, x, data = data)
         } else {
-            i_fun <- function(x, data, ...) -numDeriv::jacobian(score, x, data = data, ...)
+            i_fun <- function(x, data)
+                -numDeriv::jacobian(model$score, x, data = data)
         }
     } else {
-        i_fun <- information
+        i_fun <- model$information
     }
 
-    Ihat <- i_fun(theta, data, ...)
+    Ihat <- i_fun(theta, model$data)
     out <- list(V = solve(Ihat))
     sc <- mean(diag(out$V))
     if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
 
     simu_one <- function(i) {
-        sim_data <- simulate(theta, ...)
-        S <- s_fun(theta, sim_data, ...)
+        sim_data <- model$simulate(theta)
+        S <- s_fun(theta, sim_data)
         SS <- tcrossprod(S)
         list(S = S, SS = SS)
     }
@@ -424,8 +485,11 @@ estimate_focus_components_fef <- function(theta,
 #'     \pkg{future.apply}.
 #' @param diagnostics Logical. If `TRUE`, return simple Monte Carlo
 #'     diagnostics for the estimated components.
-#' @param ... Additional arguments passed to `simulate`, `loglik`, and,
-#'     when supplied, to `score` and `information`.
+#' @param likelihood_args A list of additional arguments passed to
+#'     `simulate`, `loglik`, and, when supplied, to `score` and
+#'     `information`. A named `data` element, if supplied, is not
+#'     passed to `simulate`; it is replaced by each simulated iid
+#'     observation when evaluating the likelihood-side functions.
 #'
 #' @return An object of class `"focus_components"`, suitable for the
 #'     `components` argument of [focus_engine()], with elements `V`,
@@ -433,12 +497,14 @@ estimate_focus_components_fef <- function(theta,
 #'     `diagnostics` is included.
 #'
 #' @details
-#' The supplied `simulate` function is called repeatedly as
-#' `simulate(theta, ...)`, once for each simulated iid observation.
+#' The supplied `simulate` function is called repeatedly with `theta`
+#' and the entries of `likelihood_args` other than `data`, once for
+#' each simulated iid observation.
 #'
 #' The supplied `loglik` function is then used on each simulated
-#' observation through calls of the form `loglik(theta, data = data,
-#' ...)`.
+#' observation with the parameter vector as its first argument, the
+#' simulated observation as `data`, and the remaining entries of
+#' `likelihood_args`.
 #'
 #' If both `score` and `information` are `NULL`, then both quantities
 #' are obtained numerically from `loglik`.
@@ -467,7 +533,7 @@ estimate_focus_components_iid <- function(theta,
                                           nsim = 1000,
                                           parallelize = FALSE,
                                           diagnostics = FALSE,
-                                          ...) {
+                                          likelihood_args = list()) {
     cl <- match.call()
     theta <- as.numeric(theta)
     n <- as.integer(n)
@@ -477,35 +543,43 @@ estimate_focus_components_iid <- function(theta,
     if (parallelize && !requireNamespace("future.apply", quietly = TRUE)) {
         stop("Package `future.apply` is required when `parallelize = TRUE`.")
     }
+    model <- .focus_component_functions(loglik,
+                                        score,
+                                        information,
+                                        simulate,
+                                        likelihood_args)
     no_score <- is.null(score)
     no_info <- is.null(information)
     if (no_score && no_info) {
         simu_one <- function(i) {
-            data <- simulate(theta, ...)
-            ders <- grad_hess(loglik, theta, data = data, ...)
+            data <- model$simulate(theta)
+            ders <- grad_hess(model$loglik, theta, data = data)
             list(S = ders$grad,
                  I = -ders$hess,
                  SS = tcrossprod(ders$grad))
         }
     } else {
         if (no_score) {
-            s_fun <- function(x, data, ...) numDeriv::grad(loglik, x, data = data, ...)
+            s_fun <- function(x, data)
+                numDeriv::grad(model$loglik, x, data = data)
         } else {
-            s_fun <- score
+            s_fun <- model$score
         }
         if (no_info) {
             if (no_score) {
-                i_fun <- function(x, data, ...) -numDeriv::hessian(loglik, x, data = data, ...)
+                i_fun <- function(x, data)
+                    -numDeriv::hessian(model$loglik, x, data = data)
             } else {
-                i_fun <- function(x, data, ...) -numDeriv::jacobian(score, x, data = data, ...)
+                i_fun <- function(x, data)
+                    -numDeriv::jacobian(model$score, x, data = data)
             }
         } else {
-            i_fun <- information
+            i_fun <- model$information
         }
         simu_one <- function(i) {
-            data <- simulate(theta, ...)
-            S <- s_fun(theta, data, ...)
-            I <- i_fun(theta, data, ...)
+            data <- model$simulate(theta)
+            S <- s_fun(theta, data)
+            I <- i_fun(theta, data)
             SS <- tcrossprod(S)
             list(S = S, I = I, SS = SS)
         }

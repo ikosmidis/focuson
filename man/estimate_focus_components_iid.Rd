@@ -14,7 +14,7 @@ estimate_focus_components_iid(
   nsim = 1000,
   parallelize = FALSE,
   diagnostics = FALSE,
-  ...
+  likelihood_args = list()
 )
 }
 \arguments{
@@ -58,8 +58,11 @@ calculations. This requires the suggested package
 \item{diagnostics}{Logical. If \code{TRUE}, return simple Monte Carlo
 diagnostics for the estimated components.}
 
-\item{...}{Additional arguments passed to \code{simulate}, \code{loglik}, and,
-when supplied, to \code{score} and \code{information}.}
+\item{likelihood_args}{A list of additional arguments passed to
+\code{simulate}, \code{loglik}, and, when supplied, to \code{score} and
+\code{information}. A named \code{data} element, if supplied, is not
+passed to \code{simulate}; it is replaced by each simulated iid
+observation when evaluating the likelihood-side functions.}
 }
 \value{
 An object of class \code{"focus_components"}, suitable for the
@@ -73,11 +76,14 @@ simulating single iid observations and exploiting the additive
 structure of the score and information.
 }
 \details{
-The supplied \code{simulate} function is called repeatedly as
-\code{simulate(theta, ...)}, once for each simulated iid observation.
+The supplied \code{simulate} function is called repeatedly with \code{theta}
+and the entries of \code{likelihood_args} other than \code{data}, once for
+each simulated iid observation.
 
 The supplied \code{loglik} function is then used on each simulated
-observation through calls of the form \code{loglik(theta, data = data, ...)}.
+observation with the parameter vector as its first argument, the
+simulated observation as \code{data}, and the remaining entries of
+\code{likelihood_args}.
 
 If both \code{score} and \code{information} are \code{NULL}, then both quantities
 are obtained numerically from \code{loglik}.
