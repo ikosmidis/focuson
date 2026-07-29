@@ -57,9 +57,10 @@
 #' @importFrom numDeriv grad hessian
 #' @importFrom stats coef model.frame qchisq qnorm runif update vcov printCoefmat
 #' @importFrom utils capture.output
-#' @importFrom stats optimize splinefun pchisq
-#' @importFrom graphics abline plot.default points
+#' @importFrom stats optimize splinefun pchisq approxfun confint
+#' @importFrom graphics abline plot.default points text
 #' @importFrom alabama auglag
+#' @importFrom utils modifyList
 #' @import nleqslv
 #'
 "_PACKAGE"

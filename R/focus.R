@@ -226,7 +226,7 @@ focus.glm <- function(object,
         V = V,
         on = on,
         correction = correction,
-        components = get_correction_components,
+        components_fun = get_correction_components,
         on_gradient = on_gradient,
         on_hessian = on_hessian,
         ...

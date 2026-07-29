@@ -86,19 +86,19 @@ checked.}
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}. The result
 has attributes:
-\describe{
-\item{\code{"type"}}{The string \code{"profile"}.}
-\item{\code{"max|fvec|"}}{The maximum absolute endpoint equation residual for
-each endpoint.}
-\item{\code{"messages"}}{The convergence messages returned by
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for the lower and upper endpoint solves.}
-\item{\code{"loglik"}}{The log-likelihood evaluated at the lower and upper
-endpoint parameter vectors.}
-\item{\code{"solution"}}{A list containing the solutions of the lower and upper
+\itemize{
+\item \strong{\code{type}:} The string \code{"profile"}.
+\item \strong{\verb{max|fvec|}:} The maximum absolute endpoint equation residual for
+each endpoint.
+\item \strong{\code{messages}:} The convergence messages returned by
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for the lower and upper endpoint solves.
+\item \strong{\code{loglik}:} The log-likelihood evaluated at the lower and upper
+endpoint parameter vectors.
+\item \strong{\code{solution}:} A list containing the solutions of the lower and upper
 endpoint equations. These can be supplied as \code{start} in a subsequent
-call.}
-\item{\code{"iter"}}{The number of outer iterations used by
-\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for each endpoint.}
+call.
+\item \strong{\code{iter}:} The number of outer iterations used by
+\code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} for each endpoint.
 }
 }
 \description{
