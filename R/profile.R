@@ -57,19 +57,20 @@
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`. The result
 #' has attributes:
-#'
-#' * **`type`:** The string `"profile"`.
-#' * **`max|fvec|`:** The maximum absolute endpoint equation residual for
-#'   each endpoint.
-#' * **`messages`:** The convergence messages returned by
-#'   [nleqslv::nleqslv()] for the lower and upper endpoint solves.
-#' * **`loglik`:** The log-likelihood evaluated at the lower and upper
-#'   endpoint parameter vectors.
-#' * **`solution`:** A list containing the solutions of the lower and upper
-#'   endpoint equations. These can be supplied as `start` in a subsequent
-#'   call.
-#' * **`iter`:** The number of outer iterations used by
-#'   [nleqslv::nleqslv()] for each endpoint.
+#' \describe{
+#'   \item{`"type"`}{The string `"profile"`.}
+#'   \item{`"max|fvec|"`}{The maximum absolute endpoint equation residual for
+#'     each endpoint.}
+#'   \item{`"messages"`}{The convergence messages returned by
+#'     [nleqslv::nleqslv()] for the lower and upper endpoint solves.}
+#'   \item{`"loglik"`}{The log-likelihood evaluated at the lower and upper
+#'     endpoint parameter vectors.}
+#'   \item{`"solution"`}{A list containing the solutions of the lower and upper
+#'     endpoint equations. These can be supplied as `start` in a subsequent
+#'     call.}
+#'   \item{`"iter"`}{The number of outer iterations used by
+#'     [nleqslv::nleqslv()] for each endpoint.}
+#' }
 #'
 #' @details
 #'

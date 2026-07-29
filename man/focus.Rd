@@ -52,14 +52,17 @@ correct.}
 \value{
 A list with components:
 \describe{
-\item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by \code{on}.}
+\item{\code{estimate}}{Numeric scalar, the estimate of the quantity defined by
+\code{on}.}
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
-\item{\code{correction}}{Character string recording the bias correction method used.}
+\item{\code{correction}}{Character string recording the bias correction method
+used.}
 \item{\code{object}}{The fitted model object used internally by \code{focus()},
 after any refitting described below.}
 \item{\code{on}}{A list containing the supplied \code{on}, \code{on_gradient}, and
 \code{on_hessian} functions.}
-\item{\code{dots}}{A list with the additional arguments supplied through \code{...}.}
+\item{\code{dots}}{A list with the additional arguments supplied through
+\code{...}.}
 }
 }
 \description{

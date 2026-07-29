@@ -40,14 +40,17 @@
 #' @return
 #' A list with components:
 #' \describe{
-#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
+#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by
+#'     `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
-#'   \item{`correction`}{Character string recording the bias correction method used.}
+#'   \item{`correction`}{Character string recording the bias correction method
+#'     used.}
 #'   \item{`object`}{The fitted model object used internally by `focus()`,
 #'     after any refitting described below.}
 #'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
 #'     `on_hessian` functions.}
-#'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
+#'   \item{`dots`}{A list with the additional arguments supplied through
+#'     `...`.}
 #' }
 #'
 #' @details

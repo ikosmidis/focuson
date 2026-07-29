@@ -36,16 +36,19 @@
 #' @return
 #' A list similar to the output of [focus()], with components:
 #' \describe{
-#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by `on`.}
+#'   \item{`estimate`}{Numeric scalar, the estimate of the quantity defined by
+#'     `on`.}
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
-#'   \item{`correction`}{Character string recording the bias correction method used.}
+#'   \item{`correction`}{Character string recording the bias correction method
+#'     used.}
 #'   \item{`theta`}{Numeric vector, the supplied model parameter estimates.}
 #'   \item{`components`}{The supplied model-side components.}
 #'   \item{`estimator`}{Character string recording the estimator represented by
 #'     `theta`.}
 #'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
 #'     `on_hessian` functions.}
-#'   \item{`dots`}{A list with the additional arguments supplied through `...`.}
+#'   \item{`dots`}{A list with the additional arguments supplied through
+#'     `...`.}
 #'   \item{`call`}{The matched call to `focus_engine()`.}
 #' }
 #' The returned object has class `"focus_engine_list"` and inherits from
