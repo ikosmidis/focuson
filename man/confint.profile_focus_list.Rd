@@ -25,7 +25,7 @@
 \item{method}{Character. The likelihood-based method used to construct the
 interval. \code{"pl"} (default) uses the ordinary profile likelihood,
 \code{"mpl"} uses the modified profile likelihood, and \code{"rstar"} uses the
-modified signed likelihood root.}
+modified signed likelihood-ratio statistic \eqn{r^*}.}
 
 \item{interpolation}{Character. Interpolation method used between computed
 profile points. \code{"linear"} (default) uses \code{\link[stats:approxfun]{stats::approxfun()}} and
@@ -53,9 +53,10 @@ profile.
 Methods \code{"mpl"} and \code{"rstar"} require an object returned by
 \code{\link[=modified_profile_focus]{modified_profile_focus()}}. For \code{"mpl"}, the modified profile is recentered
 at the maximum of its cubic-spline interpolant before constructing the
-signed likelihood root. The \code{interpolation} argument then determines how
-that root is interpolated to obtain the confidence limits. The modified
-profile maximum must be in the interior of the supplied grid.
+signed likelihood root based on the modified profile likelihood. The
+\code{interpolation} argument then determines how that root is interpolated to
+obtain the confidence limits. The modified profile maximum must be in the
+interior of the supplied grid.
 
 In contrast, \code{confint(focus_object, method = "pl")} uses \code{\link[=profile_ci]{profile_ci()}}
 to solve the endpoint equations directly.

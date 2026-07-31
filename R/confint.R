@@ -236,7 +236,7 @@ confint.focus_list <- function(object,
 #' @param method Character. The likelihood-based method used to construct the
 #'     interval. `"pl"` (default) uses the ordinary profile likelihood,
 #'     `"mpl"` uses the modified profile likelihood, and `"rstar"` uses the
-#'     modified signed likelihood root.
+#'     modified signed likelihood-ratio statistic \eqn{r^*}.
 #' @param interpolation Character. Interpolation method used between computed
 #'     profile points. `"linear"` (default) uses [stats::approxfun()] and
 #'     `"cubic"` uses [stats::splinefun()].
@@ -252,9 +252,10 @@ confint.focus_list <- function(object,
 #' Methods `"mpl"` and `"rstar"` require an object returned by
 #' [modified_profile_focus()]. For `"mpl"`, the modified profile is recentered
 #' at the maximum of its cubic-spline interpolant before constructing the
-#' signed likelihood root. The `interpolation` argument then determines how
-#' that root is interpolated to obtain the confidence limits. The modified
-#' profile maximum must be in the interior of the supplied grid.
+#' signed likelihood root based on the modified profile likelihood. The
+#' `interpolation` argument then determines how that root is interpolated to
+#' obtain the confidence limits. The modified profile maximum must be in the
+#' interior of the supplied grid.
 #'
 #' In contrast, `confint(focus_object, method = "pl")` uses [profile_ci()]
 #' to solve the endpoint equations directly.

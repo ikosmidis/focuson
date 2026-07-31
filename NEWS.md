@@ -1,4 +1,19 @@
-# focuson 0.1.900
+# focuson 0.3
+
+## New functionality
+
+* Added `modified_profile_focus()` for simulation-based construction of the
+  modified profile likelihood and the modified signed likelihood-ratio
+  statistic $r^*$ for arbitrary scalar functions of model parameters. The
+  returned profile includes the nuisance-parameter and information
+  adjustments.
+
+* Extended `confint()` for computed focus profiles with
+  `method = "pl"`, `"mpl"`, or `"rstar"` for intervals based on the ordinary
+  profile likelihood, modified profile likelihood, or modified signed
+  likelihood-ratio statistic $r^*$, respectively.
+
+# focuson 0.2
 
 ## Bug fixes
 

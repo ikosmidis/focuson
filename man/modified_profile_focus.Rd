@@ -2,7 +2,7 @@
 % Please edit documentation in R/modified_profile.R
 \name{modified_profile_focus}
 \alias{modified_profile_focus}
-\title{Modified profile likelihood and modified signed likelihood root}
+\title{Modified profile likelihood and modified signed likelihood-ratio statistic}
 \usage{
 modified_profile_focus(
   loglik,
@@ -104,15 +104,39 @@ internally. The argument is ignored when \code{approach = "VM"}.}
 \code{on_hessian}.}
 }
 \value{
-An object inheriting from \code{"profile_focus_list"}, with additional columns
-containing the ordinary signed likelihood root, the nuisance and
-information adjustments, the modified signed likelihood root, and the
-modified profile log likelihood.
+An object inheriting from \code{"profile_focus_list"}. In addition to the
+columns returned by \code{\link[=profile_focus]{profile_focus()}}, it contains:
+\describe{
+\item{\code{signed_root}}{The ordinary signed likelihood root
+\eqn{r(\psi)}, with sign determined by
+\eqn{\hat\psi-\psi}.}
+\item{\code{log_C_inverse}}{The logarithm of the inverse
+modified-profile adjustment factor, \eqn{\log C_\psi^{-1}}.}
+\item{\code{NP}}{The nuisance-parameter adjustment
+\eqn{NP(\psi)=\log C_\psi^{-1}/r(\psi)}.}
+\item{\code{u_tilde}}{The standardized sample-space derivative
+\eqn{\tilde u_\psi} after eliminating the nuisance directions.
+Its sign is set equal to that of \eqn{r(\psi)}.}
+\item{\code{log_u_over_r}}{The intermediate quantity
+\eqn{\log|\tilde u_\psi/r(\psi)|}.}
+\item{\code{INF}}{The information adjustment
+\eqn{INF(\psi)=\log|\tilde u_\psi/r(\psi)|/r(\psi)}.}
+\item{\code{rstar}}{The modified signed likelihood-ratio statistic
+\eqn{r^*(\psi)=r(\psi)+NP(\psi)+INF(\psi)}.}
+\item{\code{modified_loglik}}{The modified profile log likelihood
+\eqn{\ell_{\mathrm{MP}}(\psi)=
+    \ell_P(\psi)-\log C_\psi^{-1}}.}
+}
+
+The \code{"nsim"} attribute records the number of common simulated datasets.
+The \code{"expected_information"} attribute contains the simulation estimate
+of \eqn{\operatorname{Var}_{\hat\theta}\{U(\hat\theta;Y)\}}.
 }
 \description{
 Construct an ordinary profile likelihood for a scalar focus and estimate
 the nuisance-parameter and information adjustments used for modified
-profile likelihood and modified signed-root inference.
+profile likelihood and inference based on the modified signed
+likelihood-ratio statistic \eqn{r^*}.
 }
 \details{
 \code{likelihood_args} must contain a named \code{data} element holding the observed
@@ -124,4 +148,14 @@ datasets.
 The same simulated datasets are used at every point on the profile. The
 adjustments are undefined at the ordinary maximum in their direct
 representations because the ordinary signed likelihood root is zero.
+Quantities that are not evaluated there are stored as \code{NA};
+\code{log_C_inverse} is set to zero so that \code{modified_loglik} remains defined.
+Confidence intervals based on \code{rstar} are obtained by interpolation away
+from that point.
+
+\code{u_tilde} and \code{log_u_over_r} are intermediate quantities and are not
+parameter estimates or standard errors. They are retained to make the
+calculation of \code{INF} reproducible and to help diagnose numerical behavior
+near the ordinary maximum. Most inferential use will involve
+\code{modified_loglik}, \code{NP}, \code{INF}, and \code{rstar} directly.
 }

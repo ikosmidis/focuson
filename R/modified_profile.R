@@ -22,11 +22,12 @@
 }
 
 
-#' Modified profile likelihood and modified signed likelihood root
+#' Modified profile likelihood and modified signed likelihood-ratio statistic
 #'
 #' Construct an ordinary profile likelihood for a scalar focus and estimate
 #' the nuisance-parameter and information adjustments used for modified
-#' profile likelihood and modified signed-root inference.
+#' profile likelihood and inference based on the modified signed
+#' likelihood-ratio statistic \eqn{r^*}.
 #'
 #' @inheritParams profile_focus
 #' @param simulate A function that simulates one dataset at a supplied
@@ -56,7 +57,7 @@
 #'     \eqn{\log|\tilde u_\psi/r(\psi)|}.}
 #'   \item{`INF`}{The information adjustment
 #'     \eqn{INF(\psi)=\log|\tilde u_\psi/r(\psi)|/r(\psi)}.}
-#'   \item{`rstar`}{The modified signed likelihood root
+#'   \item{`rstar`}{The modified signed likelihood-ratio statistic
 #'     \eqn{r^*(\psi)=r(\psi)+NP(\psi)+INF(\psi)}.}
 #'   \item{`modified_loglik`}{The modified profile log likelihood
 #'     \eqn{\ell_{\mathrm{MP}}(\psi)=
