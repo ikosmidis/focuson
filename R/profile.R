@@ -811,12 +811,6 @@ profile_focus <- function(loglik,
     out
 }
 
-.profile_signed <- function(object) {
-    sign(attr(object, "mle") - object$psi) *
-        sqrt(2 * pmax(attr(object, "max_loglik") - object$loglik, 0))
-}
-
-
 #' Print a focus profile log-likelihood
 #'
 #' Print the main characteristics of a focus profile log-likelihood.
@@ -885,7 +879,6 @@ print.profile_focus_list <- function(x,
     }
     format_value <- function(value)
         format(signif(value, digits), trim = TRUE)
-
     cat("Profile log-likelihood for a scalar focus\n\n")
     cat("Profiling approach:", attr(x, "approach"), "\n")
     cat("Focus at MLE:", format_value(attr(x, "mle")), "\n")
@@ -909,67 +902,6 @@ print.profile_focus_list <- function(x,
             format_value(boundary_lr_level),
         "\n")
     invisible(x)
-}
-
-
-#' Confidence intervals from a focus profile
-#'
-#' Extract a confidence interval from a computed focus profile by
-#' interpolation on the signed likelihood-root scale.
-#'
-#' @param object An object of class `"profile_focus_list"`, as returned by
-#'     [profile_focus()] or [profile.focus_list_glm()].
-#' @param parm Currently unused.
-#' @param level Nominal confidence level.
-#' @param interpolation Character. Interpolation method used between computed
-#'     profile points. `"linear"` (default) uses [stats::approxfun()] and
-#'     `"cubic"` uses [stats::splinefun()].
-#' @param ... Currently unused.
-#'
-#' @details
-#' This method interpolates the supplied profile and does not perform further
-#' likelihood evaluations. The profile must extend beyond the likelihood-root
-#' cutoffs for `level` on both sides of the MLE. Consequently, a two-sided
-#' interval cannot be extracted from a single-branch profile.
-#'
-#' In contrast, `confint(focus_object, method = "pl")` uses [profile_ci()]
-#' to solve the endpoint equations directly.
-#'
-#' @return
-#' A numeric vector of length 2 with names `"lower"` and `"upper"`. The
-#' `"level"`, `"type"`, and `"interpolation"` attributes record the nominal
-#' level, interval type (`"pl"`), and interpolation method, respectively.
-#'
-#' @seealso [profile_focus()], [profile.focus_list_glm()],
-#'     [plot.profile_focus_list()], [profile_ci()]
-#'
-#' @export
-confint.profile_focus_list <- function(object,
-                                       parm,
-                                       level = 0.95,
-                                       interpolation = c("linear", "cubic"),
-                                       ...) {
-    if (!is.numeric(level) || length(level) != 1L ||
-        !is.finite(level) || level <= 0 || level >= 1)
-        stop("`level` must be a number in (0, 1).")
-    interpolation <- match.arg(interpolation)
-    signed_root <- .profile_signed(object)
-    qua <- qnorm(0.5 + level / 2)
-    if (qua > max(signed_root) || -qua < min(signed_root)) {
-        stop("`level` exceeds the range of the supplied profile; ",
-             "try recomputing it with a larger `max_level` or a wider ",
-             "`focus_range`, or inspect its behavior using ",
-             "`approach = \"focus_grid\"`.")
-    }
-    fn <- if (identical(interpolation, "linear"))
-        approxfun(x = signed_root, y = object$psi)
-    else
-        splinefun(signed_root, y = object$psi)
-    out <- c(lower = fn(qua), upper = fn(-qua))
-    attr(out, "level") <- level
-    attr(out, "type") <- "pl"
-    attr(out, "interpolation") <- interpolation
-    out
 }
 
 

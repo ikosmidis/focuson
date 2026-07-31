@@ -287,6 +287,10 @@ expect_equal(confint(profile_mean, level = 0.9,
 expect_error(confint(profile_mean, level = 0),
              pattern = "number in \\(0, 1\\)")
 expect_error(confint(profile_mean, interpolation = "quadratic"))
+expect_error(confint(profile_mean, method = "mpl"),
+             pattern = "modified_profile_focus")
+expect_error(confint(profile_mean, method = "rstar"),
+             pattern = "modified_profile_focus")
 expect_error(confint(profile_mean, level = 0.999999),
              pattern = "exceeds the range")
 expect_error(confint(profile_mean_right),

@@ -200,3 +200,121 @@ confint.focus_list <- function(object,
                    nleqslv_args = nleqslv_args),
               object$dots))
 }
+
+
+.profile_signed <- function(object) {
+    sign(attr(object, "mle") - object$psi) *
+        sqrt(2 * pmax(attr(object, "max_loglik") - object$loglik, 0))
+}
+
+.modified_profile_maximum <- function(object) {
+    objective <- splinefun(object$psi, object$modified_loglik)
+    focus_range <- range(object$psi)
+    fit <- optimize(objective,
+                    interval = focus_range,
+                    maximum = TRUE,
+                    tol = sqrt(.Machine$double.eps))
+    boundary_loglik <- objective(focus_range)
+    tolerance <- sqrt(.Machine$double.eps) *
+        max(abs(c(fit$objective, boundary_loglik)), 1)
+    if (max(boundary_loglik) >= fit$objective - tolerance)
+        stop("The modified profile maximum is at the grid boundary; ",
+             "recompute the profile over a wider focus range.")
+    c(psi = fit$maximum, loglik = fit$objective)
+}
+
+#' Confidence intervals from a focus profile
+#'
+#' Extract a confidence interval from a computed focus profile by
+#' interpolation on the signed likelihood-root scale.
+#'
+#' @param object An object of class `"profile_focus_list"`, as returned by
+#'     [profile_focus()], [modified_profile_focus()], or
+#'     [profile.focus_list_glm()].
+#' @param parm Currently unused.
+#' @param level Nominal confidence level.
+#' @param method Character. The likelihood-based method used to construct the
+#'     interval. `"pl"` (default) uses the ordinary profile likelihood,
+#'     `"mpl"` uses the modified profile likelihood, and `"rstar"` uses the
+#'     modified signed likelihood root.
+#' @param interpolation Character. Interpolation method used between computed
+#'     profile points. `"linear"` (default) uses [stats::approxfun()] and
+#'     `"cubic"` uses [stats::splinefun()].
+#' @param ... Currently unused.
+#'
+#' @details
+#' This method interpolates the supplied profile and does not perform further
+#' likelihood evaluations. The profile must extend beyond the likelihood-root
+#' cutoffs for `level` in both directions on the selected root scale.
+#' Consequently, a two-sided interval cannot be extracted from a single-branch
+#' profile.
+#'
+#' Methods `"mpl"` and `"rstar"` require an object returned by
+#' [modified_profile_focus()]. For `"mpl"`, the modified profile is recentered
+#' at the maximum of its cubic-spline interpolant before constructing the
+#' signed likelihood root. The `interpolation` argument then determines how
+#' that root is interpolated to obtain the confidence limits. The modified
+#' profile maximum must be in the interior of the supplied grid.
+#'
+#' In contrast, `confint(focus_object, method = "pl")` uses [profile_ci()]
+#' to solve the endpoint equations directly.
+#'
+#' @return
+#' A numeric vector of length 2 with names `"lower"` and `"upper"`. The
+#' `"level"`, `"type"`, and `"interpolation"` attributes record the nominal
+#' level, interval type (`"pl"`, `"mpl"`, or `"rstar"`), and interpolation
+#' method, respectively.
+#'
+#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#'     [modified_profile_focus()], [plot.profile_focus_list()], [profile_ci()]
+#'
+#' @export
+confint.profile_focus_list <- function(object,
+                                       parm,
+                                       level = 0.95,
+                                       method = c("pl", "mpl", "rstar"),
+                                       interpolation = c("linear", "cubic"),
+                                       ...) {
+    if (!is.numeric(level) || length(level) != 1L ||
+        !is.finite(level) || level <= 0 || level >= 1)
+        stop("`level` must be a number in (0, 1).")
+    method <- match.arg(method)
+    interpolation <- match.arg(interpolation)
+    if (!identical(method, "pl") &&
+        !inherits(object, "modified_profile_focus_list"))
+        stop("`method = \"", method, "\"` requires an object returned by ",
+             "`modified_profile_focus()`.")
+    signed_root <- switch(
+        method,
+        pl = .profile_signed(object),
+        mpl = {
+            maximum <- .modified_profile_maximum(object)
+            sign(maximum["psi"] - object$psi) *
+                sqrt(2 * pmax(maximum["loglik"] -
+                              object$modified_loglik, 0))
+        },
+        rstar = object$rstar
+    )
+    keep <- is.finite(object$psi) & is.finite(signed_root)
+    psi <- object$psi[keep]
+    signed_root <- signed_root[keep]
+    if (length(signed_root) < 2L)
+        stop("The supplied profile does not contain enough finite values for ",
+             "`method = \"", method, "\"`.")
+    qua <- qnorm(0.5 + level / 2)
+    if (qua > max(signed_root) || -qua < min(signed_root)) {
+        stop("`level` exceeds the range of the supplied profile; ",
+             "try recomputing it with a larger `max_level` or a wider ",
+             "`focus_range`, or inspect its behavior using ",
+             "`approach = \"focus_grid\"`.")
+    }
+    fn <- if (identical(interpolation, "linear"))
+        approxfun(x = signed_root, y = psi)
+    else
+        splinefun(signed_root, y = psi)
+    out <- c(lower = fn(qua), upper = fn(-qua))
+    attr(out, "level") <- level
+    attr(out, "type") <- method
+    attr(out, "interpolation") <- interpolation
+    out
+}
