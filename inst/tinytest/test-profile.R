@@ -300,6 +300,7 @@ profile_plot_file <- tempfile(fileext = ".pdf")
 pdf(profile_plot_file)
 expect_silent(plot(profile_mean, interpolation = "linear"))
 expect_silent(plot(profile_mean, interpolation = "cubic"))
+expect_silent(plot(profile_mean, what = "pl"))
 expect_silent(plot(profile_mean_focus_grid, interpolation = "linear"))
 expect_silent(plot(profile_mean_focus_grid, signed = TRUE))
 expect_silent(plot(profile_mean, ci = TRUE))
@@ -311,6 +312,10 @@ expect_silent(plot(profile_mean_right, signed = TRUE))
 dev.off()
 unlink(profile_plot_file)
 expect_error(plot(profile_mean, interpolation = "quadratic"))
+expect_error(plot(profile_mean, what = "mpl"),
+             pattern = "requires an object returned")
+expect_error(plot(profile_mean, what = "rstar"),
+             pattern = "requires an object returned")
 expect_error(plot(profile_mean, ci = TRUE, level = 0.999999),
              pattern = "exceeds the range")
 expect_error(plot(profile_mean_right, ci = TRUE),

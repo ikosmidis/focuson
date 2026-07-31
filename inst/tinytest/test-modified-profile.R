@@ -41,6 +41,27 @@ expect_true(is.na(modified$rstar[!away_from_mle]))
 expect_identical(attr(modified, "nsim"), 100)
 expect_identical(dim(attr(modified, "expected_information")), c(1L, 1L))
 
+printed_modified <- capture.output(print(modified))
+expect_true(any(grepl("Profile log-likelihood for a scalar focus",
+                      printed_modified, fixed = TRUE)))
+expect_true(any(grepl("Modified-profile calculations:",
+                      printed_modified, fixed = TRUE)))
+expect_true(any(grepl("Simulations: 100",
+                      printed_modified, fixed = TRUE)))
+expect_true(any(grepl("Usable noncentral points: 6 of 6",
+                      printed_modified, fixed = TRUE)))
+expect_true(any(grepl("log|u_tilde / r| range:",
+                      printed_modified, fixed = TRUE)))
+
+modified_nonfinite <- modified
+modified_nonfinite$log_u_over_r[which(away_from_mle)[1L]] <- NA_real_
+invisible(capture.output(
+    expect_warning(
+        print(modified_nonfinite),
+        pattern = "non-finite at 1 of 6 noncentral profile points"
+    )
+))
+
 level <- 0.8
 expected_ci <- mle +
     c(lower = -1, upper = 1) * qnorm(0.5 + level / 2) / sqrt(n)
@@ -60,6 +81,18 @@ expect_equal(ci_rstar, expected_ci,
 expect_identical(attr(ci_pl, "type"), "pl")
 expect_identical(attr(ci_mpl, "type"), "mpl")
 expect_identical(attr(ci_rstar, "type"), "rstar")
+modified_plot_file <- tempfile(fileext = ".pdf")
+pdf(modified_plot_file)
+expect_silent(plot(modified, what = "pl"))
+expect_silent(plot(modified, what = "mpl"))
+expect_silent(plot(modified, what = "mpl", signed = TRUE))
+expect_silent(plot(modified, what = "mpl", level = level, ci = TRUE))
+expect_silent(plot(modified, what = "rstar"))
+expect_silent(plot(modified, what = "rstar", signed = TRUE))
+expect_silent(plot(modified, what = "rstar", signed = TRUE,
+                   level = level, ci = TRUE))
+dev.off()
+unlink(modified_plot_file)
 
 boundary_modified <- modified
 boundary_modified$modified_loglik <- seq_len(nrow(boundary_modified))

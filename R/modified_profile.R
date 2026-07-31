@@ -317,3 +317,65 @@ modified_profile_focus <- function(loglik,
     attr(profile, "expected_information") <- I_hat
     profile
 }
+
+
+#' Print a modified focus profile
+#'
+#' Print the ordinary profile characteristics and a summary of the
+#' modified-profile calculations.
+#'
+#' @inheritParams print.profile_focus_list
+#'
+#' @details
+#' In addition to the ordinary profile summary, the method reports the number
+#' of simulations, the number of noncentral profile points with finite
+#' modified-profile quantities, and the ranges of `log_u_over_r`, `NP`, `INF`,
+#' and `rstar`. The point at the ordinary maximum is excluded because these
+#' quantities are undefined in their direct representations when the ordinary
+#' signed likelihood root is zero.
+#'
+#' A warning is produced if any of `log_u_over_r`, `NP`, `INF`, or `rstar` is
+#' non-finite away from the ordinary maximum. No warning is based solely on
+#' the magnitude of an adjustment.
+#'
+#' @return `x`, invisibly.
+#'
+#' @seealso [modified_profile_focus()], [print.profile_focus_list()]
+#'
+#' @export
+print.modified_profile_focus_list <- function(
+        x,
+        digits = max(3L, getOption("digits") - 2L),
+        ...) {
+    NextMethod()
+    noncentral <- is.finite(x$signed_root) & x$signed_root != 0
+    diagnostics <- c("log_u_over_r", "NP", "INF", "rstar")
+    finite_diagnostics <- vapply(
+        diagnostics,
+        function(component) is.finite(x[[component]]),
+        logical(nrow(x))
+    )
+    usable <- noncentral & rowSums(finite_diagnostics) == length(diagnostics)
+    format_value <- function(value)
+        format(signif(value, digits), trim = TRUE)
+    format_range <- function(value) {
+        value <- value[noncentral & is.finite(value)]
+        if (!length(value))
+            return("unavailable")
+        value <- range(value)
+        paste(format_value(value[1L]), "to", format_value(value[2L]))
+    }
+    cat("\nModified-profile calculations:\n")
+    cat("Simulations:", attr(x, "nsim"), "\n")
+    cat("Usable noncentral points:", sum(usable), "of", sum(noncentral), "\n")
+    cat("log|u_tilde / r| range:", format_range(x$log_u_over_r), "\n")
+    cat("NP adjustment range:", format_range(x$NP), "\n")
+    cat("INF adjustment range:", format_range(x$INF), "\n")
+    cat("r* range:", format_range(x$rstar), "\n")
+    if (any(noncentral & !usable)) {
+        warning("Modified-profile diagnostics are non-finite at ",
+                sum(noncentral & !usable), " of ", sum(noncentral),
+                " noncentral profile points.")
+    }
+    invisible(x)
+}
