@@ -35,7 +35,7 @@ ci_mean <- profile_ci(loglik = loglik_mean,
 expected_mean <- theta_hat + c(lower = -1, upper = 1) * sqrt(cutoff / n)
 
 expect_equal(ci_mean, expected_mean, tolerance = 1e-08, check.attributes = FALSE)
-expect_identical(attr(ci_mean, "type"), "profile")
+expect_identical(attr(ci_mean, "type"), "pl")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
 
@@ -278,7 +278,7 @@ expected_profile_ci_mean <- theta_hat +
 expect_equal(profile_ci_mean, expected_profile_ci_mean,
              tolerance = 1e-08, check.attributes = FALSE)
 expect_equal(attr(profile_ci_mean, "level"), 0.9)
-expect_identical(attr(profile_ci_mean, "type"), "profile")
+expect_identical(attr(profile_ci_mean, "type"), "pl")
 expect_identical(attr(profile_ci_mean, "interpolation"), "linear")
 expect_equal(confint(profile_mean, level = 0.9,
                      interpolation = "cubic"),

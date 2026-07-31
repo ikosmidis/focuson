@@ -58,7 +58,7 @@ expect_equal(
     check.attributes = FALSE
 )
 expect_error(confint(engine_out, method = "hulc"))
-expect_error(confint(engine_out, method = "profile"))
+expect_error(confint(engine_out, method = "pl"))
 
 engine_constant <- focus_engine(
     theta = theta,

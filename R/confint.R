@@ -6,7 +6,8 @@
 #' @param parm Currently unused.
 #' @param level Confidence level.
 #' @param method Character string specifying the confidence interval
-#'     method.  One of `"wald"`, `"profile"`, or `"hulc"`.
+#'     method. One of `"wald"`, `"pl"`, or `"hulc"`. `"pl"` denotes
+#'     profile-likelihood inference.
 #' @param se_at Character string specifying where the delta-method
 #'     standard error is evaluated for `method = "wald"`. `"supplied"`
 #'     uses the standard error stored in `object`; `"compatible"`
@@ -19,7 +20,7 @@
 #'     [focus_se()] when `se_at = "compatible"`.
 #' @param nleqslv_args A list of control arguments passed to
 #'     [nleqslv::nleqslv()] through [profile_ci()] when
-#'     `method = "profile"`.
+#'     `method = "pl"`.
 #' @param ... Additional arguments for the confidence interval
 #'     method. For `method = "hulc"`, these are passed to [hulc_ci()],
 #'     except that the nominal level is determined by `level`. For
@@ -36,7 +37,7 @@
 #' `focus_se()` is used to compute a compatible standard error lazily. If that
 #' computation fails, a warning is issued and the stored standard error is used.
 #'
-#' For `method = "profile"`, [profile_ci()] is used to compute a likelihood
+#' For `method = "pl"`, [profile_ci()] is used to compute a likelihood
 #' profile interval for the scalar parameter defined by the stored `on`
 #' function. If the stored fitted object is not an ML fit, it is refitted by
 #' maximum likelihood before profiling. This interval is likelihood-based and
@@ -64,7 +65,7 @@ confint.focus_list <- function(object,
                                se_control = list(),
                                nleqslv_args = list(),
                                ...) {
-    method <- match.arg(method, c("wald", "profile", "hulc"))
+    method <- match.arg(method, c("wald", "pl", "hulc"))
     se_at <- match.arg(se_at, c("supplied", "compatible"))
     if (!is.list(se_control)) {
         stop("`se_control` must be a list.")
@@ -107,9 +108,9 @@ confint.focus_list <- function(object,
         return(ci)
     }
 
-    if (identical(method, "profile")) {
+    if (identical(method, "pl")) {
         if (inherits(object, "focus_engine_list")) {
-            stop("`method = \"profile\"` is not available for `focus_engine()` results.")
+            stop("`method = \"pl\"` is not available for `focus_engine()` results.")
         }
         return(.confint_profile_focus_list_glm(object = object,
                                                level = level,

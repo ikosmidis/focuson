@@ -23,7 +23,7 @@ profile points. \code{"linear"} (default) uses \code{\link[stats:approxfun]{stat
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}. The
 \code{"level"}, \code{"type"}, and \code{"interpolation"} attributes record the nominal
-level, interval type, and interpolation method, respectively.
+level, interval type (\code{"pl"}), and interpolation method, respectively.
 }
 \description{
 Extract a confidence interval from a computed focus profile by
@@ -35,7 +35,7 @@ likelihood evaluations. The profile must extend beyond the likelihood-root
 cutoffs for \code{level} on both sides of the MLE. Consequently, a two-sided
 interval cannot be extracted from a single-branch profile.
 
-In contrast, \code{confint(focus_object, method = "profile")} uses \code{\link[=profile_ci]{profile_ci()}}
+In contrast, \code{confint(focus_object, method = "pl")} uses \code{\link[=profile_ci]{profile_ci()}}
 to solve the endpoint equations directly.
 }
 \seealso{

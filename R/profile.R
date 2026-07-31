@@ -58,7 +58,8 @@
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`. The result
 #' has attributes:
 #' \describe{
-#'   \item{`"type"`}{The string `"profile"`.}
+#'   \item{`"type"`}{The string `"pl"`, denoting profile-likelihood
+#'     inference.}
 #'   \item{`"max|fvec|"`}{The maximum absolute endpoint equation residual for
 #'     each endpoint.}
 #'   \item{`"messages"`}{The convergence messages returned by
@@ -336,7 +337,7 @@ profile_ci <- function(loglik,
                                  upper = endpoints[[2]]$x)
     attr(ci, "iter") <- c(lower = endpoints[[1]]$iter,
                           upper = endpoints[[2]]$iter)
-    attr(ci, "type") <- "profile"
+    attr(ci, "type") <- "pl"
     ci
 }
 
@@ -931,13 +932,13 @@ print.profile_focus_list <- function(x,
 #' cutoffs for `level` on both sides of the MLE. Consequently, a two-sided
 #' interval cannot be extracted from a single-branch profile.
 #'
-#' In contrast, `confint(focus_object, method = "profile")` uses [profile_ci()]
+#' In contrast, `confint(focus_object, method = "pl")` uses [profile_ci()]
 #' to solve the endpoint equations directly.
 #'
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`. The
 #' `"level"`, `"type"`, and `"interpolation"` attributes record the nominal
-#' level, interval type, and interpolation method, respectively.
+#' level, interval type (`"pl"`), and interpolation method, respectively.
 #'
 #' @seealso [profile_focus()], [profile.focus_list_glm()],
 #'     [plot.profile_focus_list()], [profile_ci()]
@@ -966,7 +967,7 @@ confint.profile_focus_list <- function(object,
         splinefun(signed_root, y = object$psi)
     out <- c(lower = fn(qua), upper = fn(-qua))
     attr(out, "level") <- level
-    attr(out, "type") <- "profile"
+    attr(out, "type") <- "pl"
     attr(out, "interpolation") <- interpolation
     out
 }

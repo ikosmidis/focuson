@@ -87,7 +87,8 @@ checked.}
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}. The result
 has attributes:
 \describe{
-\item{\code{"type"}}{The string \code{"profile"}.}
+\item{\code{"type"}}{The string \code{"pl"}, denoting profile-likelihood
+inference.}
 \item{\code{"max|fvec|"}}{The maximum absolute endpoint equation residual for
 each endpoint.}
 \item{\code{"messages"}}{The convergence messages returned by

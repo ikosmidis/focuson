@@ -24,7 +24,8 @@
 \item{level}{Confidence level.}
 
 \item{method}{Character string specifying the confidence interval
-method.  One of \code{"wald"}, \code{"profile"}, or \code{"hulc"}.}
+method. One of \code{"wald"}, \code{"pl"}, or \code{"hulc"}. \code{"pl"} denotes
+profile-likelihood inference.}
 
 \item{se_at}{Character string specifying where the delta-method
 standard error is evaluated for \code{method = "wald"}. \code{"supplied"}
@@ -41,7 +42,7 @@ at a supplied model parameter vector. Required for
 
 \item{nleqslv_args}{A list of control arguments passed to
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}} when
-\code{method = "profile"}.}
+\code{method = "pl"}.}
 
 \item{...}{Additional arguments for the confidence interval
 method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
@@ -62,7 +63,7 @@ By default, the stored standard error is used. If \code{se_at = "compatible"},
 \code{focus_se()} is used to compute a compatible standard error lazily. If that
 computation fails, a warning is issued and the stored standard error is used.
 
-For \code{method = "profile"}, \code{\link[=profile_ci]{profile_ci()}} is used to compute a likelihood
+For \code{method = "pl"}, \code{\link[=profile_ci]{profile_ci()}} is used to compute a likelihood
 profile interval for the scalar parameter defined by the stored \code{on}
 function. If the stored fitted object is not an ML fit, it is refitted by
 maximum likelihood before profiling. This interval is likelihood-based and

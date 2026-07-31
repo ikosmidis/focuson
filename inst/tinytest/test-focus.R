@@ -191,10 +191,10 @@ budworm_focus <- focus(budworm_fit,
                        on_hessian = hess_index,
                        correction = "no",
                        i = 2)
-budworm_profile_ci <- confint(budworm_focus, method = "profile", level = 0.95)
+budworm_profile_ci <- confint(budworm_focus, method = "pl", level = 0.95)
 expect_equal(budworm_profile_ci, budworm_glm_ci,
              tolerance = 1e-04, check.attributes = FALSE)
-expect_identical(attr(budworm_profile_ci, "type"), "profile")
+expect_identical(attr(budworm_profile_ci, "type"), "pl")
 
 budworm_focus_median <- focus(budworm_fit,
                               on = on_index,
@@ -203,11 +203,11 @@ budworm_focus_median <- focus(budworm_fit,
                               correction = "median",
                               i = 2)
 budworm_profile_ci_median <- confint(budworm_focus_median,
-                                     method = "profile",
+                                     method = "pl",
                                      level = 0.95)
 expect_equal(budworm_profile_ci_median, budworm_glm_ci,
              tolerance = 1e-04, check.attributes = FALSE)
-expect_identical(attr(budworm_profile_ci_median, "type"), "profile")
+expect_identical(attr(budworm_profile_ci_median, "type"), "pl")
 
 budworm_refit_data <- focuson:::.refit_data(budworm_focus$object)
 expect_true(all(c("numalive", "numdead", "sex", "ldose") %in% names(budworm_refit_data)))

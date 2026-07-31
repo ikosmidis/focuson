@@ -19,7 +19,7 @@
   user-supplied range of focus values.
 
 * Added profile likelihood support for GLM-based `focus()` results through
-  `profile()` and `confint(..., method = "profile")`.
+  `profile()` and `confint(..., method = "pl")`.
 
 * Added `print()`, `plot()`, and `confint()` methods for computed focus
   profiles, with linear or cubic interpolation.
