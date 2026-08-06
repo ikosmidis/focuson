@@ -9,6 +9,8 @@
 #'     and, if `ci = TRUE`, vertical confidence limits.
 #' @param signed Logical. If `TRUE`, plot the signed likelihood root;
 #'     otherwise plot the profile log-likelihood. Default is `FALSE`.
+#'     This argument is ignored when `what = "rstar"`, for which the signed
+#'     scale is always used.
 #' @param what Character. The quantity to plot. `"pl"` (default) selects the
 #'     ordinary profile likelihood, `"mpl"` selects the modified profile
 #'     likelihood, and `"rstar"` selects the modified signed
@@ -94,9 +96,9 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
     if (signed) {
         ylab <- switch(
             what,
-            pl = "Signed likelihood root",
-            mpl = "Signed likelihood root based on modified profile likelihood",
-            rstar = "Modified signed likelihood-ratio statistic"
+            pl = "Signed profile likelihood root",
+            mpl = "Signed modified profile likelihood root",
+            rstar = expression("Modified signed likelihood-ratio statistic "~r~"*")
         )
         plot.default(x$psi, signed_root, pch = 21, bg = "lightgray",
                      col = "lightgray", cex = 0.8,

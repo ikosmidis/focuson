@@ -22,7 +22,9 @@
 and, if \code{ci = TRUE}, vertical confidence limits.}
 
 \item{signed}{Logical. If \code{TRUE}, plot the signed likelihood root;
-otherwise plot the profile log-likelihood. Default is \code{FALSE}.}
+otherwise plot the profile log-likelihood. Default is \code{FALSE}.
+This argument is ignored when \code{what = "rstar"}, for which the signed
+scale is always used.}
 
 \item{interpolation}{Character. Interpolation method used between
 computed profile points. \code{"linear"} (default) uses \code{\link[stats:approxfun]{stats::approxfun()}}
