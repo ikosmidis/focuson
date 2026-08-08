@@ -70,10 +70,11 @@
 #'
 #' @details
 #' `likelihood_args` must contain a named `data` element holding the observed
-#' dataset. This element is used for the ordinary profile and observed
-#' information. It is not passed to `simulate`; the object returned by
-#' `simulate` replaces it when evaluating `loglik` and `score` on simulated
-#' datasets.
+#' data object. This can, for example, be a complete dataset or the response
+#' under a fixed-design model. The element is used for the ordinary profile
+#' and observed information. It is not passed to `simulate`; the object
+#' returned by `simulate` replaces it when evaluating `loglik` and `score` on
+#' simulated data.
 #'
 #' The same simulated datasets are used at every point on the profile. The
 #' adjustments are undefined at the ordinary maximum in their direct
@@ -316,6 +317,105 @@ modified_profile_focus <- function(loglik,
     attr(profile, "nsim") <- nsim
     attr(profile, "expected_information") <- I_hat
     profile
+}
+
+
+#' Modified profile likelihood for a focus object
+#'
+#' Compute a modified profile likelihood and the corresponding higher-order
+#' likelihood quantities for the scalar parameter defined by a focus object.
+#'
+#' @param fitted A fitted focus object.
+#' @param ... Arguments passed to methods.
+#'
+#' @return An object inheriting from `"modified_profile_focus_list"`.
+#'
+#' @seealso [modified_profile_focus()], [stats::profile()], [modified_profile.focus_list_glm()]
+#'
+#'
+#' @export
+modified_profile <- function(fitted, ...)
+    UseMethod("modified_profile")
+
+
+#' Modified profile likelihood for a GLM focus object
+#'
+#' Compute a simulation-based modified profile likelihood for the scalar
+#' parameter defined by a GLM focus object.
+#'
+#' @inheritParams modified_profile_focus
+#' @param fitted An object of class `"focus_list_glm"`, as returned by
+#'     [focus()].
+#' @param ... Currently unused.
+#'
+#' @details
+#' If the fitted model stored in `fitted` is not an ML fit, it is refitted by
+#' maximum likelihood. Likelihood quantities and simulation under the fitted
+#' design are obtained from [enrichwith::get_auxiliary_functions()]. Simulated
+#' responses replace the observed response when the likelihood quantities are
+#' evaluated for the higher-order adjustments.
+#'
+#' @return An object of class `"modified_profile_focus_list"`, inheriting from
+#'     `"profile_focus_list"`. See [modified_profile_focus()] for its columns
+#'     and attributes.
+#'
+#' @seealso [modified_profile_focus()], [profile.focus_list_glm()],
+#'     [plot.profile_focus_list()], [confint.profile_focus_list()]
+#'
+#' @examples
+#'
+#' \dontrun{
+#'
+#' data("babies", package = "cond")
+#' babies_fit <- glm(cbind(r1, r2) ~ day + lull - 1, data = babies,
+#'                   family = binomial)
+#'
+#' lullyes_ind = match("lullyes", names(coef(babies_fit)))
+#' babies_focus <- focus(babies_fit, on = function(theta) theta[lullyes_ind])
+#' set.seed(2020)
+#' babies_mpl <- modified_profile(babies_focus)
+#'
+#' opar <- par(no.readonly = TRUE)
+#' par(mfrow = c(1, 2))
+#' plot(babies_mpl, what = "pl", ci = TRUE)
+#' plot(babies_mpl, what = "mpl", ci = TRUE)
+#' par(opar)
+#'
+#' par(mfrow = c(1, 3))
+#' plot(babies_mpl, what = "pl", signed = TRUE, ci = TRUE)
+#' plot(babies_mpl, what = "mpl", signed = TRUE, ci = TRUE)
+#' plot(babies_mpl, what = "rstar", ci = TRUE)
+#' par(opar)
+#'
+#' }
+#'
+#' @export
+modified_profile.focus_list_glm <- function(
+        fitted,
+        nsim = 1000,
+        parallelize = FALSE,
+        grid_size = 20,
+        max_level = 0.995,
+        nleqslv_args = list(),
+        approach = c("VM", "focus_grid"),
+        focus_range = NULL,
+        auglag_args = list(),
+        ...) {
+    components <- .profile_glm_components(fitted, simulation = TRUE)
+    do.call(modified_profile_focus,
+            c(components,
+              list(on = fitted$on$on,
+                   on_gradient = fitted$on$on_gradient,
+                   on_hessian = fitted$on$on_hessian,
+                   nsim = nsim,
+                   parallelize = parallelize,
+                   grid_size = grid_size,
+                   max_level = max_level,
+                   nleqslv_args = nleqslv_args,
+                   approach = approach,
+                   focus_range = focus_range,
+                   auglag_args = auglag_args),
+              fitted$dots))
 }
 
 

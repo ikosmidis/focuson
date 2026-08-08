@@ -12,7 +12,7 @@ Roxygen: list(markdown = TRUE)
 Imports: 
     alabama,
     brglm2,
-    enrichwith (>= 0.4.1),
+    enrichwith (>= 0.6),
     nleqslv,
     numDeriv
 Suggests: 

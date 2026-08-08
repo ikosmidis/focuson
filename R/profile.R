@@ -420,38 +420,10 @@ profile.focus_list_glm <- function(fitted,
                                    focus_range = NULL,
                                    auglag_args = list(),
                                    ...) {
-    fit <- fitted$object
-    if (!identical(fit$type, "ML")) {
-        fit <- update(fit, type = "ML", start = coef(fit, model = "mean"))
-    }
-    p_mean <- length(coef(fit, model = "mean"))
-    theta <- coef(fit, model = "full")
-    if (fit$family$family %in% c("poisson", "binomial")) {
-        theta <- theta[names(coef(fit, model = "mean"))]
-    }
-    aux <- enrichwith::get_auxiliary_functions(fit)
-    m_inds <- seq_len(p_mean)
-    d_ind <- p_mean + 1
-    split_theta <- function(theta) {
-        if (length(theta) == p_mean) {
-            list(coefficients = theta)
-        } else {
-            list(coefficients = theta[m_inds],
-                 dispersion = theta[d_ind])
-        }
-    }
-    loglik <- function(theta)
-        sum(do.call(aux$dmodel, c(split_theta(theta), list(log = TRUE))))
-    score <- function(theta)
-        do.call(aux$score, split_theta(theta))
-    information <- function(theta)
-        do.call(aux$information, split_theta(theta))
+    components <- .profile_glm_components(fitted)
     do.call(profile_focus,
-            c(list(loglik = loglik,
-                   score = score,
-                   information = information,
-                   mle = theta,
-                   on = fitted$on$on,
+            c(components,
+              list(on = fitted$on$on,
                    on_gradient = fitted$on$on_gradient,
                    on_hessian = fitted$on$on_hessian,
                    grid_size = grid_size,
@@ -903,5 +875,4 @@ print.profile_focus_list <- function(x,
         "\n")
     invisible(x)
 }
-
 

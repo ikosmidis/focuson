@@ -140,10 +140,11 @@ likelihood-ratio statistic \eqn{r^*}.
 }
 \details{
 \code{likelihood_args} must contain a named \code{data} element holding the observed
-dataset. This element is used for the ordinary profile and observed
-information. It is not passed to \code{simulate}; the object returned by
-\code{simulate} replaces it when evaluating \code{loglik} and \code{score} on simulated
-datasets.
+data object. This can, for example, be a complete dataset or the response
+under a fixed-design model. The element is used for the ordinary profile
+and observed information. It is not passed to \code{simulate}; the object
+returned by \code{simulate} replaces it when evaluating \code{loglik} and \code{score} on
+simulated data.
 
 The same simulated datasets are used at every point on the profile. The
 adjustments are undefined at the ordinary maximum in their direct

@@ -8,6 +8,10 @@
   returned profile includes the nuisance-parameter and information
   adjustments.
 
+* Added `modified_profile()` support for GLM-based `focus()` results, with
+  likelihood quantities and fixed-design response simulation obtained through
+  `enrichwith`.
+
 * Extended `confint()` for computed focus profiles with
   `method = "pl"`, `"mpl"`, or `"rstar"` for intervals based on the ordinary
   profile likelihood, modified profile likelihood, or modified signed
