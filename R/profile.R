@@ -348,14 +348,16 @@ profile_ci <- function(loglik,
 #' object.
 #'
 #' @inheritParams profile_focus
-#' @param fitted An object of class `"focus_list_glm"`, as returned by
+#' @param fitted An object inheriting from `"focus_list"`, as returned by
 #'     [focus()].
 #' @param ... Currently unused.
 #'
 #' @details
 #' If the fitted model stored in `fitted` is not an ML fit, it is refitted by
 #' maximum likelihood. The model-specific likelihood quantities are passed to
-#' [profile_focus()] to construct the requested profile.
+#' [profile_focus()] to construct the requested profile. Currently, GLM and
+#' beta-regression focus objects are supported. Results from [focus_engine()]
+#' are not supported.
 #'
 #' The result is likelihood-based and does not use a bias-corrected focus
 #' estimate as the centre of the profile. The signed likelihood root uses the
@@ -366,8 +368,8 @@ profile_ci <- function(loglik,
 #' the MLE produces a single profile branch. See [profile_focus()] for details.
 #'
 #' @return
-#' `profile.focus_list_glm()` returns a data frame with columns `psi`,
-#' `loglik`, `theta`, and `lagrange`, and class `"profile_focus_list"`.
+#' The fitted-model methods return a data frame with columns `psi`, `loglik`,
+#' `theta`, and `lagrange`, and class `"profile_focus_list"`.
 #' The first two columns contain the focus parameter and profile
 #' log-likelihood. The matrix-valued column `theta` contains the parameter
 #' vectors and `lagrange` contains the corresponding Lagrange multipliers.
@@ -412,15 +414,26 @@ profile_ci <- function(loglik,
 #' @seealso [profile_focus()], [profile_ci()], [confint.focus_list()]
 #'
 #' @export
-profile.focus_list_glm <- function(fitted,
-                                   grid_size = 20,
-                                   max_level = 0.995,
-                                   nleqslv_args = list(),
-                                   approach = c("VM", "focus_grid"),
-                                   focus_range = NULL,
-                                   auglag_args = list(),
-                                   ...) {
-    components <- .profile_glm_components(fitted)
+profile.focus_list <- function(fitted,
+                               grid_size = 20,
+                               max_level = 0.995,
+                               nleqslv_args = list(),
+                               approach = c("VM", "focus_grid"),
+                               focus_range = NULL,
+                               auglag_args = list(),
+                               ...) {
+    if (inherits(fitted, "focus_engine_list")) {
+        stop("`profile()` is not available for `focus_engine()` results.")
+    }
+    components <- if (inherits(fitted, "focus_list_glm")) {
+        .profile_components_glm(fitted)
+    } else if (inherits(fitted, "focus_list_betareg")) {
+        .profile_components_betareg(fitted)
+    } else {
+        stop("Likelihood profiling is not available for this focus object.")
+    }
+    components <- components[c("loglik", "score", "information", "mle",
+                               "likelihood_args")]
     do.call(profile_focus,
             c(components,
               list(on = fitted$on$on,
@@ -521,7 +534,7 @@ profile.focus_list_glm <- function(fitted,
 #' confint(prof, level = 0.9, interpolation = "cubic")
 #' profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 #'
-#' @seealso [profile_ci()], [profile.focus_list_glm()],
+#' @seealso [profile_ci()], [profile.focus_list()],
 #'     [plot.profile_focus_list()]
 #'
 #' @export
@@ -788,7 +801,7 @@ profile_focus <- function(loglik,
 #' Print the main characteristics of a focus profile log-likelihood.
 #'
 #' @param x An object of class `"profile_focus_list"`, as returned by
-#'     [profile_focus()] or [profile.focus_list_glm()].
+#'     [profile_focus()] or [profile.focus_list()].
 #' @param digits Number of significant digits used for printing.
 #' @param ... Currently unused.
 #'
@@ -825,7 +838,7 @@ profile_focus <- function(loglik,
 #'
 #' @return `x`, invisibly.
 #'
-#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#' @seealso [profile_focus()], [profile.focus_list()],
 #'     [plot.profile_focus_list()], [confint.profile_focus_list()]
 #'
 #' @export
@@ -875,4 +888,3 @@ print.profile_focus_list <- function(x,
         "\n")
     invisible(x)
 }
-

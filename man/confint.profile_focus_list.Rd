@@ -16,7 +16,7 @@
 \arguments{
 \item{object}{An object of class \code{"profile_focus_list"}, as returned by
 \code{\link[=profile_focus]{profile_focus()}}, \code{\link[=modified_profile_focus]{modified_profile_focus()}}, or
-\code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
+\code{\link[=profile.focus_list]{profile.focus_list()}}.}
 
 \item{parm}{Currently unused.}
 
@@ -62,6 +62,6 @@ In contrast, \code{confint(focus_object, method = "pl")} uses \code{\link[=profi
 to solve the endpoint equations directly.
 }
 \seealso{
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}},
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}},
 \code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=plot.profile_focus_list]{plot.profile_focus_list()}}, \code{\link[=profile_ci]{profile_ci()}}
 }

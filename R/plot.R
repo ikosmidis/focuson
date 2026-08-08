@@ -4,7 +4,7 @@
 #' signed likelihood-root scale.
 #'
 #' @param x An object of class `"profile_focus_list"`, as returned by
-#'     [profile_focus()] or [profile.focus_list_glm()].
+#'     [profile_focus()] or [profile.focus_list()].
 #' @param level Confidence level used to draw the horizontal cutoff
 #'     and, if `ci = TRUE`, vertical confidence limits.
 #' @param signed Logical. If `TRUE`, plot the signed likelihood root;
@@ -49,7 +49,7 @@
 #'
 #' @return Called for its side effect of drawing a plot.
 #'
-#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#' @seealso [profile_focus()], [profile.focus_list()],
 #'     [modified_profile_focus()], [confint.profile_focus_list()],
 #'     [profile_ci()]
 #'

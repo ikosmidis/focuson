@@ -156,6 +156,6 @@ profile_ci(loglik, on = coef_var, mle = mle, level = 0.9)
 
 }
 \seealso{
-\code{\link[=profile_ci]{profile_ci()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}},
+\code{\link[=profile_ci]{profile_ci()}}, \code{\link[=profile.focus_list]{profile.focus_list()}},
 \code{\link[=plot.profile_focus_list]{plot.profile_focus_list()}}
 }

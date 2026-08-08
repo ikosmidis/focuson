@@ -112,9 +112,26 @@ confint.focus_list <- function(object,
         if (inherits(object, "focus_engine_list")) {
             stop("`method = \"pl\"` is not available for `focus_engine()` results.")
         }
-        return(.confint_profile_focus_list_glm(object = object,
-                                               level = level,
-                                               nleqslv_args = nleqslv_args))
+        components <- if (inherits(object, "focus_list_glm")) {
+            .profile_components_glm(object)
+        } else if (inherits(object, "focus_list_betareg")) {
+            .profile_components_betareg(object)
+        } else {
+            stop("Direct profile likelihood intervals are not available for ",
+                 "this focus object.")
+        }
+        components <- components[c("loglik", "score", "information", "mle",
+                                   "likelihood_args")]
+        return(do.call(
+            profile_ci,
+            c(components,
+              list(on = object$on$on,
+                   on_gradient = object$on$on_gradient,
+                   on_hessian = object$on$on_hessian,
+                   level = level,
+                   nleqslv_args = nleqslv_args),
+              object$dots)
+        ))
     }
 
     if (inherits(object, "focus_engine_list")) {
@@ -161,19 +178,6 @@ confint.focus_list <- function(object,
          "`method = \"hulc\"` requires the original model data.")
 }
 
-.confint_profile_focus_list_glm <- function(object, level, nleqslv_args) {
-    components <- .profile_glm_components(object)
-    do.call(profile_ci,
-            c(components,
-              list(on = object$on$on,
-                   on_gradient = object$on$on_gradient,
-                   on_hessian = object$on$on_hessian,
-                   level = level,
-                   nleqslv_args = nleqslv_args),
-              object$dots))
-}
-
-
 .profile_signed <- function(object) {
     sign(attr(object, "mle") - object$psi) *
         sqrt(2 * pmax(attr(object, "max_loglik") - object$loglik, 0))
@@ -202,7 +206,7 @@ confint.focus_list <- function(object,
 #'
 #' @param object An object of class `"profile_focus_list"`, as returned by
 #'     [profile_focus()], [modified_profile_focus()], or
-#'     [profile.focus_list_glm()].
+#'     [profile.focus_list()].
 #' @param parm Currently unused.
 #' @param level Nominal confidence level.
 #' @param method Character. The likelihood-based method used to construct the
@@ -238,7 +242,7 @@ confint.focus_list <- function(object,
 #' level, interval type (`"pl"`, `"mpl"`, or `"rstar"`), and interpolation
 #' method, respectively.
 #'
-#' @seealso [profile_focus()], [profile.focus_list_glm()],
+#' @seealso [profile_focus()], [profile.focus_list()],
 #'     [modified_profile_focus()], [plot.profile_focus_list()], [profile_ci()]
 #'
 #' @export

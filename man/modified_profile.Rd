@@ -19,5 +19,6 @@ Compute a modified profile likelihood and the corresponding higher-order
 likelihood quantities for the scalar parameter defined by a focus object.
 }
 \seealso{
-\code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[stats:profile]{stats::profile()}}, \code{\link[=modified_profile.focus_list_glm]{modified_profile.focus_list_glm()}}
+\code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[stats:profile]{stats::profile()}},
+\code{\link[=modified_profile.focus_list]{modified_profile.focus_list()}}
 }

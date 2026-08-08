@@ -330,7 +330,8 @@ modified_profile_focus <- function(loglik,
 #'
 #' @return An object inheriting from `"modified_profile_focus_list"`.
 #'
-#' @seealso [modified_profile_focus()], [stats::profile()], [modified_profile.focus_list_glm()]
+#' @seealso [modified_profile_focus()], [stats::profile()],
+#'     [modified_profile.focus_list()]
 #'
 #'
 #' @export
@@ -338,28 +339,30 @@ modified_profile <- function(fitted, ...)
     UseMethod("modified_profile")
 
 
-#' Modified profile likelihood for a GLM focus object
+#' Modified profile likelihood for a fitted-model focus object
 #'
 #' Compute a simulation-based modified profile likelihood for the scalar
-#' parameter defined by a GLM focus object.
+#' parameter defined by a fitted-model focus object.
 #'
 #' @inheritParams modified_profile_focus
-#' @param fitted An object of class `"focus_list_glm"`, as returned by
+#' @param fitted An object inheriting from `"focus_list"`, as returned by
 #'     [focus()].
 #' @param ... Currently unused.
 #'
 #' @details
 #' If the fitted model stored in `fitted` is not an ML fit, it is refitted by
 #' maximum likelihood. Likelihood quantities and simulation under the fitted
-#' design are obtained from [enrichwith::get_auxiliary_functions()]. Simulated
-#' responses replace the observed response when the likelihood quantities are
-#' evaluated for the higher-order adjustments.
+#' design are obtained from [enrichwith::get_auxiliary_functions()] for
+#' supported fitted-model classes. Simulated responses replace the observed
+#' response when the likelihood quantities are evaluated for the higher-order
+#' adjustments. Currently, GLM and beta-regression focus objects are
+#' supported. Results from [focus_engine()] are not supported.
 #'
 #' @return An object of class `"modified_profile_focus_list"`, inheriting from
 #'     `"profile_focus_list"`. See [modified_profile_focus()] for its columns
 #'     and attributes.
 #'
-#' @seealso [modified_profile_focus()], [profile.focus_list_glm()],
+#' @seealso [modified_profile_focus()], [profile.focus_list()],
 #'     [plot.profile_focus_list()], [confint.profile_focus_list()]
 #'
 #' @examples
@@ -390,7 +393,7 @@ modified_profile <- function(fitted, ...)
 #' }
 #'
 #' @export
-modified_profile.focus_list_glm <- function(
+modified_profile.focus_list <- function(
         fitted,
         nsim = 1000,
         parallelize = FALSE,
@@ -401,7 +404,16 @@ modified_profile.focus_list_glm <- function(
         focus_range = NULL,
         auglag_args = list(),
         ...) {
-    components <- .profile_glm_components(fitted, simulation = TRUE)
+    if (inherits(fitted, "focus_engine_list"))
+        stop("`modified_profile()` is not available for `focus_engine()` ",
+             "results.")
+    components <- if (inherits(fitted, "focus_list_glm")) {
+        .profile_components_glm(fitted)
+    } else if (inherits(fitted, "focus_list_betareg")) {
+        .profile_components_betareg(fitted)
+    } else {
+        stop("Modified profiling is not available for this focus object.")
+    }
     do.call(modified_profile_focus,
             c(components,
               list(on = fitted$on$on,

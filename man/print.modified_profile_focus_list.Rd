@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
-\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
+\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list]{profile.focus_list()}}.}
 
 \item{digits}{Number of significant digits used for printing.}
 

@@ -16,7 +16,7 @@
 }
 \arguments{
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
-\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}}.}
+\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list]{profile.focus_list()}}.}
 
 \item{level}{Confidence level used to draw the horizontal cutoff
 and, if \code{ci = TRUE}, vertical confidence limits.}
@@ -71,7 +71,7 @@ log-likelihood representation, so \code{signed} is treated as \code{TRUE}
 irrespective of its supplied value.
 }
 \seealso{
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list_glm]{profile.focus_list_glm()}},
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}},
 \code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}},
 \code{\link[=profile_ci]{profile_ci()}}
 }
