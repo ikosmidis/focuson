@@ -24,8 +24,10 @@
 \item{level}{Confidence level.}
 
 \item{method}{Character string specifying the confidence interval
-method. One of \code{"wald"}, \code{"pl"}, or \code{"hulc"}. \code{"pl"} denotes
-profile-likelihood inference.}
+method. One of \code{"wald"}, \code{"pl"}, \code{"mpl"}, \code{"rstar"}, or \code{"hulc"}.
+The likelihood-based methods use the ordinary profile likelihood, the
+modified profile likelihood, and the modified signed likelihood-ratio
+statistic \eqn{r^*}, respectively.}
 
 \item{se_at}{Character string specifying where the delta-method
 standard error is evaluated for \code{method = "wald"}. \code{"supplied"}
@@ -42,13 +44,17 @@ at a supplied model parameter vector. Required for
 
 \item{nleqslv_args}{A list of control arguments passed to
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}} when
-\code{method = "pl"}.}
+\code{method = "pl"}, or through \code{\link[=modified_profile]{modified_profile()}} when
+\code{method = "mpl"} or \code{"rstar"}.}
 
 \item{...}{Additional arguments for the confidence interval
 method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
 except that the nominal level is determined by \code{level}. For
 \code{method = "wald"} and \code{se_at = "compatible"} with
-\code{focus_engine_list} objects, these are passed to \code{V_function}.}
+\code{focus_engine_list} objects, these are passed to \code{V_function}. For
+\code{method = "mpl"} or \code{"rstar"}, \code{interpolation} is passed to
+\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}} and the remaining arguments are passed
+to \code{\link[=modified_profile]{modified_profile()}}.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}.
@@ -70,6 +76,14 @@ maximum likelihood before profiling. This interval is likelihood-based and
 does not use the bias-corrected focus estimate as the likelihood centre.
 Profile intervals are currently not available for \code{focus_engine()} results.
 
+For \code{method = "mpl"} or \code{"rstar"}, \code{\link[=modified_profile]{modified_profile()}} first computes a
+complete simulation-based modified profile, from which
+\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}} extracts the requested interval. This is a
+convenience workflow for a single interval. For diagnostics, plotting, or
+intervals at multiple confidence levels, the recommended workflow is to
+retain the result of \code{\link[=modified_profile]{modified_profile()}} and then call
+\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}} or \code{\link[=plot.profile_focus_list]{plot.profile_focus_list()}} on it.
+
 For \code{method = "hulc"}, \code{\link[=hulc_ci]{hulc_ci()}} is applied to data recovered from the
 stored fitted object using \code{\link[=focus_statistic]{focus_statistic()}} as the statistic evaluated
 on each partition. The recovered data must be suitable for refitting the
@@ -80,5 +94,6 @@ The nominal coverage level is determined by \code{level}; users should
 not supply \code{level} in \code{...}.
 }
 \seealso{
-\code{\link[=focus]{focus()}}, \code{\link[=hulc_ci]{hulc_ci()}}, \code{\link[=focus_statistic]{focus_statistic()}}
+\code{\link[=focus]{focus()}}, \code{\link[=modified_profile]{modified_profile()}}, \code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}},
+\code{\link[=hulc_ci]{hulc_ci()}}, \code{\link[=focus_statistic]{focus_statistic()}}
 }

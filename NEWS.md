@@ -15,7 +15,9 @@
 * Extended `confint()` for computed focus profiles with
   `method = "pl"`, `"mpl"`, or `"rstar"` for intervals based on the ordinary
   profile likelihood, modified profile likelihood, or modified signed
-  likelihood-ratio statistic $r^*$, respectively.
+  likelihood-ratio statistic $r^*$, respectively. Methods `"mpl"` and
+  `"rstar"` can also be requested directly from supported fitted-model
+  `focus()` results as a convenience for computing a single interval.
 
 # focuson 0.2
 

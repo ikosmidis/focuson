@@ -59,6 +59,10 @@ expect_equal(
 )
 expect_error(confint(engine_out, method = "hulc"))
 expect_error(confint(engine_out, method = "pl"))
+expect_error(confint(engine_out, method = "mpl"),
+             pattern = "not available for `focus_engine\\(\\)` results")
+expect_error(confint(engine_out, method = "rstar"),
+             pattern = "not available for `focus_engine\\(\\)` results")
 expect_error(profile(engine_out),
              pattern = "not available for `focus_engine\\(\\)` results")
 expect_error(modified_profile(engine_out),

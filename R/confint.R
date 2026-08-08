@@ -6,8 +6,10 @@
 #' @param parm Currently unused.
 #' @param level Confidence level.
 #' @param method Character string specifying the confidence interval
-#'     method. One of `"wald"`, `"pl"`, or `"hulc"`. `"pl"` denotes
-#'     profile-likelihood inference.
+#'     method. One of `"wald"`, `"pl"`, `"mpl"`, `"rstar"`, or `"hulc"`.
+#'     The likelihood-based methods use the ordinary profile likelihood, the
+#'     modified profile likelihood, and the modified signed likelihood-ratio
+#'     statistic \eqn{r^*}, respectively.
 #' @param se_at Character string specifying where the delta-method
 #'     standard error is evaluated for `method = "wald"`. `"supplied"`
 #'     uses the standard error stored in `object`; `"compatible"`
@@ -20,12 +22,16 @@
 #'     [focus_se()] when `se_at = "compatible"`.
 #' @param nleqslv_args A list of control arguments passed to
 #'     [nleqslv::nleqslv()] through [profile_ci()] when
-#'     `method = "pl"`.
+#'     `method = "pl"`, or through [modified_profile()] when
+#'     `method = "mpl"` or `"rstar"`.
 #' @param ... Additional arguments for the confidence interval
 #'     method. For `method = "hulc"`, these are passed to [hulc_ci()],
 #'     except that the nominal level is determined by `level`. For
 #'     `method = "wald"` and `se_at = "compatible"` with
-#'     `focus_engine_list` objects, these are passed to `V_function`.
+#'     `focus_engine_list` objects, these are passed to `V_function`. For
+#'     `method = "mpl"` or `"rstar"`, `interpolation` is passed to
+#'     [confint.profile_focus_list()] and the remaining arguments are passed
+#'     to [modified_profile()].
 #'
 #' @return
 #' A numeric vector of length 2 with names `"lower"` and `"upper"`.
@@ -44,6 +50,14 @@
 #' does not use the bias-corrected focus estimate as the likelihood centre.
 #' Profile intervals are currently not available for `focus_engine()` results.
 #'
+#' For `method = "mpl"` or `"rstar"`, [modified_profile()] first computes a
+#' complete simulation-based modified profile, from which
+#' [confint.profile_focus_list()] extracts the requested interval. This is a
+#' convenience workflow for a single interval. For diagnostics, plotting, or
+#' intervals at multiple confidence levels, the recommended workflow is to
+#' retain the result of [modified_profile()] and then call
+#' [confint.profile_focus_list()] or [plot.profile_focus_list()] on it.
+#'
 #' For `method = "hulc"`, [hulc_ci()] is applied to data recovered from the
 #' stored fitted object using [focus_statistic()] as the statistic evaluated
 #' on each partition. The recovered data must be suitable for refitting the
@@ -53,7 +67,8 @@
 #' The nominal coverage level is determined by `level`; users should
 #' not supply `level` in `...`.
 #'
-#' @seealso [focus()], [hulc_ci()], [focus_statistic()]
+#' @seealso [focus()], [modified_profile()], [confint.profile_focus_list()],
+#'     [hulc_ci()], [focus_statistic()]
 #'
 #' @export
 confint.focus_list <- function(object,
@@ -65,7 +80,7 @@ confint.focus_list <- function(object,
                                se_control = list(),
                                nleqslv_args = list(),
                                ...) {
-    method <- match.arg(method, c("wald", "pl", "hulc"))
+    method <- match.arg(method, c("wald", "pl", "mpl", "rstar", "hulc"))
     se_at <- match.arg(se_at, c("supplied", "compatible"))
     if (!is.list(se_control)) {
         stop("`se_control` must be a list.")
@@ -132,6 +147,27 @@ confint.focus_list <- function(object,
                    nleqslv_args = nleqslv_args),
               object$dots)
         ))
+    }
+
+    if (method %in% c("mpl", "rstar")) {
+        if (inherits(object, "focus_engine_list")) {
+            stop("`method = \"", method, "\"` is not available for ",
+                 "`focus_engine()` results.")
+        }
+        dots <- list(...)
+        interpolation <- if (is.null(dots$interpolation))
+            "linear"
+        else
+            dots$interpolation
+        dots$interpolation <- NULL
+        modified <- do.call(
+            modified_profile,
+            c(list(fitted = object, nleqslv_args = nleqslv_args), dots)
+        )
+        return(confint(modified,
+                       level = level,
+                       method = method,
+                       interpolation = interpolation))
     }
 
     if (inherits(object, "focus_engine_list")) {

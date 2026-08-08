@@ -39,6 +39,40 @@ noncentral <- budworm_modified$signed_root != 0
 expect_true(all(is.finite(budworm_modified$modified_loglik)))
 expect_true(all(is.finite(budworm_modified$rstar[noncentral])))
 
+set.seed(1)
+budworm_mpl_ci <- confint(
+    budworm_focus,
+    method = "mpl",
+    level = 0.7,
+    nsim = 50,
+    grid_size = 2,
+    max_level = 0.8,
+    interpolation = "cubic"
+)
+expect_equal(
+    budworm_mpl_ci,
+    confint(budworm_modified,
+            method = "mpl",
+            level = 0.7,
+            interpolation = "cubic"),
+    tolerance = 1e-10
+)
+
+set.seed(1)
+budworm_rstar_ci <- confint(
+    budworm_focus,
+    method = "rstar",
+    level = 0.7,
+    nsim = 50,
+    grid_size = 2,
+    max_level = 0.8
+)
+expect_equal(
+    budworm_rstar_ci,
+    confint(budworm_modified, method = "rstar", level = 0.7),
+    tolerance = 1e-10
+)
+
 gaussian_fit <- glm(
     mpg ~ wt,
     data = mtcars,
