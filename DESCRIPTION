@@ -16,6 +16,7 @@ Imports:
     nleqslv,
     numDeriv
 Suggests: 
+    betareg,
     future.apply,
     tinytest,
     detectseparation

@@ -3,12 +3,15 @@
 \name{focus_se}
 \alias{focus_se}
 \alias{focus_se.focus_list_glm}
+\alias{focus_se.focus_list_betareg}
 \alias{focus_se.focus_engine_list}
 \title{Compute standard errors for focus objects}
 \usage{
 focus_se(object, control = list(), ...)
 
 \method{focus_se}{focus_list_glm}(object, control = list(), ...)
+
+\method{focus_se}{focus_list_betareg}(object, control = list(), ...)
 
 \method{focus_se}{focus_engine_list}(object, control = list(), V_function, ...)
 }
@@ -24,7 +27,7 @@ focus_se(object, control = list(), ...)
 model parameter vector. Required for \code{focus_engine_list} objects.}
 }
 \value{
-For the \code{focus_list_glm} method, a list with components:
+For fitted-model methods, a list with components:
 \describe{
 \item{\code{se}}{Numeric scalar, the delta-method standard error.}
 \item{\code{theta}}{Numeric vector, the reconstructed model parameter vector.}
@@ -40,16 +43,16 @@ reconstructing the model parameter vector at which the standard error is
 evaluated.
 }
 \details{
-For \code{focus_list_glm} and \code{focus_engine_list} objects, the method first
-obtains focused estimates for all model parameters using \code{\link[=focus_on_all]{focus_on_all()}}.
-It then selects an active coordinate of the original focus function,
-replaces that coordinate so that the focus function matches the reported
-focus estimate, evaluates the model information at the reconstructed
-parameter vector, and applies the delta method. The \code{focus_engine_list}
-method requires a user-supplied \code{V_function} function.
+For \code{focus_list_glm}, \code{focus_list_betareg}, and \code{focus_engine_list} objects,
+the method first obtains focused estimates for all model parameters using
+\code{\link[=focus_on_all]{focus_on_all()}}. It then selects an active coordinate of the original
+focus function, replaces that coordinate so that the focus function matches
+the reported focus estimate, evaluates the model information at the
+reconstructed parameter vector, and applies the delta method. The
+\code{focus_engine_list} method requires a user-supplied \code{V_function} function.
 
-The current \code{focus_list_glm} and \code{focus_engine_list} methods recognize the
-following \code{control} entries:
+The current \code{focus_list_glm}, \code{focus_list_betareg}, and \code{focus_engine_list}
+methods recognize the following \code{control} entries:
 \describe{
 \item{\code{tol_deriv}}{Numeric scalar. Tolerance used to decide whether a
 derivative is large enough for the corresponding parameter to be treated

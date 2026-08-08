@@ -14,8 +14,9 @@ focus(
 )
 }
 \arguments{
-\item{object}{A fitted model object of class \code{\link[stats:glm]{"glm"}} or
-\code{\link[brglm2:brglmFit]{"brglmFit"}}.}
+\item{object}{A fitted model object. Methods are available for objects of
+class \code{\link[stats:glm]{"glm"}}, \code{\link[brglm2:brglmFit]{"brglmFit"}}, and
+\code{"betareg"}.}
 
 \item{on}{A function specifying the scalar parameter of interest.
 It must take the model parameter vector as first argument and return
@@ -67,8 +68,7 @@ after any refitting described below.}
 }
 \description{
 Estimate and perform inference on a scalar function of the model
-parameters from a fitted model object of class \code{\link[stats:glm]{"glm"}}
-or \code{\link[brglm2:brglmFit]{"brglmFit"}}.
+parameters from a supported fitted model object.
 }
 \details{
 The function evaluates a user-specified scalar function of the full
@@ -86,6 +86,12 @@ estimator is removed, and helps avoid separation issues in categorical
 response models.
 Hence, the \code{object} component returned by the \code{glm} method always inherits
 from \code{\link[brglm2:brglmFit]{"brglmFit"}}.
+
+For \code{"betareg"} objects, the full parameter vector contains the mean and
+precision submodel parameters. Objects fitted with \code{type = "ML"}, \code{"BC"},
+or \code{"BR"} are used as supplied. For \code{"BC"} and \code{"BR"} fits, the
+first-order mean bias is treated as zero when applying a further focus
+correction.
 
 The current implementation assumes that \code{object} supports
 \code{\link[stats:coef]{stats::coef()}} and \code{\link[stats:vcov]{stats::vcov()}} for the full parameter vector
@@ -178,6 +184,14 @@ set.seed(678)
 confint(focus(endo), method = "hulc", level = 0.95,
         Delta = 0, check_statistic = FALSE)
 }
+
+
+## Beta regression
+library("betareg")
+
+data("GasolineYield", package = "betareg")
+gy <- betareg(yield ~ batch + temp, data = GasolineYield)
+focus(gy, on = function(theta) theta[11])
 
 }
 \seealso{

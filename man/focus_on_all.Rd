@@ -3,12 +3,15 @@
 \name{focus_on_all}
 \alias{focus_on_all}
 \alias{focus_on_all.focus_list_glm}
+\alias{focus_on_all.focus_list_betareg}
 \alias{focus_on_all.focus_engine_list}
 \title{Focus on all model parameters}
 \usage{
 focus_on_all(object, ...)
 
 \method{focus_on_all}{focus_list_glm}(object, ...)
+
+\method{focus_on_all}{focus_list_betareg}(object, ...)
 
 \method{focus_on_all}{focus_engine_list}(object, ...)
 }
@@ -28,9 +31,9 @@ each coordinate of the model parameter vector associated with a \code{\link[=foc
 }
 \details{
 It applies the same focus correction recorded in \code{object} to each coordinate
-of the model parameter vector. The \code{focus_list_glm} and \code{focus_engine_list}
-methods use analytic coordinate gradients and Hessians for those coordinate
-functions.
+of the model parameter vector. The \code{focus_list_glm}, \code{focus_list_betareg},
+and \code{focus_engine_list} methods use analytic coordinate gradients and
+Hessians for those coordinate functions.
 }
 \examples{
 

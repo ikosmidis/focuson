@@ -13,9 +13,9 @@
 #'
 #' @details
 #' It applies the same focus correction recorded in `object` to each coordinate
-#' of the model parameter vector. The `focus_list_glm` and `focus_engine_list`
-#' methods use analytic coordinate gradients and Hessians for those coordinate
-#' functions.
+#' of the model parameter vector. The `focus_list_glm`, `focus_list_betareg`,
+#' and `focus_engine_list` methods use analytic coordinate gradients and
+#' Hessians for those coordinate functions.
 #'
 #' @seealso [`focus()`], [`focus_se()`]
 #'
@@ -50,7 +50,7 @@ focus_on_all <- function(object, ...) {
 #' @param ... Additional arguments passed to methods.
 #'
 #' @return
-#' For the `focus_list_glm` method, a list with components:
+#' For fitted-model methods, a list with components:
 #' \describe{
 #'   \item{`se`}{Numeric scalar, the delta-method standard error.}
 #'   \item{`theta`}{Numeric vector, the reconstructed model parameter vector.}
@@ -61,13 +61,13 @@ focus_on_all <- function(object, ...) {
 #' }
 #'
 #' @details
-#' For `focus_list_glm` and `focus_engine_list` objects, the method first
-#' obtains focused estimates for all model parameters using [`focus_on_all()`].
-#' It then selects an active coordinate of the original focus function,
-#' replaces that coordinate so that the focus function matches the reported
-#' focus estimate, evaluates the model information at the reconstructed
-#' parameter vector, and applies the delta method. The `focus_engine_list`
-#' method requires a user-supplied `V_function` function.
+#' For `focus_list_glm`, `focus_list_betareg`, and `focus_engine_list` objects,
+#' the method first obtains focused estimates for all model parameters using
+#' [`focus_on_all()`]. It then selects an active coordinate of the original
+#' focus function, replaces that coordinate so that the focus function matches
+#' the reported focus estimate, evaluates the model information at the
+#' reconstructed parameter vector, and applies the delta method. The
+#' `focus_engine_list` method requires a user-supplied `V_function` function.
 #'
 #' @seealso [`focus()`], [`focus_on_all()`]
 #'
@@ -85,6 +85,18 @@ focus_on_all.focus_list_glm <- function(object, ...) {
     if (fit$family$family %in% c("poisson", "binomial")) {
         theta <- theta[names(coef(fit, model = "mean"))]
     }
+    .focus_on_all_fitted(object, theta)
+}
+
+#' @rdname focus_on_all
+#' @export
+focus_on_all.focus_list_betareg <- function(object, ...) {
+    theta <- coef(object$object, model = "full")
+    .focus_on_all_fitted(object, theta)
+}
+
+.focus_on_all_fitted <- function(object, theta) {
+    fit <- object$object
     on_coordinate <- function(theta, j) {
         theta[j]
     }
@@ -146,8 +158,8 @@ focus_on_all.focus_engine_list <- function(object, ...) {
 
 #' @rdname focus_se
 #' @details
-#' The current `focus_list_glm` and `focus_engine_list` methods recognize the
-#' following `control` entries:
+#' The current `focus_list_glm`, `focus_list_betareg`, and `focus_engine_list`
+#' methods recognize the following `control` entries:
 #' \describe{
 #'   \item{`tol_deriv`}{Numeric scalar. Tolerance used to decide whether a
 #'     derivative is large enough for the corresponding parameter to be treated
@@ -171,6 +183,23 @@ focus_se.focus_list_glm <- function(object, control = list(), ...) {
                                       dispersion = theta[-seq_len(p_mean)])
         }
         solve(info)
+    }
+    .reconstruct_focus_se(all_coefs = all_coefs,
+                          V_function = V_function,
+                          on_estimate = coef(object),
+                          on_se = object$se,
+                          on_fun = object$on$on,
+                          dots = object$dots,
+                          control = control)
+}
+
+#' @rdname focus_se
+#' @export
+focus_se.focus_list_betareg <- function(object, control = list(), ...) {
+    all_coefs <- focus_on_all(object, ...)
+    afuns <- enrichwith::get_auxiliary_functions(object$object)
+    V_function <- function(theta) {
+        solve(afuns$information(coefficients = theta))
     }
     .reconstruct_focus_se(all_coefs = all_coefs,
                           V_function = V_function,

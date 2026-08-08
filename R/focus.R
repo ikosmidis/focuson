@@ -1,14 +1,14 @@
 #' Focus on a scalar function of the model parameters
 #'
 #' Estimate and perform inference on a scalar function of the model
-#' parameters from a fitted model object of class [`"glm"`][stats::glm]
-#' or [`"brglmFit"`][brglm2::brglmFit].
+#' parameters from a supported fitted model object.
 #'
 #' The function evaluates a user-specified scalar function of the full
 #' parameter vector and optionally applies mean or median bias correction.
 #'
-#' @param object A fitted model object of class [`"glm"`][stats::glm] or
-#'   [`"brglmFit"`][brglm2::brglmFit].
+#' @param object A fitted model object. Methods are available for objects of
+#'   class [`"glm"`][stats::glm], [`"brglmFit"`][brglm2::brglmFit], and
+#'   `"betareg"`.
 #' @param on A function specifying the scalar parameter of interest.
 #'   It must take the model parameter vector as first argument and return
 #'   a single numeric value. The default,
@@ -67,6 +67,12 @@
 #' response models.
 #' Hence, the `object` component returned by the `glm` method always inherits
 #' from [`"brglmFit"`][brglm2::brglmFit].
+#'
+#' For `"betareg"` objects, the full parameter vector contains the mean and
+#' precision submodel parameters. Objects fitted with `type = "ML"`, `"BC"`,
+#' or `"BR"` are used as supplied. For `"BC"` and `"BR"` fits, the
+#' first-order mean bias is treated as zero when applying a further focus
+#' correction.
 #'
 #' The current implementation assumes that `object` supports
 #' [stats::coef()] and [stats::vcov()] for the full parameter vector
@@ -162,6 +168,14 @@
 #'         Delta = 0, check_statistic = FALSE)
 #' }
 #'
+#'
+#' ## Beta regression
+#' library("betareg")
+#'
+#' data("GasolineYield", package = "betareg")
+#' gy <- betareg(yield ~ batch + temp, data = GasolineYield)
+#' focus(gy, on = function(theta) theta[11])
+#'
 #' @export
 focus <- function(object,
                   on = function(theta, ...) theta[1],
@@ -245,6 +259,61 @@ focus.glm <- function(object,
         estimate = core$estimate,
         se = core$se)
     class(out) <- c("focus_list_glm", "focus_list", class(out))
+    out
+}
+
+#' @export
+focus.betareg <- function(object,
+                          on = function(theta, ...) theta[1],
+                          correction = "median",
+                          on_gradient = NULL,
+                          on_hessian = NULL, ...) {
+    cl <- match.call()
+    dots <- list(...)
+    stopifnot(is.null(on_gradient) || is.function(on_gradient))
+    stopifnot(is.null(on_hessian) || is.function(on_hessian))
+    if (!(object$type %in% c("ML", "BC", "BR"))) {
+        stop("`focus.betareg()` supports only fits with type `\"ML\"`, ",
+             "`\"BC\"`, or `\"BR\"`.")
+    }
+    correction <- match.arg(correction, c("no", "median", "mean"))
+    theta <- coef(object, model = "full")
+    V <- vcov(object, model = "full")
+    get_correction_components <- function() {
+        afuns <- enrichwith::get_auxiliary_functions(object)
+        list(bias = if (identical(object$type, "ML")) {
+                        afuns$bias(coefficients = theta)
+                    } else {
+                        numeric(length(theta))
+                    },
+             P = if (identical(correction, "median")) {
+                     afuns$Pmat(coefficients = theta)
+                 },
+             Q = if (identical(correction, "median")) {
+                     afuns$Qmat(coefficients = theta)
+                 })
+    }
+    core <- .focus_core(
+        theta = theta,
+        V = V,
+        on = on,
+        correction = correction,
+        components_fun = get_correction_components,
+        on_gradient = on_gradient,
+        on_hessian = on_hessian,
+        ...
+    )
+    out <- list(
+        call = cl,
+        object = object,
+        on = list(on = on,
+                  on_gradient = on_gradient,
+                  on_hessian = on_hessian),
+        dots = dots,
+        correction = correction,
+        estimate = core$estimate,
+        se = core$se)
+    class(out) <- c("focus_list_betareg", "focus_list", class(out))
     out
 }
 
