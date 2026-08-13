@@ -191,7 +191,10 @@ library("betareg")
 
 data("GasolineYield", package = "betareg")
 gy <- betareg(yield ~ batch + temp, data = GasolineYield)
-focus(gy, on = function(theta) theta[11])
+
+gy_phi <- focus(gy, on = function(theta) theta[12])
+confint(gy_phi, method = "wald")
+confint(gy_phi, method = "pl")
 
 }
 \seealso{

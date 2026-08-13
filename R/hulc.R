@@ -218,5 +218,5 @@ hulc_ci <- function(data,
     attr(ci, "B") <- B
     attr(ci, "error") <- error_msg
     attr(ci, "type") <- "hulc"
-    ci
+    .focus_ci(ci)
 }

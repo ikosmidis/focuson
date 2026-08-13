@@ -42,13 +42,14 @@ out_wald <- focus(endo, correction = "mean")
 expect_identical(out_wald$correction, "mean")
 expect_identical(unname(coef(out_wald)), unname(out_wald$estimate))
 expect_equal(drop(vcov(out_wald)), out_wald$se^2)
+expect_true(inherits(confint(out_wald), "focus_ci"))
 expect_equal(
-    unname(confint(out_wald)),
+    as.numeric(confint(out_wald)),
     unname(out_wald$estimate) + c(-1, 1) * qnorm(0.975) * out_wald$se,
     check.attributes = FALSE
 )
 expect_equal(
-    unname(confint(out_wald, level = 0.9)),
+    as.numeric(confint(out_wald, level = 0.9)),
     unname(out_wald$estimate) + c(-1, 1) * qnorm(0.95) * out_wald$se,
     check.attributes = FALSE
 )
@@ -104,7 +105,7 @@ for (correction in c("no", "mean", "median")) {
 
     expect_equal(unname(out$estimate), pi, check.attributes = FALSE)
     expect_equal(out$se, 0)
-    expect_equal(unname(confint(out)), c(pi, pi), check.attributes = FALSE)
+    expect_equal(as.numeric(confint(out)), c(pi, pi))
 
     set.seed(678)
     ci_hulc <- confint(
@@ -113,7 +114,7 @@ for (correction in c("no", "mean", "median")) {
         check_statistic = FALSE
     )
 
-    expect_equal(unname(ci_hulc), c(pi, pi), check.attributes = FALSE)
+    expect_equal(as.numeric(ci_hulc), c(pi, pi))
     expect_identical(attr(ci_hulc, "type"), "hulc")
 }
 
@@ -192,8 +193,8 @@ budworm_focus <- focus(budworm_fit,
                        correction = "no",
                        i = 2)
 budworm_profile_ci <- confint(budworm_focus, method = "pl", level = 0.95)
-expect_equal(budworm_profile_ci, budworm_glm_ci,
-             tolerance = 1e-04, check.attributes = FALSE)
+expect_equal(as.numeric(budworm_profile_ci), as.numeric(budworm_glm_ci),
+             tolerance = 1e-04)
 expect_identical(attr(budworm_profile_ci, "type"), "pl")
 
 budworm_focus_median <- focus(budworm_fit,
@@ -205,8 +206,8 @@ budworm_focus_median <- focus(budworm_fit,
 budworm_profile_ci_median <- confint(budworm_focus_median,
                                      method = "pl",
                                      level = 0.95)
-expect_equal(budworm_profile_ci_median, budworm_glm_ci,
-             tolerance = 1e-04, check.attributes = FALSE)
+expect_equal(as.numeric(budworm_profile_ci_median),
+             as.numeric(budworm_glm_ci), tolerance = 1e-04)
 expect_identical(attr(budworm_profile_ci_median, "type"), "pl")
 
 budworm_refit_data <- focuson:::.refit_data(budworm_focus$object)

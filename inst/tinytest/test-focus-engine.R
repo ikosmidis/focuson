@@ -53,7 +53,7 @@ focus_out <- focus(
 expect_equal(engine_out$estimate, focus_out$estimate, tolerance = 1e-8, check.attributes = FALSE)
 expect_equal(engine_out$se, focus_out$se, tolerance = 1e-8)
 expect_equal(
-    unname(confint(engine_out)),
+    as.numeric(confint(engine_out)),
     unname(engine_out$estimate) + c(-1, 1) * qnorm(0.975) * engine_out$se,
     check.attributes = FALSE
 )

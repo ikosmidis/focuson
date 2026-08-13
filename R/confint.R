@@ -120,7 +120,7 @@ confint.focus_list <- function(object,
         if (exists("se_info", inherits = FALSE) && !inherits(se_info, "try-error")) {
             attr(ci, "se_info") <- se_info
         }
-        return(ci)
+        return(.focus_ci(ci))
     }
 
     if (identical(method, "pl")) {
@@ -329,5 +329,5 @@ confint.profile_focus_list <- function(object,
     attr(out, "level") <- level
     attr(out, "type") <- method
     attr(out, "interpolation") <- interpolation
-    out
+    .focus_ci(out)
 }

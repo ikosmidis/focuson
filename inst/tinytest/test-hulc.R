@@ -26,6 +26,7 @@ expect_true(is.double(ci))
 expect_equal(length(ci), 2)
 expect_true(identical(names(ci), c("lower", "upper")))
 expect_true(ci["lower"] <= ci["upper"])
+expect_true(inherits(ci, "focus_ci"))
 expect_identical(attr(ci, "type"), "hulc")
 
 

@@ -34,7 +34,9 @@ ci_mean <- profile_ci(loglik = loglik_mean,
                       level = level)
 expected_mean <- theta_hat + c(lower = -1, upper = 1) * sqrt(cutoff / n)
 
-expect_equal(ci_mean, expected_mean, tolerance = 1e-08, check.attributes = FALSE)
+expect_equal(as.numeric(ci_mean), as.numeric(expected_mean), tolerance = 1e-08)
+expect_true(inherits(ci_mean, "focus_ci"))
+expect_identical(attr(ci_mean, "level"), level)
 expect_identical(attr(ci_mean, "type"), "pl")
 expect_true(max(attr(ci_mean, "max|fvec|")) < 1e-08)
 expect_true(is.character(attr(ci_mean, "messages")))
@@ -275,15 +277,15 @@ expect_true(any(grepl(
 profile_ci_mean <- confint(profile_mean, level = 0.9)
 expected_profile_ci_mean <- theta_hat +
     c(lower = -1, upper = 1) * qnorm(0.95) / sqrt(n)
-expect_equal(profile_ci_mean, expected_profile_ci_mean,
-             tolerance = 1e-08, check.attributes = FALSE)
+expect_equal(as.numeric(profile_ci_mean), as.numeric(expected_profile_ci_mean),
+             tolerance = 1e-08)
 expect_equal(attr(profile_ci_mean, "level"), 0.9)
 expect_identical(attr(profile_ci_mean, "type"), "pl")
 expect_identical(attr(profile_ci_mean, "interpolation"), "linear")
-expect_equal(confint(profile_mean, level = 0.9,
-                     interpolation = "cubic"),
-             expected_profile_ci_mean,
-             tolerance = 1e-08, check.attributes = FALSE)
+expect_equal(as.numeric(confint(profile_mean, level = 0.9,
+                                interpolation = "cubic")),
+             as.numeric(expected_profile_ci_mean),
+             tolerance = 1e-08)
 expect_error(confint(profile_mean, level = 0),
              pattern = "number in \\(0, 1\\)")
 expect_error(confint(profile_mean, interpolation = "quadratic"))
@@ -362,8 +364,8 @@ ci_mean_warm <- profile_ci(loglik = loglik_mean,
                            do_checks = FALSE)
 expected_mean_warm <- theta_hat + c(lower = -1, upper = 1) *
     sqrt(qchisq(warm_level, 1) / n)
-expect_equal(ci_mean_warm, expected_mean_warm, tolerance = 1e-08,
-             check.attributes = FALSE)
+expect_equal(as.numeric(ci_mean_warm), as.numeric(expected_mean_warm),
+             tolerance = 1e-08)
 
 reversed_start <- rev(attr(ci_mean, "solution"))
 ci_mean_reordered <- profile_ci(loglik = loglik_mean,
@@ -391,8 +393,8 @@ ci_mean_jacobian <- profile_ci(loglik = loglik_mean,
                                on_gradient = on_mean_gradient,
                                on_hessian = on_mean_hessian_counted,
                                level = level)
-expect_equal(ci_mean_jacobian, expected_mean, tolerance = 1e-08,
-             check.attributes = FALSE)
+expect_equal(as.numeric(ci_mean_jacobian), as.numeric(expected_mean),
+             tolerance = 1e-08)
 expect_true(hessian_calls > 0L)
 
 hessian_calls <- 0L
@@ -403,8 +405,8 @@ ci_mean_no_jacobian <- profile_ci(loglik = loglik_mean,
                                   on = on_mean,
                                   on_gradient = on_mean_gradient,
                                   level = level)
-expect_equal(ci_mean_no_jacobian, expected_mean, tolerance = 1e-08,
-             check.attributes = FALSE)
+expect_equal(as.numeric(ci_mean_no_jacobian), as.numeric(expected_mean),
+             tolerance = 1e-08)
 expect_equal(hessian_calls, 0L)
 
 expect_error(profile_ci(loglik = loglik_mean,
@@ -474,7 +476,7 @@ rss_hat <- sum((y - theta2_hat[1])^2)
 expected_mu <- theta2_hat[1] +
     c(lower = -1, upper = 1) * sqrt(rss_hat * (exp(cutoff / n) - 1) / n)
 
-expect_equal(ci_mu, expected_mu, tolerance = 1e-07, check.attributes = FALSE)
+expect_equal(as.numeric(ci_mu), as.numeric(expected_mu), tolerance = 1e-07)
 expect_true(max(attr(ci_mu, "max|fvec|")) < 1e-08)
 
 
@@ -483,7 +485,7 @@ ci_numeric <- profile_ci(loglik = loglik_normal,
                          mle = theta2_hat,
                          level = level)
 
-expect_equal(ci_numeric, expected_mu, tolerance = 1e-05, check.attributes = FALSE)
+expect_equal(as.numeric(ci_numeric), as.numeric(expected_mu), tolerance = 1e-05)
 
 on_coefficient_of_variation <- function(theta)
     exp(theta[2]) / theta[1]
@@ -542,8 +544,8 @@ find_lr_endpoint <- function(direction) {
 expected_standardized_mean <- c(lower = find_lr_endpoint(-1),
                                 upper = find_lr_endpoint(1))
 
-expect_equal(ci_standardized_mean, expected_standardized_mean,
-             tolerance = 1e-07, check.attributes = FALSE)
+expect_equal(as.numeric(ci_standardized_mean),
+             as.numeric(expected_standardized_mean), tolerance = 1e-07)
 
 profile_standardized_mean <- profile_focus(
     loglik = loglik_normal,
@@ -625,8 +627,8 @@ for (level_budworm in c(0.80, 0.90, 0.95)) {
                              likelihood_args = list(object = budworm_lg),
                              level = level_budworm)
     ci_profile <- confint(budworm_profile, parm = 2, level = level_budworm)
-    expect_equal(ci_budworm, ci_profile,
-                 tolerance = 1e-04, check.attributes = FALSE)
+    expect_equal(as.numeric(ci_budworm), as.numeric(ci_profile),
+                 tolerance = 1e-04)
 }
 
 second_parameter_hessian <- function(theta) {

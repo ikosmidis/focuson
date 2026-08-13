@@ -70,17 +70,16 @@ ci_mpl <- confint(modified, level = level, method = "mpl")
 ci_mpl_cubic <- confint(modified, level = level, method = "mpl",
                         interpolation = "cubic")
 ci_rstar <- confint(modified, level = level, method = "rstar")
-expect_equal(ci_pl, expected_ci,
-             tolerance = 1e-08, check.attributes = FALSE)
-expect_equal(ci_mpl, expected_ci,
-             tolerance = 1e-08, check.attributes = FALSE)
-expect_equal(ci_mpl_cubic, expected_ci,
-             tolerance = 1e-08, check.attributes = FALSE)
-expect_equal(ci_rstar, expected_ci,
-             tolerance = 1e-08, check.attributes = FALSE)
+expect_equal(as.numeric(ci_pl), as.numeric(expected_ci), tolerance = 1e-08)
+expect_equal(as.numeric(ci_mpl), as.numeric(expected_ci), tolerance = 1e-08)
+expect_equal(as.numeric(ci_mpl_cubic), as.numeric(expected_ci),
+             tolerance = 1e-08)
+expect_equal(as.numeric(ci_rstar), as.numeric(expected_ci), tolerance = 1e-08)
 expect_identical(attr(ci_pl, "type"), "pl")
 expect_identical(attr(ci_mpl, "type"), "mpl")
 expect_identical(attr(ci_rstar, "type"), "rstar")
+expect_true(all(vapply(list(ci_pl, ci_mpl, ci_rstar),
+                       inherits, logical(1), "focus_ci")))
 modified_plot_file <- tempfile(fileext = ".pdf")
 pdf(modified_plot_file)
 expect_silent(plot(modified, what = "pl"))

@@ -19,6 +19,12 @@
   `"rstar"` can also be requested directly from supported fitted-model
   `focus()` results as a convenience for computing a single interval.
 
+## Improvements, updates and additions
+
+* Confidence intervals returned by `focuson` now inherit from `"focus_ci"`
+  and have a concise print method that reports the interval and relevant
+  method-specific information without printing all diagnostic attributes.
+
 # focuson 0.2
 
 ## Bug fixes

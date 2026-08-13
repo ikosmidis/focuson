@@ -337,8 +337,9 @@ profile_ci <- function(loglik,
                                  upper = endpoints[[2]]$x)
     attr(ci, "iter") <- c(lower = endpoints[[1]]$iter,
                           upper = endpoints[[2]]$iter)
+    attr(ci, "level") <- level
     attr(ci, "type") <- "pl"
-    ci
+    .focus_ci(ci)
 }
 
 

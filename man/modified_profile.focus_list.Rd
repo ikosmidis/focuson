@@ -100,6 +100,27 @@ plot(babies_mpl, what = "mpl", signed = TRUE, ci = TRUE)
 plot(babies_mpl, what = "rstar", ci = TRUE)
 par(opar)
 
+
+## Beta regression
+library("betareg")
+
+data("GasolineYield", package = "betareg")
+gy <- betareg(yield ~ batch + temp, data = GasolineYield)
+gy_phi <- focus(gy, on = function(theta) theta[12])
+
+## Modified profile likelihood and rstar for precision parameter
+
+set.seed(123)
+mpl_phi <- modified_profile(gy_phi, max_level = 0.9999)
+
+plot(mpl_phi, what = "pl", signed = TRUE)
+plot(mpl_phi, what = "mpl", signed = TRUE)
+plot(mpl_phi, what = "rstar")
+
+confint(mpl_phi, method = "pl")
+confint(mpl_phi, method = "mpl")
+confint(mpl_phi, method = "rstar")
+
 }
 
 }
