@@ -190,12 +190,16 @@ estimate_focus_components <- function(theta,
                                         information,
                                         simulate,
                                         likelihood_args)
+    loglik_fun <- model$loglik
+    score_fun <- model$score
+    information_fun <- model$information
+    simulate_fun <- model$simulate
     no_score <- is.null(score)
     no_info <- is.null(information)
     if (no_score && no_info) {
         simu_one <- function(i) {
-            data <- model$simulate(theta)
-            ders <- grad_hess(model$loglik, theta, data = data)
+            data <- simulate_fun(theta)
+            ders <- grad_hess(loglik_fun, theta, data = data)
             list(S = ders$grad,
                  I = -ders$hess,
                  SS = tcrossprod(ders$grad))
@@ -203,23 +207,23 @@ estimate_focus_components <- function(theta,
     } else {
         if (no_score) {
             s_fun <- function(x, data)
-                numDeriv::grad(model$loglik, x, data = data)
+                numDeriv::grad(loglik_fun, x, data = data)
         } else {
-            s_fun <- model$score
+            s_fun <- score_fun
         }
         if (no_info) {
             if (no_score) {
                 i_fun <- function(x, data)
-                    -numDeriv::hessian(model$loglik, x, data = data)
+                    -numDeriv::hessian(loglik_fun, x, data = data)
             } else {
                 i_fun <- function(x, data)
-                    -numDeriv::jacobian(model$score, x, data = data)
+                    -numDeriv::jacobian(score_fun, x, data = data)
             }
         } else {
-            i_fun <- model$information
+            i_fun <- information_fun
         }
         simu_one <- function(i) {
-            data <- model$simulate(theta)
+            data <- simulate_fun(theta)
             S <- s_fun(theta, data)
             I <- i_fun(theta, data)
             SS <- tcrossprod(S)
@@ -367,25 +371,29 @@ estimate_focus_components_fef <- function(theta,
                                         simulate,
                                         likelihood_args,
                                         require_data = TRUE)
+    loglik_fun <- model$loglik
+    score_fun <- model$score
+    information_fun <- model$information
+    simulate_fun <- model$simulate
     no_score <- is.null(score)
     no_info <- is.null(information)
 
     if (no_score) {
         s_fun <- function(x, data)
-            numDeriv::grad(model$loglik, x, data = data)
+            numDeriv::grad(loglik_fun, x, data = data)
     } else {
-        s_fun <- model$score
+        s_fun <- score_fun
     }
     if (no_info) {
         if (no_score) {
             i_fun <- function(x, data)
-                -numDeriv::hessian(model$loglik, x, data = data)
+                -numDeriv::hessian(loglik_fun, x, data = data)
         } else {
             i_fun <- function(x, data)
-                -numDeriv::jacobian(model$score, x, data = data)
+                -numDeriv::jacobian(score_fun, x, data = data)
         }
     } else {
-        i_fun <- model$information
+        i_fun <- information_fun
     }
 
     Ihat <- i_fun(theta, model$data)
@@ -394,7 +402,7 @@ estimate_focus_components_fef <- function(theta,
     if (!is.finite(sc) || sc < 1e-6 || sc > 1) sc <- 1
 
     simu_one <- function(i) {
-        sim_data <- model$simulate(theta)
+        sim_data <- simulate_fun(theta)
         S <- s_fun(theta, sim_data)
         SS <- tcrossprod(S)
         list(S = S, SS = SS)
@@ -548,12 +556,16 @@ estimate_focus_components_iid <- function(theta,
                                         information,
                                         simulate,
                                         likelihood_args)
+    loglik_fun <- model$loglik
+    score_fun <- model$score
+    information_fun <- model$information
+    simulate_fun <- model$simulate
     no_score <- is.null(score)
     no_info <- is.null(information)
     if (no_score && no_info) {
         simu_one <- function(i) {
-            data <- model$simulate(theta)
-            ders <- grad_hess(model$loglik, theta, data = data)
+            data <- simulate_fun(theta)
+            ders <- grad_hess(loglik_fun, theta, data = data)
             list(S = ders$grad,
                  I = -ders$hess,
                  SS = tcrossprod(ders$grad))
@@ -561,23 +573,23 @@ estimate_focus_components_iid <- function(theta,
     } else {
         if (no_score) {
             s_fun <- function(x, data)
-                numDeriv::grad(model$loglik, x, data = data)
+                numDeriv::grad(loglik_fun, x, data = data)
         } else {
-            s_fun <- model$score
+            s_fun <- score_fun
         }
         if (no_info) {
             if (no_score) {
                 i_fun <- function(x, data)
-                    -numDeriv::hessian(model$loglik, x, data = data)
+                    -numDeriv::hessian(loglik_fun, x, data = data)
             } else {
                 i_fun <- function(x, data)
-                    -numDeriv::jacobian(model$score, x, data = data)
+                    -numDeriv::jacobian(score_fun, x, data = data)
             }
         } else {
-            i_fun <- model$information
+            i_fun <- information_fun
         }
         simu_one <- function(i) {
-            data <- model$simulate(theta)
+            data <- simulate_fun(theta)
             S <- s_fun(theta, data)
             I <- i_fun(theta, data)
             SS <- tcrossprod(S)
