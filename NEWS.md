@@ -1,5 +1,12 @@
 # focuson 0.3
 
+## Bug fixes
+
+* Fixed parallel simulation in `estimate_focus_components()`,
+  `estimate_focus_components_fef()`, and `estimate_focus_components_iid()` so
+  that user-supplied likelihood and simulation functions are available under
+  multisession and other parallel backends.
+
 ## New functionality
 
 * Added `modified_profile_focus()` for simulation-based construction of the
@@ -8,9 +15,13 @@
   returned profile includes the nuisance-parameter and information
   adjustments.
 
-* Added `modified_profile()` support for GLM-based `focus()` results, with
-  likelihood quantities and fixed-design response simulation obtained through
-  `enrichwith`.
+* Added `focus()` support for beta regression models, including mean and
+  median bias correction, compatible standard errors, and profile likelihood
+  inference.
+
+* Added `modified_profile()` support for GLM and beta-regression `focus()`
+  results, with likelihood quantities and fixed-design response simulation
+  obtained through `enrichwith`.
 
 * Extended `confint()` for computed focus profiles with
   `method = "pl"`, `"mpl"`, or `"rstar"` for intervals based on the ordinary
@@ -24,6 +35,9 @@
 * Confidence intervals returned by `focuson` now inherit from `"focus_ci"`
   and have a concise print method that reports the interval and relevant
   method-specific information without printing all diagnostic attributes.
+
+
+* Various documentation updates.
 
 # focuson 0.2
 
