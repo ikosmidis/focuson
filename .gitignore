@@ -1,6 +1,9 @@
 inst/doc
 inst/notes*
 inst/tinytest/test-estimate_focus_components.R
+inst/notes
+inst/simulations
+inst/todo.org
 
 ### macOS ###
 # General

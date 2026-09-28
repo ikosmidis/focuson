@@ -40,24 +40,32 @@ import(brglm2)
 import(enrichwith)
 import(nleqslv)
 importFrom(alabama,auglag)
-importFrom(graphics,abline)
-importFrom(graphics,plot.default)
-importFrom(graphics,points)
-importFrom(graphics,text)
-importFrom(numDeriv,grad)
-importFrom(numDeriv,hessian)
-importFrom(stats,approxfun)
-importFrom(stats,coef)
-importFrom(stats,confint)
-importFrom(stats,model.frame)
-importFrom(stats,optimize)
-importFrom(stats,pchisq)
-importFrom(stats,printCoefmat)
-importFrom(stats,qchisq)
-importFrom(stats,qnorm)
-importFrom(stats,runif)
-importFrom(stats,splinefun)
-importFrom(stats,update)
-importFrom(stats,vcov)
-importFrom(utils,capture.output)
-importFrom(utils,modifyList)
+importFrom(graphics,
+  abline,
+  plot.default,
+  points,
+  text
+)
+importFrom(numDeriv,
+  grad,
+  hessian
+)
+importFrom(stats,
+  approxfun,
+  coef,
+  confint,
+  model.frame,
+  optimize,
+  pchisq,
+  printCoefmat,
+  qchisq,
+  qnorm,
+  runif,
+  splinefun,
+  update,
+  vcov
+)
+importFrom(utils,
+  capture.output,
+  modifyList
+)

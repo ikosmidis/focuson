@@ -1,6 +1,7 @@
 ^LICENSE\.md$
 inst/notes
 inst/simulations
+inst/todo.org
 README.qmd
 
 ^\.github$
