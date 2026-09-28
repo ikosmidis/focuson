@@ -8,7 +8,8 @@ execute:
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = "man/figures/README-"
 )
 ```
 
@@ -21,14 +22,15 @@ knitr::opts_chunk$set(
 scalar functions of model parameters. The main interface is `focus()`,
 which takes as input a fitted model and a user-supplied function of
 the model parameters, and returns an estimate and a delta-method
-standard error. A `confint()` method can be used to construct
-inferences. Mean and median bias-corrected estimators of the focus
-parameter can be computed.
+standard error. Mean and median bias-corrected estimators of the focus
+parameter can be computed. Confidence intervals can be based on Wald,
+profile likelihood, modified profile likelihood, the modified signed
+likelihood-ratio statistic $r^*$, or HulC procedures.
 
-The package is useful when the quantity of scientific interest is not a
-single model coefficient, but a scalar function of the full parameter
-vector, such as an odds ratio, a contrast, a prediction, a marginal
-effect, or a quantile.
+The package is particularly useful when the quantity of scientific
+interest is a scalar function of the full parameter vector, such as an
+odds ratio, a contrast, a prediction, a marginal effect, or a
+quantile.
 
 ## Installation
 
@@ -36,7 +38,7 @@ You can install the development version of `focuson` from GitHub with
 
 ```{r install, eval = FALSE}
 install.packages("remotes")
-remotes::install_github("ikosmidis/focuson")
+remotes::install_github("ikosmidis/focuson", ref = "develop")
 ```
 
 ## Focusing on a model parameter
@@ -70,8 +72,9 @@ focus(endo, on = function(theta) theta["NV"])
 
 ## Focusing on a function of the parameters
 
-The focus can be any scalar function of the full model parameter vector.
-For example, an odds ratio for `NV` can be estimated with
+The focus can, in principle, be any sufficiently smooth and
+sufficiently identifiable scalar function of the full model parameter
+vector.  For example, an odds ratio for `NV` can be estimated with
 
 ```{r}
 fo_or <- focus(endo, on = function(theta) exp(theta["NV"]))
@@ -94,6 +97,71 @@ estimate the focus parameter.
 
 ```{r}
 confint(fo_or, se_at = "compatible")
+```
+
+## Profile and modified profile likelihood inference
+
+Profile likelihood inference is available for supported fitted-model
+objects. The following beta regression example focuses on the precision
+parameter and illustrates the contrast between first-order and higher-order
+likelihood inference. 
+
+```{r}
+library("betareg")
+
+data("GasolineYield", package = "betareg")
+gy <- betareg(yield ~ batch + temp, data = GasolineYield)
+
+precision <- function(theta) theta[length(theta)]
+
+gy_ml <- focus(gy, on = precision, correction = "no")
+gy_mean <- focus(gy, on = precision, correction = "mean")
+gy_median <- focus(gy, on = precision, correction = "median")
+
+c(ML = unname(coef(gy_ml)),
+  mean_bias_corrected = unname(coef(gy_mean)),
+  median_bias_corrected = unname(coef(gy_median)))
+```
+
+A profile likelihood interval can be obtained directly from the focus
+object. A reusable profile can instead be constructed for inspection,
+plotting, or inference at multiple confidence levels.
+
+```{r}
+confint(gy_ml, method = "pl")
+
+gy_profile <- profile(gy_ml)
+plot(gy_profile, ci = TRUE)
+```
+
+The modified profile likelihood and $r^*$ can be computed using the
+general construction in Pierce and Bellio (2017). That construction
+requires simulation under the fitted model. Calling
+`modified_profile()` explicitly retains the complete profile and its
+diagnostics for subsequent plotting and inference.
+
+```{r}
+set.seed(123)
+gy_mpl <- modified_profile(gy_ml,
+                           nsim = 1000,
+                           max_level = 0.9999)
+
+rbind(Wald = confint(gy_ml),
+      profile = confint(gy_ml, method = "pl"),
+      modified_profile = confint(gy_mpl, method = "mpl"),
+      rstar = confint(gy_mpl, method = "rstar"))
+```
+
+In this case, the MPL and $r^*$ results agree closely and are shifted
+towards the mean and median bias-corrected estimates relative to the
+Wald and ordinary profile likelihood results.
+
+```{r}
+#| fig-height: 8
+par(mfrow = c(3, 1))
+plot(gy_mpl, what = "pl", ci = TRUE, signed = TRUE)
+plot(gy_mpl, what = "mpl", ci = TRUE, signed = TRUE)
+plot(gy_mpl, what = "rstar", ci = TRUE)
 ```
 
 ## Analytic derivatives
@@ -181,6 +249,10 @@ focus(coalition_fit,
 Kosmidis I (2014). Bias in parametric estimation: Reduction and useful
 side-effects. *WIRE Computational Statistics*, **6**, 185--196.
 doi:10.1002/wics.1296.
+
+Pierce D A, Bellio R (2017). Modern likelihood-frequentist inference.
+*International Statistical Review*, **85**, 519--541.
+doi:10.1111/insr.12232.
 
 Kuchibhotla A K, Balakrishnan S, Wasserman L (2023). The HulC: confidence
 regions from convex hulls. *Journal of the Royal Statistical Society:

@@ -10,14 +10,14 @@
 scalar functions of model parameters. The main interface is `focus()`,
 which takes as input a fitted model and a user-supplied function of the
 model parameters, and returns an estimate and a delta-method standard
-error. A `confint()` method can be used to construct inferences. Mean
-and median bias-corrected estimators of the focus parameter can be
-computed.
+error. Mean and median bias-corrected estimators of the focus parameter
+can be computed. Confidence intervals can be based on Wald, profile
+likelihood, modified profile likelihood, the modified signed
+likelihood-ratio statistic $r^*$, or HulC procedures.
 
-The package is useful when the quantity of scientific interest is not a
-single model coefficient, but a scalar function of the full parameter
-vector, such as an odds ratio, a contrast, a prediction, a marginal
-effect, or a quantile.
+The package is particularly useful when the quantity of scientific
+interest is a scalar function of the full parameter vector, such as an
+odds ratio, a contrast, a prediction, a marginal effect, or a quantile.
 
 ## Installation
 
@@ -25,7 +25,7 @@ You can install the development version of `focuson` from GitHub with
 
 ``` r
 install.packages("remotes")
-remotes::install_github("ikosmidis/focuson")
+remotes::install_github("ikosmidis/focuson", ref = "develop")
 ```
 
 ## Focusing on a model parameter
@@ -75,8 +75,9 @@ focus(endo, on = function(theta) theta["NV"])
 
 ## Focusing on a function of the parameters
 
-The focus can be any scalar function of the full model parameter vector.
-For example, an odds ratio for `NV` can be estimated with
+The focus can, in principle, be any sufficiently smooth and sufficiently
+identifiable scalar function of the full model parameter vector. For
+example, an odds ratio for `NV` can be estimated with
 
 ``` r
 fo_or <- focus(endo, on = function(theta) exp(theta["NV"]))
@@ -95,14 +96,12 @@ Wald-type confidence intervals are available through `confint()`.
 
 ``` r
 confint(fo_or)
-#>     lower     upper 
-#> -27.58318  86.17716 
-#> attr(,"level")
-#> [1] 0.95
-#> attr(,"type")
-#> [1] "wald"
-#> attr(,"se_at")
-#> [1] "supplied"
+#> 95% Wald confidence interval
+#> 
+#>   lower   upper 
+#> -27.583  86.177 
+#> 
+#> Standard error evaluated at: supplied
 ```
 
 The standard error used by default is the one stored in the `focus`
@@ -115,35 +114,95 @@ parameter.
 
 ``` r
 confint(fo_or, se_at = "compatible")
-#>     lower     upper 
-#> -77.15505 135.74903 
-#> attr(,"level")
-#> [1] 0.95
-#> attr(,"type")
-#> [1] "wald"
-#> attr(,"se_at")
-#> [1] "compatible"
-#> attr(,"se_info")
-#> attr(,"se_info")$se
-#> [1] 54.31326
+#> 95% Wald confidence interval
 #> 
-#> attr(,"se_info")$theta
-#> (Intercept)          NV          PI          EH 
-#>   3.9344345   3.3774848  -0.0377999  -2.6966726 
+#>   lower   upper 
+#> -77.155 135.749 
 #> 
-#> attr(,"se_info")$V
-#>             (Intercept)          NV           PI           EH
-#> (Intercept)   2.3609628 -0.19397817 -0.038598598 -1.072693017
-#> NV           -0.1939782  3.43689114 -0.011982259  0.191304781
-#> PI           -0.0385986 -0.01198226  0.001691114  0.006889167
-#> EH           -1.0726930  0.19130478  0.006889167  0.638663584
-#> 
-#> attr(,"se_info")$gradient
-#> [1]  0.00000 29.29699  0.00000  0.00000
-#> 
-#> attr(,"se_info")$replace
-#> [1] 2
+#> Standard error evaluated at: compatible
 ```
+
+## Profile and modified profile likelihood inference
+
+Profile likelihood inference is available for supported fitted-model
+objects. The following beta regression example focuses on the precision
+parameter and illustrates the contrast between first-order and
+higher-order likelihood inference.
+
+``` r
+library("betareg")
+
+data("GasolineYield", package = "betareg")
+gy <- betareg(yield ~ batch + temp, data = GasolineYield)
+
+precision <- function(theta) theta[length(theta)]
+
+gy_ml <- focus(gy, on = precision, correction = "no")
+gy_mean <- focus(gy, on = precision, correction = "mean")
+gy_median <- focus(gy, on = precision, correction = "median")
+
+c(ML = unname(coef(gy_ml)),
+  mean_bias_corrected = unname(coef(gy_mean)),
+  median_bias_corrected = unname(coef(gy_median)))
+#>                    ML   mean_bias_corrected median_bias_corrected 
+#>              440.2784              261.2061              279.5435
+```
+
+A profile likelihood interval can be obtained directly from the focus
+object. A reusable profile can instead be constructed for inspection,
+plotting, or inference at multiple confidence levels.
+
+``` r
+confint(gy_ml, method = "pl")
+#> 95% profile likelihood confidence interval
+#> 
+#>  lower  upper 
+#> 258.33 692.47 
+#> 
+#> Endpoint iterations: lower = 7, upper = 5
+#> Maximum equation residual: 4.4316e-05
+
+gy_profile <- profile(gy_ml)
+plot(gy_profile, ci = TRUE)
+```
+
+![](man/figures/README-unnamed-chunk-8-1.png)
+
+The modified profile likelihood and $r^*$ can be computed using the
+general construction in Pierce and Bellio (2017). That construction
+requires simulation under the fitted model. Calling `modified_profile()`
+explicitly retains the complete profile and its diagnostics for
+subsequent plotting and inference.
+
+``` r
+set.seed(123)
+gy_mpl <- modified_profile(gy_ml,
+                           nsim = 1000,
+                           max_level = 0.9999)
+
+rbind(Wald = confint(gy_ml),
+      profile = confint(gy_ml, method = "pl"),
+      modified_profile = confint(gy_mpl, method = "mpl"),
+      rstar = confint(gy_mpl, method = "rstar"))
+#>                     lower    upper
+#> Wald             224.6321 655.9247
+#> profile          258.3333 692.4728
+#> modified_profile 147.2286 500.2188
+#> rstar            149.0278 501.2810
+```
+
+In this case, the MPL and $r^*$ results agree closely and are shifted
+towards the mean and median bias-corrected estimates relative to the
+Wald and ordinary profile likelihood results.
+
+``` r
+par(mfrow = c(3, 1))
+plot(gy_mpl, what = "pl", ci = TRUE, signed = TRUE)
+plot(gy_mpl, what = "mpl", ci = TRUE, signed = TRUE)
+plot(gy_mpl, what = "rstar", ci = TRUE)
+```
+
+![](man/figures/README-unnamed-chunk-10-1.png)
 
 ## Analytic derivatives
 
@@ -268,6 +327,10 @@ focus(coalition_fit,
 Kosmidis I (2014). Bias in parametric estimation: Reduction and useful
 side-effects. *WIRE Computational Statistics*, **6**, 185–196.
 doi:10.1002/wics.1296.
+
+Pierce D A, Bellio R (2017). Modern likelihood-frequentist inference.
+*International Statistical Review*, **85**, 519–541.
+doi:10.1111/insr.12232.
 
 Kuchibhotla A K, Balakrishnan S, Wasserman L (2023). The HulC:
 confidence regions from convex hulls. *Journal of the Royal Statistical

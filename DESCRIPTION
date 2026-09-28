@@ -17,7 +17,8 @@ Imports:
     numDeriv
 Suggests: 
     betareg,
+    detectseparation,
     future.apply,
-    tinytest,
-    detectseparation
+    progressr,
+    tinytest
 Config/roxygen2/version: 8.0.0
