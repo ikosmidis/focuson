@@ -16,7 +16,8 @@
 }
 \arguments{
 \item{x}{An object of class \code{"profile_focus_list"}, as returned by
-\code{\link[=profile_focus]{profile_focus()}} or \code{\link[=profile.focus_list]{profile.focus_list()}}.}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}}, \code{\link[=modified_profile]{modified_profile()}}, or
+\code{\link[=modified_profile_focus]{modified_profile_focus()}}.}
 
 \item{level}{Confidence level used to draw the horizontal cutoff
 and, if \code{ci = TRUE}, vertical confidence limits.}
@@ -38,8 +39,8 @@ displayed irrespective of \code{ci}.}
 ordinary profile likelihood, \code{"mpl"} selects the modified profile
 likelihood, and \code{"rstar"} selects the modified signed
 likelihood-ratio statistic. The latter two require an object returned
-by \code{\link[=modified_profile_focus]{modified_profile_focus()}}. Selecting \code{"rstar"} sets \code{signed = TRUE}
-internally.}
+by \code{\link[=modified_profile]{modified_profile()}} or \code{\link[=modified_profile_focus]{modified_profile_focus()}}. Selecting
+\code{"rstar"} sets \code{signed = TRUE} internally.}
 
 \item{...}{Additional graphical arguments passed to
 \code{\link[graphics:plot.default]{graphics::plot.default()}}.}
@@ -71,7 +72,6 @@ log-likelihood representation, so \code{signed} is treated as \code{TRUE}
 irrespective of its supplied value.
 }
 \seealso{
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}},
-\code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}},
-\code{\link[=profile_ci]{profile_ci()}}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}}, \code{\link[=modified_profile]{modified_profile()}},
+\code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}}, \code{\link[=profile_ci]{profile_ci()}}
 }

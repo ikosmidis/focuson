@@ -160,3 +160,79 @@ calculation of \code{INF} reproducible and to help diagnose numerical behavior
 near the ordinary maximum. Most inferential use will involve
 \code{modified_loglik}, \code{NP}, \code{INF}, and \code{rstar} directly.
 }
+\examples{
+
+## Infer a high quantile of a Weibull lifetime distribution. Parameterize
+## the model by eta = log(scale) and xi = log(shape), so that optimization
+## is unconstrained. The focus is the log 0.99 quantile, a nonlinear
+## function of both parameters.
+
+set.seed(1)
+y <- rweibull(20, shape = 1.5, scale = 2)
+n <- length(y)
+
+## Likelihood functions take the parameter vector first and the observed
+## or simulated data second. The score avoids numerical differentiation of
+## the log likelihood; information is left to be obtained numerically.
+loglik <- function(theta, data) {
+    eta <- theta[1]
+    tau <- exp(theta[2])
+    z <- log(data) - eta
+    n <- length(data)
+    n * theta[2] - n * tau * eta +
+        (tau - 1) * sum(log(data)) - sum(exp(tau * z))
+}
+
+score <- function(theta, data) {
+    eta <- theta[1]
+    tau <- exp(theta[2])
+    z <- log(data) - eta
+    w <- exp(tau * z)
+    n <- length(data)
+    c(tau * (sum(w) - n),
+      n + tau * sum(z) - tau * sum(w * z))
+}
+
+## Obtain the MLE required as the centre of the profile.
+mle <- optim(c(eta = log(median(y)), xi = 0),
+             loglik, score, data = y, method = "BFGS",
+             control = list(fnscale = -1))$par
+
+## The simulator generates a replacement dataset at a supplied parameter
+## value. It is used to estimate the higher-order likelihood adjustments.
+simulate <- function(theta) {
+    rweibull(n, shape = exp(theta[2]), scale = exp(theta[1]))
+}
+
+log_quantile <- function(theta, prob = 0.99) {
+    theta[1] + log(-log1p(-prob)) * exp(-theta[2])
+}
+
+set.seed(2)
+weibull_profile <- modified_profile_focus(
+    loglik = loglik,
+    score = score,
+    simulate = simulate,
+    mle = mle,
+    on = log_quantile,
+    likelihood_args = list(data = y),
+    nsim = 200,
+    grid_size = 10,
+    max_level = 0.99)
+
+lev <- 0.95
+## Confidence intervals for the log-quantile
+cis <- rbind(
+   pl = confint(weibull_profile, method = "pl", level = lev),
+   mpl = confint(weibull_profile, method = "mpl", level = lev),
+   rstar = confint(weibull_profile, method = "rstar", level = lev))
+
+## Confidence intervals for the quantile
+exp(cis)
+
+## Signed profile roots
+plot(weibull_profile, what = "pl", level = lev, ci = TRUE, signed = TRUE)
+plot(weibull_profile, what = "mpl", level = lev, ci = TRUE, signed = TRUE)
+plot(weibull_profile, what = "rstar", level = lev, ci = TRUE, signed = TRUE)
+
+}

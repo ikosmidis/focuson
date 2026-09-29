@@ -1,3 +1,11 @@
+# focuson 0.4
+
+## Bug fixes
+
+## New functionality
+
+## Improvements, updates and additions
+
 # focuson 0.3
 
 ## Bug fixes
@@ -35,7 +43,6 @@
 * Confidence intervals returned by `focuson` now inherit from `"focus_ci"`
   and have a concise print method that reports the interval and relevant
   method-specific information without printing all diagnostic attributes.
-
 
 * Various documentation updates.
 

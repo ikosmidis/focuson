@@ -15,8 +15,8 @@
 }
 \arguments{
 \item{object}{An object of class \code{"profile_focus_list"}, as returned by
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=modified_profile_focus]{modified_profile_focus()}}, or
-\code{\link[=profile.focus_list]{profile.focus_list()}}.}
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}}, \code{\link[=modified_profile]{modified_profile()}}, or
+\code{\link[=modified_profile_focus]{modified_profile_focus()}}.}
 
 \item{parm}{Currently unused.}
 
@@ -51,17 +51,17 @@ Consequently, a two-sided interval cannot be extracted from a single-branch
 profile.
 
 Methods \code{"mpl"} and \code{"rstar"} require an object returned by
-\code{\link[=modified_profile_focus]{modified_profile_focus()}}. For \code{"mpl"}, the modified profile is recentered
-at the maximum of its cubic-spline interpolant before constructing the
-signed likelihood root based on the modified profile likelihood. The
-\code{interpolation} argument then determines how that root is interpolated to
-obtain the confidence limits. The modified profile maximum must be in the
-interior of the supplied grid.
+\code{\link[=modified_profile]{modified_profile()}} or \code{\link[=modified_profile_focus]{modified_profile_focus()}}. For \code{"mpl"}, the
+modified profile is recentered at the maximum of its cubic-spline
+interpolant before constructing the signed likelihood root based on the
+modified profile likelihood. The \code{interpolation} argument then determines
+how that root is interpolated to obtain the confidence limits. The modified
+profile maximum must be in the interior of the supplied grid.
 
 In contrast, \code{confint(focus_object, method = "pl")} uses \code{\link[=profile_ci]{profile_ci()}}
 to solve the endpoint equations directly.
 }
 \seealso{
-\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}},
+\code{\link[=profile_focus]{profile_focus()}}, \code{\link[=profile.focus_list]{profile.focus_list()}}, \code{\link[=modified_profile]{modified_profile()}},
 \code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=plot.profile_focus_list]{plot.profile_focus_list()}}, \code{\link[=profile_ci]{profile_ci()}}
 }
