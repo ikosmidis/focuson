@@ -330,8 +330,8 @@ modified_profile_focus <- function(loglik,
 #'
 #' @return An object inheriting from `"modified_profile_focus_list"`.
 #'
-#' @seealso [modified_profile_focus()], [stats::profile()],
-#'     [modified_profile.focus_list()]
+#' @seealso [modified_profile.focus_list()],
+#'     [modified_profile_focus()], [stats::profile()]
 #'
 #'
 #' @export

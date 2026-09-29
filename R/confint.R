@@ -241,8 +241,8 @@ confint.focus_list <- function(object,
 #' interpolation on the signed likelihood-root scale.
 #'
 #' @param object An object of class `"profile_focus_list"`, as returned by
-#'     [profile_focus()], [modified_profile_focus()], or
-#'     [profile.focus_list()].
+#'     [profile_focus()], [profile.focus_list()], [modified_profile()], or
+#'     [modified_profile_focus()].
 #' @param parm Currently unused.
 #' @param level Nominal confidence level.
 #' @param method Character. The likelihood-based method used to construct the
@@ -262,12 +262,12 @@ confint.focus_list <- function(object,
 #' profile.
 #'
 #' Methods `"mpl"` and `"rstar"` require an object returned by
-#' [modified_profile_focus()]. For `"mpl"`, the modified profile is recentered
-#' at the maximum of its cubic-spline interpolant before constructing the
-#' signed likelihood root based on the modified profile likelihood. The
-#' `interpolation` argument then determines how that root is interpolated to
-#' obtain the confidence limits. The modified profile maximum must be in the
-#' interior of the supplied grid.
+#' [modified_profile()] or [modified_profile_focus()]. For `"mpl"`, the
+#' modified profile is recentered at the maximum of its cubic-spline
+#' interpolant before constructing the signed likelihood root based on the
+#' modified profile likelihood. The `interpolation` argument then determines
+#' how that root is interpolated to obtain the confidence limits. The modified
+#' profile maximum must be in the interior of the supplied grid.
 #'
 #' In contrast, `confint(focus_object, method = "pl")` uses [profile_ci()]
 #' to solve the endpoint equations directly.
@@ -278,7 +278,7 @@ confint.focus_list <- function(object,
 #' level, interval type (`"pl"`, `"mpl"`, or `"rstar"`), and interpolation
 #' method, respectively.
 #'
-#' @seealso [profile_focus()], [profile.focus_list()],
+#' @seealso [profile_focus()], [profile.focus_list()], [modified_profile()],
 #'     [modified_profile_focus()], [plot.profile_focus_list()], [profile_ci()]
 #'
 #' @export
@@ -296,7 +296,7 @@ confint.profile_focus_list <- function(object,
     if (!identical(method, "pl") &&
         !inherits(object, "modified_profile_focus_list"))
         stop("`method = \"", method, "\"` requires an object returned by ",
-             "`modified_profile_focus()`.")
+             "`modified_profile()` or `modified_profile_focus()`.")
     signed_root <- switch(
         method,
         pl = .profile_signed(object),

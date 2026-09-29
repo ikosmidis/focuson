@@ -4,7 +4,8 @@
 #' signed likelihood-root scale.
 #'
 #' @param x An object of class `"profile_focus_list"`, as returned by
-#'     [profile_focus()] or [profile.focus_list()].
+#'     [profile_focus()], [profile.focus_list()], [modified_profile()], or
+#'     [modified_profile_focus()].
 #' @param level Confidence level used to draw the horizontal cutoff
 #'     and, if `ci = TRUE`, vertical confidence limits.
 #' @param signed Logical. If `TRUE`, plot the signed likelihood root;
@@ -15,8 +16,8 @@
 #'     ordinary profile likelihood, `"mpl"` selects the modified profile
 #'     likelihood, and `"rstar"` selects the modified signed
 #'     likelihood-ratio statistic. The latter two require an object returned
-#'     by [modified_profile_focus()]. Selecting `"rstar"` sets `signed = TRUE`
-#'     internally.
+#'     by [modified_profile()] or [modified_profile_focus()]. Selecting
+#'     `"rstar"` sets `signed = TRUE` internally.
 #' @param interpolation Character. Interpolation method used between
 #'     computed profile points. `"linear"` (default) uses [stats::approxfun()]
 #'     and `"cubic"` uses [stats::splinefun()].
@@ -49,9 +50,8 @@
 #'
 #' @return Called for its side effect of drawing a plot.
 #'
-#' @seealso [profile_focus()], [profile.focus_list()],
-#'     [modified_profile_focus()], [confint.profile_focus_list()],
-#'     [profile_ci()]
+#' @seealso [profile_focus()], [profile.focus_list()], [modified_profile()],
+#'     [modified_profile_focus()], [confint.profile_focus_list()], [profile_ci()]
 #'
 #' @export
 plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
@@ -67,7 +67,7 @@ plot.profile_focus_list <- function(x, level = 0.95, signed = FALSE,
     if (what != "pl" &&
         !inherits(x, "modified_profile_focus_list"))
         stop("`what = \"", what, "\"` requires an object returned by ",
-             "`modified_profile_focus()`.")
+             "`modified_profile()` or `modified_profile_focus()`.")
     if (what == "pl") {
         profile_loglik <- x$loglik
         profile_maximum <- c(psi = unname(attr(x, "mle")),
