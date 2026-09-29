@@ -6,6 +6,10 @@
 
 ## Improvements, updates and additions
 
+* New examples
+* More informative errors methods for the `plot()` and `confint()` for
+  methods of `modified_profile_focus_list` `profile_focus_list` objects
+
 # focuson 0.3
 
 ## Bug fixes

@@ -150,6 +150,9 @@
 #'     grid_size = 10,
 #'     max_level = 0.99)
 #'
+#' ## An inspection of the profiling result
+#' weibull_profile
+#'
 #' lev <- 0.95
 #' ## Confidence intervals for the log-quantile
 #' cis <- rbind(
