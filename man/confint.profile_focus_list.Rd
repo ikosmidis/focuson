@@ -8,9 +8,9 @@
   object,
   parm,
   level = 0.95,
+  ...,
   method = c("pl", "mpl", "rstar"),
-  interpolation = c("linear", "cubic"),
-  ...
+  interpolation = c("linear", "cubic")
 )
 }
 \arguments{
@@ -22,6 +22,8 @@
 
 \item{level}{Nominal confidence level.}
 
+\item{...}{Currently unused.}
+
 \item{method}{Character. The likelihood-based method used to construct the
 interval. \code{"pl"} (default) uses the ordinary profile likelihood,
 \code{"mpl"} uses the modified profile likelihood, and \code{"rstar"} uses the
@@ -30,8 +32,6 @@ modified signed likelihood-ratio statistic \eqn{r^*}.}
 \item{interpolation}{Character. Interpolation method used between computed
 profile points. \code{"linear"} (default) uses \code{\link[stats:approxfun]{stats::approxfun()}} and
 \code{"cubic"} uses \code{\link[stats:splinefun]{stats::splinefun()}}.}
-
-\item{...}{Currently unused.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}. The

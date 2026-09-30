@@ -2,7 +2,9 @@
 
 ## Bug fixes
 
-## New functionality
+* Fixed a potential issue that may appear due to partial matching with
+  the `confint()` method for `focus_list` and `profile_focus_list`
+  methods.
 
 ## Improvements, updates and additions
 

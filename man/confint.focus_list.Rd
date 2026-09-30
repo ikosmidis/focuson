@@ -8,12 +8,12 @@
   object,
   parm,
   level = 0.95,
+  ...,
   method = "wald",
   se_at = "supplied",
   V_function = NULL,
   se_control = list(),
-  nleqslv_args = list(),
-  ...
+  nleqslv_args = list()
 )
 }
 \arguments{
@@ -22,6 +22,15 @@
 \item{parm}{Currently unused.}
 
 \item{level}{Confidence level.}
+
+\item{...}{Additional arguments for the confidence interval
+method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
+except that the nominal level is determined by \code{level}. For
+\code{method = "wald"} and \code{se_at = "compatible"} with
+\code{focus_engine_list} objects, these are passed to \code{V_function}. For
+\code{method = "mpl"} or \code{"rstar"}, \code{interpolation} is passed to
+\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}} and the remaining arguments are passed
+to \code{\link[=modified_profile]{modified_profile()}}.}
 
 \item{method}{Character string specifying the confidence interval
 method. One of \code{"wald"}, \code{"pl"}, \code{"mpl"}, \code{"rstar"}, or \code{"hulc"}.
@@ -46,15 +55,6 @@ at a supplied model parameter vector. Required for
 \code{\link[nleqslv:nleqslv]{nleqslv::nleqslv()}} through \code{\link[=profile_ci]{profile_ci()}} when
 \code{method = "pl"}, or through \code{\link[=modified_profile]{modified_profile()}} when
 \code{method = "mpl"} or \code{"rstar"}.}
-
-\item{...}{Additional arguments for the confidence interval
-method. For \code{method = "hulc"}, these are passed to \code{\link[=hulc_ci]{hulc_ci()}},
-except that the nominal level is determined by \code{level}. For
-\code{method = "wald"} and \code{se_at = "compatible"} with
-\code{focus_engine_list} objects, these are passed to \code{V_function}. For
-\code{method = "mpl"} or \code{"rstar"}, \code{interpolation} is passed to
-\code{\link[=confint.profile_focus_list]{confint.profile_focus_list()}} and the remaining arguments are passed
-to \code{\link[=modified_profile]{modified_profile()}}.}
 }
 \value{
 A numeric vector of length 2 with names \code{"lower"} and \code{"upper"}.
