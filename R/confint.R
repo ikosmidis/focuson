@@ -74,12 +74,12 @@
 confint.focus_list <- function(object,
                                parm,
                                level = 0.95,
+                               ...,
                                method = "wald",
                                se_at = "supplied",
                                V_function = NULL,
                                se_control = list(),
-                               nleqslv_args = list(),
-                               ...) {
+                               nleqslv_args = list()) {
     method <- match.arg(method, c("wald", "pl", "mpl", "rstar", "hulc"))
     se_at <- match.arg(se_at, c("supplied", "compatible"))
     if (!is.list(se_control)) {
@@ -285,9 +285,9 @@ confint.focus_list <- function(object,
 confint.profile_focus_list <- function(object,
                                        parm,
                                        level = 0.95,
+                                       ...,
                                        method = c("pl", "mpl", "rstar"),
-                                       interpolation = c("linear", "cubic"),
-                                       ...) {
+                                       interpolation = c("linear", "cubic")) {
     if (!is.numeric(level) || length(level) != 1L ||
         !is.finite(level) || level <= 0 || level >= 1)
         stop("`level` must be a number in (0, 1).")
