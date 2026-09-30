@@ -91,6 +91,36 @@
 #' useful side-effects. *WIRE Computational Statistics*, **6**,
 #' 185-196. \doi{10.1002/wics.1296}.
 #'
+#' @examples
+#'
+#' ## Fit a Poisson model by maximum likelihood.
+#' warp_fit <- glm(breaks ~ wool + tension,
+#'                 family = poisson,
+#'                 data = warpbreaks)
+#'
+#' ## Extract the parameter estimate and model-side quantities needed for
+#' ## explicit median bias correction of a nonlinear focus.
+#' aux <- enrichwith::get_auxiliary_functions(warp_fit)
+#' theta <- coef(warp_fit)
+#' components <- list(V = vcov(warp_fit),
+#'                    P = aux$Pmat(),
+#'                    Q = aux$Qmat())
+#'
+#' ## The exponentiated wool coefficient is the expected-break rate
+#' ## ratio for wool B relative to wool A at the same tension.
+#' rate_ratio <- function(theta)
+#'     exp(theta["woolB"])
+#'
+#' engine_fit <- focus_engine(theta = theta,
+#'                            components = components,
+#'                            on = rate_ratio,
+#'                            correction = "median")
+#' engine_fit
+#'
+#' ## The low-level calculation agrees with the fitted-model
+#' ## interface.
+#' focus(warp_fit, on = rate_ratio, correction = "median")
+#'
 #' @export
 focus_engine <- function(theta,
                          components,
