@@ -78,9 +78,9 @@
 #' The endpoint equations are
 #' \deqn{2\{\ell(\hat\theta) - \ell(\theta)\} - c = 0}
 #' and
-#' \deqn{\nabla \ell(\theta) - \lambda \nabla g(\theta) = 0,}
+#' \deqn{\nabla \ell(\theta) - \lambda \nabla h(\theta) = 0,}
 #' where \eqn{\ell(\theta)} is `loglik`, \eqn{\hat\theta} is `mle`,
-#' \eqn{g} is the function supplied through `on`, and \eqn{c} is the
+#' \eqn{h} is the function supplied through `on`, and \eqn{c} is the
 #' `level` quantile of a chi-squared distribution with one degree of
 #' freedom.
 #'
@@ -360,10 +360,8 @@ profile_ci <- function(loglik,
 #' beta-regression focus objects are supported. Results from [focus_engine()]
 #' are not supported.
 #'
-#' The result is likelihood-based and does not use a bias-corrected focus
-#' estimate as the centre of the profile. The signed likelihood root uses the
-#' sign of the focus at the unrestricted MLE minus the focus value at the
-#' profile point.
+#' The signed likelihood root uses the sign of the focus at the
+#' unrestricted MLE minus the focus value at the profile point.
 #'
 #' With `approach = "focus_grid"`, a range that does not contain the focus at
 #' the MLE produces a single profile branch. See [profile_focus()] for details.
@@ -401,7 +399,7 @@ profile_ci <- function(loglik,
 #' ## `approach = "VM"`) is numerically unstable
 #' try(prof <- profile(endo2))
 #'
-#' ## A closer inspection of the profile log-likelihood reveals that #
+#' ## A closer inspection of the profile log-likelihood reveals that
 #' ## the profile is essentially monotone; the log-likelihood approaches
 #' ## its supremum as the NV coefficient tends to infinity.
 #' prof <- profile(endo2, approach = "focus_grid", focus_range = c(0, 30))
@@ -809,26 +807,26 @@ profile_focus <- function(loglik,
 #' @details
 #' The printed entries have the following meanings:
 #'
-#' * **Profiling approach:** the method used to construct the profile, either
+#' * *Profiling approach:* the method used to construct the profile, either
 #'   the Venzon and Moolgavkar approach (`"VM"`) or constrained optimization
 #'   over a grid of focus values (`"focus_grid"`).
-#' * **Focus at MLE:** the focus evaluated at the supplied unrestricted maximum
+#' * *Focus at MLE:* the focus evaluated at the supplied unrestricted maximum
 #'   likelihood estimate. For a single-branch focus-grid profile, this value
 #'   lies outside the supplied focus range and is not a returned profile point.
-#' * **Maximum log-likelihood:** the log-likelihood at the supplied
+#' * *Maximum log-likelihood:* the log-likelihood at the supplied
 #'   unrestricted maximum likelihood estimate.
-#' * **Parameter dimension:** the dimension of the model parameter vector
+#' * *Parameter dimension:* the dimension of the model parameter vector
 #'   stored in the matrix-valued `theta` column.
-#' * **Profile points:** the number of rows in the computed profile.
-#' * **Points by side:** the number of profile points to the left and right of
+#' * *Profile points:* the number of rows in the computed profile.
+#' * *Points by side:* the number of profile points to the left and right of
 #'   the focus at the MLE. The MLE itself, when present, is not counted on
 #'   either side.
-#' * **Requested nominal level:** for a VM profile, the `max_level` used to
+#' * *Requested nominal level:* for a VM profile, the `max_level` used to
 #'   construct the likelihood-root grid. The grid extends one step beyond this
 #'   level.
-#' * **Focus range:** for a focus-grid profile, the supplied lower and upper
+#' * *Focus range:* for a focus-grid profile, the supplied lower and upper
 #'   focus values.
-#' * **Implied level at grid boundary:** the chi-squared reference level
+#' * *Implied level at grid boundary:* the chi-squared reference level
 #'   corresponding to the likelihood drop at the outer endpoint of the
 #'   computed profile. When both branches are present, the smaller of their
 #'   endpoint levels is reported. For a VM profile this is generally larger

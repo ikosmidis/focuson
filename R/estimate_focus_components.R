@@ -291,12 +291,14 @@ estimate_focus_components <- function(theta,
     out
 }
 
-#' Estimate components for [focus_engine()] in a full exponential family
+#' Estimate components for [focus_engine()] in a full exponential
+#' family in canonical parameterization
 #'
 #' Estimate the model-side components used by [focus_engine()] in the
 #' special case where the reference parameterization is that of a full
-#' exponential family, so that `Q = 0` and `V` can be obtained directly
-#' from the observed information evaluated at the supplied estimate.
+#' exponential family in canonical parameterization, so that `Q = 0`
+#' and `V` can be obtained directly from the observed information
+#' evaluated at the supplied estimate.
 #'
 #' @param theta Numeric parameter vector at which the components are
 #'     estimated.
@@ -341,14 +343,50 @@ estimate_focus_components <- function(theta,
 #'     `diagnostics = TRUE`, an additional element `diagnostics` is
 #'     included.
 #'
-#' @details
-#' This helper assumes that the supplied parameterization is that of a
-#' full exponential family. In that case, `Q` is taken to be zero and
-#' `V` is obtained by inverting the observed information evaluated at
-#' the supplied `theta` and `likelihood_args$data`. Only `P` is
-#' estimated by Monte Carlo simulation.
+#' @details This helper assumes that the supplied parameterization is
+#'     that of a full exponential family in canonical
+#'     parameterization. In that case, `Q` is taken to be zero and `V`
+#'     is obtained by inverting the observed information evaluated at
+#'     the supplied `theta` and `likelihood_args$data`. Only `P` is
+#'     estimated by Monte Carlo simulation.
 #'
 #' @seealso [focus_engine()], [estimate_focus_components()]
+#'
+#' @examples
+#' \dontrun{
+#'
+#' ## Poisson regression with a log link is a full exponential family
+#' ## in the regression coefficients, conditional on the fixed design.
+#' warp_fit <- glm(breaks ~ wool + tension, family = poisson,
+#'                 data = warpbreaks)
+#' aux <- enrichwith::get_auxiliary_functions(warp_fit)
+#' theta <- coef(warp_fit)
+#'
+#' loglik <- function(theta, data)
+#'     sum(aux$dmodel(coefficients = theta, dispersion = 1,
+#'                    response = data, log = TRUE))
+#' score <- function(theta, data)
+#'     aux$score(coefficients = theta, dispersion = 1, response = data)
+#' information <- function(theta, data)
+#'     aux$information(coefficients = theta, dispersion = 1,
+#'                     response = data, type = "observed")
+#' simulate <- function(theta)
+#'     aux$simulate(coefficients = theta, dispersion = 1, nsim = 1)[[1]]
+#'
+#' ## Each simulation produces a complete response vector at the same design.
+#' set.seed(1)
+#' components <- estimate_focus_components_fef(
+#'     theta, loglik, score, information, simulate = simulate,
+#'     nsim = 10000, likelihood_args = list(data = warpbreaks$breaks)
+#' )
+#'
+#' ## Expected-break rate ratio for wool B versus wool A at the same tension.
+#' rate_ratio <- function(theta) exp(theta[2])
+#' focus_engine(theta, components, on = rate_ratio, correction = "median")
+#' ## Compare with the calculation using analytical model-side components.
+#' focus(warp_fit, on = rate_ratio, correction = "median")
+#'
+#' }
 #'
 #' @export
 estimate_focus_components_fef <- function(theta,
@@ -525,9 +563,10 @@ estimate_focus_components_fef <- function(theta,
 #' If `information` is supplied, it is used directly, regardless of
 #' whether `score` is also supplied.
 #'
-#' The returned `V`, `P`, and `Q` target the corresponding full-sample
-#' components under iid sampling by multiplying the simulated
-#' one-observation quantities by `n`.
+#' The one-observation estimates of the information matrix, and of the
+#' components of `P`, and `Q` are multiplied by `n` to obtain
+#' full-sample quantities. `V` is the inverse of the resulting
+#' full-sample information matrix.
 #'
 #' @seealso [focus_engine()], [estimate_focus_components()]
 #'

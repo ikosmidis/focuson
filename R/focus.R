@@ -46,7 +46,7 @@
 #'   \item{`correction`}{Character string recording the bias correction method
 #'     used.}
 #'   \item{`object`}{The fitted model object used internally by `focus()`,
-#'     after any refitting described below.}
+#'     after any refitting described in Details.}
 #'   \item{`on`}{A list containing the supplied `on`, `on_gradient`, and
 #'     `on_hessian` functions.}
 #'   \item{`dots`}{A list with the additional arguments supplied through
@@ -59,14 +59,14 @@
 #' `focus()` refits the model using [brglm2::brglmFit()] with `type = "ML"`
 #' and starting values `coef(object)`.
 #'
-#' If the primary class of `object` is [`"brglmFit"`][brglm2::brglmFit] and
-#' `object$type` is not one of `"ML"`, `"AS_mean"`, or `"correction"`,
-#' then `focus()` refits the model with `type = "AS_mean"`. This ensures that
-#' the first-order term in the bias expansion of the maximum likelihood
-#' estimator is removed, and helps avoid separation issues in categorical
-#' response models.
-#' Hence, the `object` component returned by the `glm` method always inherits
-#' from [`"brglmFit"`][brglm2::brglmFit].
+#' If the primary class of `object` is
+#' [`"brglmFit"`][brglm2::brglmFit] and `object$type` is not one of
+#' `"ML"`, `"AS_mean"`, or `"correction"`, then `focus()` refits the
+#' model with `type = "AS_mean"`. This ensures that the first-order
+#' term in the bias expansion of the maximum likelihood estimator is
+#' removed, and helps avoid issues with data separation in categorical
+#' response models.  Hence, the `object` component returned by the
+#' `glm` method always inherits from [`"brglmFit"`][brglm2::brglmFit].
 #'
 #' For `"betareg"` objects, the full parameter vector contains the mean and
 #' precision submodel parameters. Objects fitted with `type = "ML"`, `"BC"`,
@@ -78,10 +78,10 @@
 #' [stats::coef()] and [stats::vcov()] for the full parameter vector
 #' and the inverse of the expected information.
 #'
-#' Let \eqn{\psi(\theta)} denote the scalar function specified by `on`.
+#' Let \eqn{h(\theta)} denote the scalar function specified by `on`.
 #' The plug-in estimator is `on(theta, ...)`, where `theta` is the estimated
 #' parameter vector. Mean and median bias corrections are computed using
-#' first- and second-order derivatives of \eqn{\psi(\theta)} together with
+#' first- and second-order derivatives of \eqn{h(\theta)} together with
 #' model-specific auxiliary quantities.
 #'
 #' If `on_gradient` or `on_hessian` are supplied, then `focus()` uses them in
@@ -94,11 +94,11 @@
 #' `focus()` itself, such as `correction` and `object`, are matched
 #' before `...` is formed and therefore cannot be passed through `...`.
 #'
-#' Standard errors are computed using the delta method, with covariance matrix
-#' and gradients evaluated at the estimated parameters from `object` or the
-#' refit version of it, as described above. Corrected standard errors can be
-#' computed explicitly with [`focus_se()`] or requested lazily in
-#' [confint.focus_list()].
+#' Standard errors are computed using the delta method, with
+#' covariance matrix and gradients evaluated at the estimated
+#' parameters from `object` or the refit version of it, as described
+#' above. Compatible standard errors can be computed explicitly with
+#' [`focus_se()`] or requested lazily in [confint.focus_list()].
 #'
 #' Confidence intervals can be obtained from the returned object using
 #' [confint()].
@@ -325,9 +325,6 @@ focus.betareg <- function(object,
 #' Evaluate a scalar function of the model parameters after refitting
 #' a model object on a supplied dataset.
 #'
-#' This is a convenience wrapper around [focus()], intended for use in
-#' resampling procedures such as the bootstrap, where the model is
-#' repeatedly refit on different datasets.
 #'
 #' @param data A data frame containing the variables required to refit
 #'   the model.
@@ -352,12 +349,14 @@ focus.betareg <- function(object,
 #' A numeric scalar: the estimate of the quantity defined by `on`.
 #'
 #' @details
+#'
 #' The function refits `object` using `data` via [update()], and then
 #' applies [focus()] to the refitted model. Only the `estimate`
 #' component of the result from [focus()] is returned.
 #'
-#' This function is particularly useful in resampling settings, where a
-#' statistic function returning a single numeric value is required.
+#' his is a convenience wrapper around [focus()], intended for use in
+#' resampling procedures such as the bootstrap, where the model is
+#' repeatedly refit on different datasets.
 #'
 #' @examples
 #' library("brglm2")

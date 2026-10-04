@@ -15,7 +15,8 @@ Imports:
     enrichwith (>= 0.6),
     nleqslv,
     numDeriv
-Suggests: 
+Suggests:
+    cond,
     betareg,
     detectseparation,
     future.apply,

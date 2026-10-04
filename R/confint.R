@@ -44,11 +44,12 @@
 #' computation fails, a warning is issued and the stored standard error is used.
 #'
 #' For `method = "pl"`, [profile_ci()] is used to compute a likelihood
-#' profile interval for the scalar parameter defined by the stored `on`
-#' function. If the stored fitted object is not an ML fit, it is refitted by
-#' maximum likelihood before profiling. This interval is likelihood-based and
-#' does not use the bias-corrected focus estimate as the likelihood centre.
-#' Profile intervals are currently not available for `focus_engine()` results.
+#' profile interval for the scalar parameter defined by the stored
+#' `on` function. If the stored fitted object is not an ML fit, it is
+#' refitted by maximum likelihood before profiling. This interval is
+#' then likelihood-based and does not use the bias-corrected focus
+#' estimate. Profile intervals are currently not available for
+#' `focus_engine()` results.
 #'
 #' For `method = "mpl"` or `"rstar"`, [modified_profile()] first computes a
 #' complete simulation-based modified profile, from which

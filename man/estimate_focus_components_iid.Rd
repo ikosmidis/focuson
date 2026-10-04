@@ -96,9 +96,10 @@ Jacobian of \code{score}.
 If \code{information} is supplied, it is used directly, regardless of
 whether \code{score} is also supplied.
 
-The returned \code{V}, \code{P}, and \code{Q} target the corresponding full-sample
-components under iid sampling by multiplying the simulated
-one-observation quantities by \code{n}.
+The one-observation estimates of the information matrix, and of the
+components of \code{P}, and \code{Q} are multiplied by \code{n} to obtain
+full-sample quantities. \code{V} is the inverse of the resulting
+full-sample information matrix.
 }
 \seealso{
 \code{\link[=focus_engine]{focus_engine()}}, \code{\link[=estimate_focus_components]{estimate_focus_components()}}

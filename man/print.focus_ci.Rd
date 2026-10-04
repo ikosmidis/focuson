@@ -17,8 +17,9 @@
 \code{x}, invisibly.
 }
 \description{
-Print a confidence interval returned by pkg{focuson}, together with a
-concise summary of the method-specific information used to construct it.
+Print a confidence interval returned by the methods in
+\pkg{focuson}, together with a concise summary of the
+method-specific information used to construct it.
 }
 \details{
 Method-specific diagnostic attributes remain available through

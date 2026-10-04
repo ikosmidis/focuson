@@ -62,12 +62,11 @@ compute_B <- function(level, Delta){
 #' Construct a HulC confidence interval
 #'
 #' Compute a HulC confidence interval for a user-supplied statistic by
-#' partitioning the data into `B` subsets, evaluating the statistic on each
-#' subset, and taking the range of the resulting values.
-#'
-#' The number of partitions is chosen to achieve nominal coverage
-#' level `level` under the HulC construction, optionally with
-#' randomization as described in the original method.
+#' partitioning the data into `B` subsets, evaluating the statistic on
+#' each subset, and taking the range of the resulting values.  The
+#' number of partitions is chosen to achieve nominal coverage level
+#' `level` under the HulC construction, optionally with randomization
+#' as described in the original method.
 #'
 #' @param data A [`data.frame`] object with observations in rows.
 #' @param statistic A function that takes a [`data.frame`] as its first argument

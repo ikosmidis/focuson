@@ -50,14 +50,13 @@ one of the partitions, the function returns \code{c(NA, NA)}.
 }
 \description{
 Compute a HulC confidence interval for a user-supplied statistic by
-partitioning the data into \code{B} subsets, evaluating the statistic on each
-subset, and taking the range of the resulting values.
+partitioning the data into \code{B} subsets, evaluating the statistic on
+each subset, and taking the range of the resulting values.  The
+number of partitions is chosen to achieve nominal coverage level
+\code{level} under the HulC construction, optionally with randomization
+as described in the original method.
 }
 \details{
-The number of partitions is chosen to achieve nominal coverage
-level \code{level} under the HulC construction, optionally with
-randomization as described in the original method.
-
 The observations are first randomly permuted, then split into \code{B} roughly
 equal-sized partitions. The user-supplied \code{statistic} is evaluated on each
 partition, and the confidence interval is defined as the range of these

@@ -69,10 +69,8 @@ maximum likelihood. The model-specific likelihood quantities are passed to
 beta-regression focus objects are supported. Results from \code{\link[=focus_engine]{focus_engine()}}
 are not supported.
 
-The result is likelihood-based and does not use a bias-corrected focus
-estimate as the centre of the profile. The signed likelihood root uses the
-sign of the focus at the unrestricted MLE minus the focus value at the
-profile point.
+The signed likelihood root uses the sign of the focus at the
+unrestricted MLE minus the focus value at the profile point.
 
 With \code{approach = "focus_grid"}, a range that does not contain the focus at
 the MLE produces a single profile branch. See \code{\link[=profile_focus]{profile_focus()}} for details.
@@ -100,7 +98,7 @@ endo <- glm(HG ~ NV + PI + EH,
 ## `approach = "VM"`) is numerically unstable
 try(prof <- profile(endo2))
 
-## A closer inspection of the profile log-likelihood reveals that #
+## A closer inspection of the profile log-likelihood reveals that
 ## the profile is essentially monotone; the log-likelihood approaches
 ## its supremum as the NV coefficient tends to infinity.
 prof <- profile(endo2, approach = "focus_grid", focus_range = c(0, 30))

@@ -59,7 +59,7 @@ A list with components:
 \item{\code{correction}}{Character string recording the bias correction method
 used.}
 \item{\code{object}}{The fitted model object used internally by \code{focus()},
-after any refitting described below.}
+after any refitting described in Details.}
 \item{\code{on}}{A list containing the supplied \code{on}, \code{on_gradient}, and
 \code{on_hessian} functions.}
 \item{\code{dots}}{A list with the additional arguments supplied through
@@ -78,14 +78,14 @@ If the primary class of \code{object} is \code{\link[stats:glm]{"glm"}}, then
 \code{focus()} refits the model using \code{\link[brglm2:brglmFit]{brglm2::brglmFit()}} with \code{type = "ML"}
 and starting values \code{coef(object)}.
 
-If the primary class of \code{object} is \code{\link[brglm2:brglmFit]{"brglmFit"}} and
-\code{object$type} is not one of \code{"ML"}, \code{"AS_mean"}, or \code{"correction"},
-then \code{focus()} refits the model with \code{type = "AS_mean"}. This ensures that
-the first-order term in the bias expansion of the maximum likelihood
-estimator is removed, and helps avoid separation issues in categorical
-response models.
-Hence, the \code{object} component returned by the \code{glm} method always inherits
-from \code{\link[brglm2:brglmFit]{"brglmFit"}}.
+If the primary class of \code{object} is
+\code{\link[brglm2:brglmFit]{"brglmFit"}} and \code{object$type} is not one of
+\code{"ML"}, \code{"AS_mean"}, or \code{"correction"}, then \code{focus()} refits the
+model with \code{type = "AS_mean"}. This ensures that the first-order
+term in the bias expansion of the maximum likelihood estimator is
+removed, and helps avoid issues with data separation in categorical
+response models.  Hence, the \code{object} component returned by the
+\code{glm} method always inherits from \code{\link[brglm2:brglmFit]{"brglmFit"}}.
 
 For \code{"betareg"} objects, the full parameter vector contains the mean and
 precision submodel parameters. Objects fitted with \code{type = "ML"}, \code{"BC"},
@@ -97,10 +97,10 @@ The current implementation assumes that \code{object} supports
 \code{\link[stats:coef]{stats::coef()}} and \code{\link[stats:vcov]{stats::vcov()}} for the full parameter vector
 and the inverse of the expected information.
 
-Let \eqn{\psi(\theta)} denote the scalar function specified by \code{on}.
+Let \eqn{h(\theta)} denote the scalar function specified by \code{on}.
 The plug-in estimator is \code{on(theta, ...)}, where \code{theta} is the estimated
 parameter vector. Mean and median bias corrections are computed using
-first- and second-order derivatives of \eqn{\psi(\theta)} together with
+first- and second-order derivatives of \eqn{h(\theta)} together with
 model-specific auxiliary quantities.
 
 If \code{on_gradient} or \code{on_hessian} are supplied, then \code{focus()} uses them in
@@ -113,11 +113,11 @@ Arguments in \code{...} are reserved for \code{on}, \code{on_gradient}, and
 \code{focus()} itself, such as \code{correction} and \code{object}, are matched
 before \code{...} is formed and therefore cannot be passed through \code{...}.
 
-Standard errors are computed using the delta method, with covariance matrix
-and gradients evaluated at the estimated parameters from \code{object} or the
-refit version of it, as described above. Corrected standard errors can be
-computed explicitly with \code{\link[=focus_se]{focus_se()}} or requested lazily in
-\code{\link[=confint.focus_list]{confint.focus_list()}}.
+Standard errors are computed using the delta method, with
+covariance matrix and gradients evaluated at the estimated
+parameters from \code{object} or the refit version of it, as described
+above. Compatible standard errors can be computed explicitly with
+\code{\link[=focus_se]{focus_se()}} or requested lazily in \code{\link[=confint.focus_list]{confint.focus_list()}}.
 
 Confidence intervals can be obtained from the returned object using
 \code{\link[=confint]{confint()}}.

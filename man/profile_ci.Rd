@@ -111,9 +111,9 @@ of Venzon and Moolgavkar (1988).
 The endpoint equations are
 \deqn{2\{\ell(\hat\theta) - \ell(\theta)\} - c = 0}
 and
-\deqn{\nabla \ell(\theta) - \lambda \nabla g(\theta) = 0,}
+\deqn{\nabla \ell(\theta) - \lambda \nabla h(\theta) = 0,}
 where \eqn{\ell(\theta)} is \code{loglik}, \eqn{\hat\theta} is \code{mle},
-\eqn{g} is the function supplied through \code{on}, and \eqn{c} is the
+\eqn{h} is the function supplied through \code{on}, and \eqn{c} is the
 \code{level} quantile of a chi-squared distribution with one degree of
 freedom.
 

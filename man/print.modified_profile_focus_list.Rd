@@ -29,9 +29,10 @@ and \code{rstar}. The point at the ordinary maximum is excluded because these
 quantities are undefined in their direct representations when the ordinary
 signed likelihood root is zero.
 
-A warning is produced if any of \code{log_u_over_r}, \code{NP}, \code{INF}, or \code{rstar} is
-non-finite away from the ordinary maximum. No warning is based solely on
-the magnitude of an adjustment.
+A warning is produced if any of log_u_over_r, NP, INF, or rstar is
+non-finite away from the ordinary maximum. Large finite values are
+reported in the displayed ranges but do not themselves trigger a
+warning.
 }
 \seealso{
 \code{\link[=modified_profile_focus]{modified_profile_focus()}}, \code{\link[=print.profile_focus_list]{print.profile_focus_list()}}

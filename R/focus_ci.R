@@ -6,8 +6,9 @@
 
 #' Print a focus confidence interval
 #'
-#' Print a confidence interval returned by pkg{focuson}, together with a
-#' concise summary of the method-specific information used to construct it.
+#' Print a confidence interval returned by the methods in
+#' \pkg{focuson}, together with a concise summary of the
+#' method-specific information used to construct it.
 #'
 #' @param x An object of class `"focus_ci"`.
 #' @param digits Number of significant digits used for printing.

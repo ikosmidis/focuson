@@ -48,16 +48,13 @@ Evaluate a scalar function of the model parameters after refitting
 a model object on a supplied dataset.
 }
 \details{
-This is a convenience wrapper around \code{\link[=focus]{focus()}}, intended for use in
-resampling procedures such as the bootstrap, where the model is
-repeatedly refit on different datasets.
-
 The function refits \code{object} using \code{data} via \code{\link[=update]{update()}}, and then
 applies \code{\link[=focus]{focus()}} to the refitted model. Only the \code{estimate}
 component of the result from \code{\link[=focus]{focus()}} is returned.
 
-This function is particularly useful in resampling settings, where a
-statistic function returning a single numeric value is required.
+his is a convenience wrapper around \code{\link[=focus]{focus()}}, intended for use in
+resampling procedures such as the bootstrap, where the model is
+repeatedly refit on different datasets.
 }
 \examples{
 library("brglm2")

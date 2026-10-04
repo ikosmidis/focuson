@@ -446,27 +446,28 @@ modified_profile <- function(fitted, ...)
 #' @examples
 #'
 #' \dontrun{
+#' if (requireNamespace("cond", quietly = TRUE)) {
+#'     data("babies", package = "cond")
+#'     babies_fit <- glm(cbind(r1, r2) ~ day + lull - 1, data = babies,
+#'                       family = binomial)
 #'
-#' data("babies", package = "cond")
-#' babies_fit <- glm(cbind(r1, r2) ~ day + lull - 1, data = babies,
-#'                   family = binomial)
+#'     lullyes_ind = match("lullyes", names(coef(babies_fit)))
+#'     babies_focus <- focus(babies_fit, on = function(theta) theta[lullyes_ind])
+#'     set.seed(2020)
+#'     babies_mpl <- modified_profile(babies_focus)
 #'
-#' lullyes_ind = match("lullyes", names(coef(babies_fit)))
-#' babies_focus <- focus(babies_fit, on = function(theta) theta[lullyes_ind])
-#' set.seed(2020)
-#' babies_mpl <- modified_profile(babies_focus)
+#'     opar <- par(no.readonly = TRUE)
+#'     par(mfrow = c(1, 2))
+#'     plot(babies_mpl, what = "pl", ci = TRUE)
+#'     plot(babies_mpl, what = "mpl", ci = TRUE)
+#'     par(opar)
 #'
-#' opar <- par(no.readonly = TRUE)
-#' par(mfrow = c(1, 2))
-#' plot(babies_mpl, what = "pl", ci = TRUE)
-#' plot(babies_mpl, what = "mpl", ci = TRUE)
-#' par(opar)
-#'
-#' par(mfrow = c(1, 3))
-#' plot(babies_mpl, what = "pl", signed = TRUE, ci = TRUE)
-#' plot(babies_mpl, what = "mpl", signed = TRUE, ci = TRUE)
-#' plot(babies_mpl, what = "rstar", ci = TRUE)
-#' par(opar)
+#'     par(mfrow = c(1, 3))
+#'     plot(babies_mpl, what = "pl", signed = TRUE, ci = TRUE)
+#'     plot(babies_mpl, what = "mpl", signed = TRUE, ci = TRUE)
+#'     plot(babies_mpl, what = "rstar", ci = TRUE)
+#'     par(opar)
+#' }
 #'
 #'
 #' ## Beta regression
@@ -538,6 +539,7 @@ modified_profile.focus_list <- function(
 #' @inheritParams print.profile_focus_list
 #'
 #' @details
+#'
 #' In addition to the ordinary profile summary, the method reports the number
 #' of simulations, the number of noncentral profile points with finite
 #' modified-profile quantities, and the ranges of `log_u_over_r`, `NP`, `INF`,
@@ -545,9 +547,10 @@ modified_profile.focus_list <- function(
 #' quantities are undefined in their direct representations when the ordinary
 #' signed likelihood root is zero.
 #'
-#' A warning is produced if any of `log_u_over_r`, `NP`, `INF`, or `rstar` is
-#' non-finite away from the ordinary maximum. No warning is based solely on
-#' the magnitude of an adjustment.
+#' A warning is produced if any of log_u_over_r, NP, INF, or rstar is
+#' non-finite away from the ordinary maximum. Large finite values are
+#' reported in the displayed ranges but do not themselves trigger a
+#' warning.
 #'
 #' @return `x`, invisibly.
 #'
