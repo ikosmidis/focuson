@@ -253,8 +253,10 @@ estimate_focus_components <- function(theta,
             draws_t
         ) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(
-                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
+            diag_t <- .diagnostics_matrix(draws_t, mean_t * sc, nsim = nsim)
+            diag_t$mcse_max <- diag_t$mcse_max / abs(sc)
+            diag_t$mcse_frobenius <- diag_t$mcse_frobenius / abs(sc)
+            p_diag[[t]] <<- diag_t
         }
         mean_t
     })
@@ -267,8 +269,10 @@ estimate_focus_components <- function(theta,
             draws_t
         ) / (sc * nsim)
         if (diagnostics) {
-            q_diag[[t]] <<- .diagnostics_matrix(
-                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
+            diag_t <- .diagnostics_matrix(draws_t, mean_t * sc, nsim = nsim)
+            diag_t$mcse_max <- diag_t$mcse_max / abs(sc)
+            diag_t$mcse_frobenius <- diag_t$mcse_frobenius / abs(sc)
+            q_diag[[t]] <<- diag_t
         }
         mean_t
     })
@@ -463,8 +467,10 @@ estimate_focus_components_fef <- function(theta,
         draws_t <- lapply(derivatives, function(der) der$SS * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(
-                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
+            diag_t <- .diagnostics_matrix(draws_t, mean_t * sc, nsim = nsim)
+            diag_t$mcse_max <- diag_t$mcse_max / abs(sc)
+            diag_t$mcse_frobenius <- diag_t$mcse_frobenius / abs(sc)
+            p_diag[[t]] <<- diag_t
         }
         mean_t
     })
@@ -658,8 +664,10 @@ estimate_focus_components_iid <- function(theta,
         draws_t <- lapply(derivatives, function(der) n * der$SS * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(
-                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
+            diag_t <- .diagnostics_matrix(draws_t, mean_t * sc, nsim = nsim)
+            diag_t$mcse_max <- diag_t$mcse_max / abs(sc)
+            diag_t$mcse_frobenius <- diag_t$mcse_frobenius / abs(sc)
+            p_diag[[t]] <<- diag_t
         }
         mean_t
     })
@@ -669,8 +677,10 @@ estimate_focus_components_iid <- function(theta,
         draws_t <- lapply(derivatives, function(der) -n * der$I * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            q_diag[[t]] <<- .diagnostics_matrix(
-                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
+            diag_t <- .diagnostics_matrix(draws_t, mean_t * sc, nsim = nsim)
+            diag_t$mcse_max <- diag_t$mcse_max / abs(sc)
+            diag_t$mcse_frobenius <- diag_t$mcse_frobenius / abs(sc)
+            q_diag[[t]] <<- diag_t
         }
         mean_t
     })
