@@ -253,7 +253,8 @@ estimate_focus_components <- function(theta,
             draws_t
         ) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(draws_t, mean_t, nsim = nsim)
+            p_diag[[t]] <<- .diagnostics_matrix(
+                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
         }
         mean_t
     })
@@ -266,7 +267,8 @@ estimate_focus_components <- function(theta,
             draws_t
         ) / (sc * nsim)
         if (diagnostics) {
-            q_diag[[t]] <<- .diagnostics_matrix(draws_t, mean_t, nsim = nsim)
+            q_diag[[t]] <<- .diagnostics_matrix(
+                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
         }
         mean_t
     })
@@ -461,7 +463,8 @@ estimate_focus_components_fef <- function(theta,
         draws_t <- lapply(derivatives, function(der) der$SS * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(draws_t, mean_t, nsim = nsim)
+            p_diag[[t]] <<- .diagnostics_matrix(
+                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
         }
         mean_t
     })
@@ -655,7 +658,8 @@ estimate_focus_components_iid <- function(theta,
         draws_t <- lapply(derivatives, function(der) n * der$SS * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            p_diag[[t]] <<- .diagnostics_matrix(draws_t, mean_t, nsim = nsim)
+            p_diag[[t]] <<- .diagnostics_matrix(
+                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
         }
         mean_t
     })
@@ -665,7 +669,8 @@ estimate_focus_components_iid <- function(theta,
         draws_t <- lapply(derivatives, function(der) -n * der$I * der$S[t] * sc)
         mean_t <- Reduce("+", draws_t) / (sc * nsim)
         if (diagnostics) {
-            q_diag[[t]] <<- .diagnostics_matrix(draws_t, mean_t, nsim = nsim)
+            q_diag[[t]] <<- .diagnostics_matrix(
+                lapply(draws_t, function(x) x / sc), mean_t, nsim = nsim)
         }
         mean_t
     })
