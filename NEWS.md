@@ -6,11 +6,15 @@
   the `confint()` method for `focus_list` and `profile_focus_list`
   methods.
 
+* Fixed a bug in the computation of convergence diagnostics in the
+  `estimate_focus_components*()` methods, when `diagnostics = TRUE`.
+
 ## Improvements, updates and additions
 
-* New examples
+* New examples.
+
 * More informative errors methods for the `plot()` and `confint()` for
-  methods of `modified_profile_focus_list` `profile_focus_list` objects
+  methods of `modified_profile_focus_list` `profile_focus_list` objects.
 
 # focuson 0.3
 
@@ -98,3 +102,5 @@
 # focuson 0.1
 
 * First public release, along with <https://arxiv.org/abs/2606.28597v1>.
+
+
