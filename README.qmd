@@ -206,7 +206,7 @@ HulC confidence intervals can also be constructed from `focus()` objects.
 The statistic is recomputed on data partitions using the same focus
 specification.
 
-```{r hulc, eval = FALSE}
+```{r}
 set.seed(678)
 confint(focus(endo), method = "hulc")
 ```

@@ -269,6 +269,13 @@ focus specification.
 ``` r
 set.seed(678)
 confint(focus(endo), method = "hulc")
+#> 95% HulC confidence interval
+#> 
+#>  lower  upper 
+#> 2.1660 8.0234 
+#> 
+#> Partitions: 5
+#> Median-bias bound (Delta): 0
 ```
 
 ## Low-level use
