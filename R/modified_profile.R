@@ -222,7 +222,7 @@ modified_profile_focus <- function(loglik,
                auglag_args = auglag_args),
           dots)
     )
-    theta_hat <- as.numeric(mle)
+    theta_hat <- mle
     theta_profile <- as.matrix(profile$theta)
     p <- length(theta_hat)
     npoints <- nrow(theta_profile)

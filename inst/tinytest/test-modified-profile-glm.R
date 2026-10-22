@@ -102,3 +102,21 @@ expect_identical(ncol(gaussian_modified$theta),
                  length(coef(gaussian_fit, model = "full")))
 gaussian_noncentral <- gaussian_modified$signed_root != 0
 expect_true(all(is.finite(gaussian_modified$rstar[gaussian_noncentral])))
+
+## Named indexing must also work for nonlinear focuses with numerical derivatives.
+ratio_named <- focus(gaussian_fit, correction = "no",
+                     on = function(theta) theta["wt"] / theta["(Intercept)"])
+ratio_position <- focus(gaussian_fit, correction = "no",
+                        on = function(theta) theta[2] / theta[1])
+set.seed(3)
+ratio_named_modified <- modified_profile(ratio_named, nsim = 50,
+                                         grid_size = 2, max_level = 0.8)
+set.seed(3)
+ratio_position_modified <- modified_profile(ratio_position, nsim = 50,
+                                            grid_size = 2, max_level = 0.8)
+expect_true(all(is.finite(ratio_named_modified$modified_loglik)))
+expect_equal(ratio_named_modified$modified_loglik,
+             ratio_position_modified$modified_loglik)
+expect_equal(ratio_named_modified$rstar, ratio_position_modified$rstar)
+expect_equal(confint(ratio_named_modified, method = "mpl", level = 0.7),
+             confint(ratio_position_modified, method = "mpl", level = 0.7))
