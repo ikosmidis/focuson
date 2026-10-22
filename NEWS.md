@@ -1,3 +1,11 @@
+# focuson 0.5
+
+## Bug fixes
+
+* Preserved parameter names in modified profiling, fixing failures when
+  focus functions use named indexing, including in `confint()` with
+  `method = "mpl"` or `"rstar"`.
+
 # focuson 0.4
 
 ## Bug fixes
